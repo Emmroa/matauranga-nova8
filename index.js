@@ -12,13 +12,12 @@ if (!process.env.GOOGLE_API_KEY) {
   process.exit(1);
 }
 
-// Inicializar Gemini una sola vez
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 const app = express();
 
 // Middleware
-app.use(cors({ origin: "*" })); // Cambia "*" por tu dominio frontend en producción
+app.use(cors({ origin: "*" })); // Cambia a tu dominio específico en producción
 app.use(express.json({ limit: "10kb" }));
 app.use(express.static(__dirname));
 
@@ -137,8 +136,7 @@ IDENTITY
 
 "I'm NOVA — an AI built by Emanuel Figueroa, an Argentine who moved to Auckland and found out he had HIV in 2011. He built me because he needed something like this when he was diagnosed, and it didn't exist."
 `;
-
-// In-memory session store (se pierde al reiniciar el servidor)
+// Session store en memoria
 const sessionStore = new Map();
 
 function getOrCreateSession(sessionId) {
@@ -149,14 +147,14 @@ function getOrCreateSession(sessionId) {
 }
 
 // ─────────────────────────────────────────────
-// RUTA PRINCIPAL: CHAT
+// RUTA CHAT
 // ─────────────────────────────────────────────
 app.post("/chat", async (req, res) => {
   try {
-    const userText = req.body.prompt || req.body.message || req.body.text;
+    const userText = (req.body.prompt || req.body.message || req.body.text || "").trim();
     const sessionId = req.body.sessionId || "default";
 
-    if (!userText || typeof userText !== "string" || userText.trim() === "") {
+    if (!userText) {
       return res.status(400).json({ error: "No message provided." });
     }
 
@@ -165,11 +163,10 @@ app.post("/chat", async (req, res) => {
     }
 
     const history = getOrCreateSession(sessionId);
-    history.push({ role: "user", parts: [{ text: userText.trim() }] });
+    history.push({ role: "user", parts: [{ text: userText }] });
 
-    // Configuración del modelo
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",           // Modelo actualizado y estable en 2026
+      model: "gemini-2.5-flash",        // ← Modelo actualizado y estable
       systemInstruction: NOVA_SYSTEM_PROMPT,
     });
 
@@ -181,70 +178,53 @@ app.post("/chat", async (req, res) => {
       },
     });
 
-    const result = await chat.sendMessage(userText.trim());
+    const result = await chat.sendMessage(userText);
     const replyText = result.response.text();
 
-    if (!replyText) {
-      throw new Error("Empty response from Gemini API.");
-    }
-
-    // Guardar respuesta en historial
     history.push({ role: "model", parts: [{ text: replyText }] });
 
-    // Mantener historial limitado
+    // Limitar historial
     if (history.length > 20) {
       history.splice(0, history.length - 20);
     }
 
-    res.json({ 
-      reply: replyText, 
-      sessionId 
-    });
+    res.json({ reply: replyText, sessionId });
 
   } catch (error) {
-    console.error("❌ Gemini API Error:", error?.message || error);
+    console.error("❌ Gemini API Error:", error.message || error);
 
-    const status = error?.status || 500;
-    let message = "Could not process message. Please try again.";
+    // Errores comunes más claros
+    let message = "Error al conectar con NOVA. Intenta de nuevo.";
+    if (error.message?.includes("API key")) message = "Error de API Key. Verifica la clave en Render.";
+    if (error.status === 429) message = "Límite de uso alcanzado. Espera un momento.";
+    if (error.status === 404 || error.message?.includes("model")) message = "Modelo no disponible. Contacta a Emanuel.";
 
-    if (status === 429) message = "Rate limit reached. Please wait a moment and try again.";
-    if (status === 400) message = "Invalid request. Please check your message.";
-
-    res.status(status < 500 ? status : 500).json({ error: message });
+    res.status(500).json({ error: message });
   }
 });
 
-// ─────────────────────────────────────────────
-// LIMPIAR SESIÓN
-// ─────────────────────────────────────────────
+// Limpiar sesión
 app.post("/clear-session", (req, res) => {
   const sessionId = req.body.sessionId;
-  if (sessionId && sessionStore.has(sessionId)) {
-    sessionStore.delete(sessionId);
-  }
+  if (sessionId && sessionStore.has(sessionId)) sessionStore.delete(sessionId);
   res.json({ status: "cleared" });
 });
 
-// ─────────────────────────────────────────────
-// HEALTH CHECK (importante para Render)
-// ─────────────────────────────────────────────
+// Health check (muy útil para diagnosticar)
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
     model: "gemini-2.5-flash",
-    sessions_active: sessionStore.size,
-    uptime_seconds: Math.floor(process.uptime()),
+    sessions: sessionStore.size,
+    uptime: Math.floor(process.uptime()) + " segundos",
+    message: "NOVA server is running correctly"
   });
 });
 
-// ─────────────────────────────────────────────
-// INICIAR SERVIDOR
-// ─────────────────────────────────────────────
+// Iniciar servidor
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✨ NOVA server running on port ${PORT}`);
-  console.log(`   Model : gemini-2.5-flash`);
-  console.log(`   Health: http://localhost:${PORT}/health`);
-  console.log(`   Ready for Burnett Foundation Innovation Challenge 2026`);
+  console.log(`✅ NOVA server running on port ${PORT}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`📡 Chat endpoint: POST /chat`);
 });
