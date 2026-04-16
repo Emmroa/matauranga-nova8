@@ -53,10 +53,7 @@
     }
 
     @media (min-width: 600px) {
-      .widget {
-        height: 92dvh;
-        border-radius: var(--radius);
-      }
+      .widget { height: 92dvh; border-radius: var(--radius); }
     }
 
     .header {
@@ -169,28 +166,11 @@
 
     button:hover { background: var(--accent-light); transform: scale(1.08); }
 
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin: 20px 0;
-    }
-
-    .chip {
-      padding: 10px 18px;
-      background: rgba(107, 158, 126, 0.15);
-      border: 1px solid rgba(107, 158, 126, 0.4);
-      border-radius: 30px;
-      font-size: 13.5px;
-      color: var(--accent-light);
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .chip:hover {
-      background: rgba(107, 158, 126, 0.3);
-      transform: translateY(-2px);
+    .typing {
+      color: var(--muted);
+      font-style: italic;
+      padding: 8px 0;
+      align-self: flex-start;
     }
 
     .disclaimer {
@@ -200,13 +180,6 @@
       padding: 14px 24px;
       background: rgba(0,0,0,0.4);
       border-top: 1px solid rgba(107, 158, 126, 0.15);
-    }
-
-    .typing {
-      color: var(--muted);
-      font-style: italic;
-      padding: 8px 0;
-      align-self: flex-start;
     }
   </style>
 </head>
@@ -226,18 +199,6 @@
     </div>
 
     <div class="messages" id="chat-box">
-      <div id="welcome">
-        <div style="text-align:center; margin: 30px 0 20px;">
-          <div style="font-size: 48px; margin-bottom: 12px;">🌿</div>
-          <p style="font-size: 19px; font-weight: 600; color: var(--accent-light);">Kia ora, I'm Nova</p>
-          <p style="color: var(--muted); max-width: 280px; margin: 0 auto;">A safe space to talk honestly and without judgement.</p>
-        </div>
-        <div class="chips">
-          <div class="chip" onclick="quickMsg('What is U=U?')">💊 What is U=U?</div>
-          <div class="chip" onclick="quickMsg('Tell me about PrEP')">🛡️ PrEP in NZ</div>
-          <div class="chip" onclick="quickMsg('I feel alone with this')">💭 Emotional support</div>
-        </div>
-      </div>
       <div class="typing" id="typing">Nova is typing...</div>
     </div>
 
@@ -249,18 +210,16 @@
 
     <div class="disclaimer">
       NOVA is an AI created especially for the Burnett Foundation Innovation Challenge 2026. 
-      This is not a substitute for professional medical advice. This conversation is private and nothing is stored permanently.
+      This is not a substitute for professional medical advice. Conversations are private.
     </div>
   </div>
 
   <script>
-    const API_URL = "https://matauranga-nova8.onrender.com/chat";
+    const API_URL = "https://matauranga-nova8.onrender.com/chat";   // ← Cambia si tu URL es diferente
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('userInput');
     const typing = document.getElementById('typing');
-    const welcome = document.getElementById('welcome');
     let sessionId = "nova-" + Date.now();
-    let currentNovaMsg = null;
 
     function autoHeight(el) {
       el.style.height = 'auto';
@@ -274,25 +233,12 @@
       }
     }
 
-    function quickMsg(text) {
-      userInput.value = text;
-      sendMessage();
-    }
-
-    function appendUserMsg(text) {
+    function appendMsg(text, sender) {
       const div = document.createElement('div');
-      div.className = 'msg user';
+      div.className = `msg ${sender}`;
       div.innerText = text;
-      chatBox.insertBefore(div, typing);
+      chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function createNovaMsg() {
-      const div = document.createElement('div');
-      div.className = 'msg nova';
-      chatBox.insertBefore(div, typing);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return div;
     }
 
     function setLoading(state) {
@@ -303,14 +249,11 @@
       const text = userInput.value.trim();
       if (!text) return;
 
-      welcome.style.display = 'none';
-      appendUserMsg(text);
+      appendMsg(text, 'user');
       userInput.value = '';
       userInput.style.height = 'auto';
 
       setLoading(true);
-      currentNovaMsg = createNovaMsg();
-      let accumulated = "";
 
       try {
         const response = await fetch(API_URL, {
@@ -319,48 +262,31 @@
           body: JSON.stringify({ prompt: text, sessionId: sessionId })
         });
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
 
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
+        const data = await response.json();
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.chunk) {
-                  accumulated += data.chunk;
-                  currentNovaMsg.innerText = accumulated;
-                  chatBox.scrollTop = chatBox.scrollHeight;
-                }
-                if (data.done || data.error) {
-                  setLoading(false);
-                  return;
-                }
-              } catch (e) {}
-            }
-          }
+        if (data.reply) {
+          const cleanText = data.reply.replace(/\[TAG:.*?\]/g, '').trim();
+          appendMsg(cleanText, 'nova');
+        } else {
+          appendMsg("Sorry, I didn't receive a clear response. Please try again.", 'nova');
         }
       } catch (err) {
-        if (currentNovaMsg) currentNovaMsg.innerText = "There was a connection error. Please try again.";
+        console.error(err);
+        appendMsg("Connection error. Please check your internet and try again.", 'nova');
       } finally {
         setLoading(false);
         userInput.focus();
       }
     }
 
-    // Mensaje inicial en inglés (NZ casual + cálido)
+    // Mensaje inicial en inglés
     window.onload = () => {
       const initialMsg = "Kia ora — I'm Nova. I'm here to support you with HIV-related topics with honesty, warmth, and no judgement. This chat is completely private and nothing is stored permanently. I'm an AI, not a healthcare professional. What's on your mind today?";
-      const div = document.createElement('div');
-      div.className = 'msg nova';
-      div.innerText = initialMsg;
-      chatBox.insertBefore(div, typing);
+      appendMsg(initialMsg, 'nova');
     };
   </script>
 </body>
