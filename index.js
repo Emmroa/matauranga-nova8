@@ -445,18 +445,18 @@ app.post("/chat", async (req, res) => {
     const response = await result.response;
     const replyText = response.text();
 
-    // 1. Extraer los tags que Nova genera (los )
+        // 1. Extraer los tags que Nova genera
     const tagsMatch = replyText.match(//g);
     const tags = tagsMatch ? tagsMatch.join(", ").replace(//g, "") : "Sin tags";
 
-    // 2. Guardar en Google Sheets (sin esperar para no demorar la respuesta al usuario)
+    // 2. Guardar en Google Sheets
     saveToNovaMetrics({
       userPrompt: userText,
-      novaReply: replyText.replace(//g, ""), // Limpiamos los tags de la respuesta para el Excel
+      novaReply: replyText.replace(//g, ""), 
       tags: tags
     }).catch(err => console.error("Error al guardar métrica:", err));
 
-    // 3. Enviar la respuesta al usuario (limpia de tags)
+    // 3. Enviar respuesta limpia
     res.json({ reply: replyText.replace(//g, "") });
 
   } catch (error) {
