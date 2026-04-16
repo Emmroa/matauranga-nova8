@@ -378,6 +378,8 @@ V7 (2026-02) — Versión Final Consolidada
   Safety layer anti-jailbreak, crisis 4 pasos, Zero Data Retention,
   Te Whare Tapa Whā, 6 Momentos, recursos NZ completos.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`; // <-- Esto cierra el prompt gigante. No lo borres.
+
 // --- CONFIGURACIÓN GEMINI ---
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({
@@ -385,19 +387,39 @@ const model = genAI.getGenerativeModel({
   systemInstruction: NOVA_SYSTEM_PROMPT,
 });
 
-// --- RUTA DEL CHAT (LIMPIA) ---
+// --- RUTA DEL CHAT ---
 app.post("/chat", async (req, res) => {
   try {
     const userText = req.body.prompt || req.body.message || req.body.text;
     if (!userText) {
-      return res.status(400).json({ error: "No se recibió mensaje." });
+      return res.status(400).json({ error: "No se recibio mensaje." });
     }
 
     const result = await model.generateContent(userText);
     const response = await result.response;
     const replyText = response.text();
 
-    // Solo enviamos la respuesta de Nova al usuario (Frontend)
+    res.json({ reply: replyText });
+
+  } catch (error) {
+    console.error("Error en Gemini:", error);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
+
+// --- SALUD Y PUERTO ---
+app.get("/health", (req, res) => res.json({ status: "ok" }));
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("Servidor de Nova activo en puerto " + PORT);
+});
+
+
+    const result = await model.generateContent(userText);
+    const response = await result.response;
+    const replyText = response.text();
+
     res.json({ reply: replyText });
 
   } catch (error) {
@@ -406,11 +428,9 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// --- RUTA DE SALUD Y PUERTO ---
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✨ Mātauranga Nova — Servidor activo en puerto ${PORT}`);
+  console.log("Servidor de Nova activo en el puerto: " + PORT);
 });
-
