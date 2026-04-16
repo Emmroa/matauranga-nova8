@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ── ESTA ES LA LÍNEA MÁGICA QUE MUESTRA TU PÁGINA ──
+// ── MOSTRAR TU PÁGINA ──
 app.use(express.static(__dirname));
 
 // ── CONFIGURACIÓN DE GEMINI ──
@@ -18,12 +18,21 @@ const model = genAI.getGenerativeModel({
   systemInstruction: "Eres Nova, una tutora de IA amigable, clara y alentadora del ecosistema educativo Mātauranga Nova. Tu rol es ayudar a estudiantes a aprender. Responde siempre en el mismo idioma que el usuario. Sé concisa y empática."
 });
 
-// Ruta para el chat
+// ── RUTA PARA EL CHAT (CORREGIDA) ──
 app.post("/chat", async (req, res) => {
   try {
-    const result = await model.generateContent(req.body.message);
+    // Atrapamos el mensaje sin importar cómo lo envíe el frontend
+    const userText = req.body.message || req.body.prompt || req.body.text;
+
+    if (!userText) {
+      console.error("El servidor recibió una solicitud vacía o mal formateada:", req.body);
+      return res.status(400).json({ error: "No se recibió el texto del mensaje." });
+    }
+
+    const result = await model.generateContent(userText);
     const response = await result.response;
     res.json({ reply: response.text() });
+    
   } catch (error) {
     console.error("Error en Gemini:", error);
     res.status(500).json({ error: "No pude procesar tu mensaje." });
