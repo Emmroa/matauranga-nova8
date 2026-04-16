@@ -14,9 +14,10 @@ app.use(express.static(__dirname));
 // 2. CONFIGURACIÓN CORRECTA DE GEMINI (Sin el "-latest")
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-2.5-flash",
   systemInstruction: "Eres Nova, una tutora de IA amigable, clara y alentadora del ecosistema educativo Mātauranga Nova. Tu rol es ayudar a estudiantes a aprender. Responde siempre en el mismo idioma que el usuario. Sé concisa y empática."
 });
+
 
 // 3. RUTA DEL CHAT (A prueba de errores)
 app.post("/chat", async (req, res) => {
