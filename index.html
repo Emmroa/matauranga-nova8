@@ -254,7 +254,6 @@
 
         const data = await response.json();
 
-        // Remover mensaje de "thinking"
         chatBox.removeChild(loadingMsg);
 
         if (data.reply) {
@@ -265,16 +264,15 @@
         }
       } catch (err) {
         chatBox.removeChild(loadingMsg);
-        // Mensaje kiwi amigable cuando hay error (incluido 429)
-        appendMsg("Hey, sorry about that mate — Nova's a bit busy right now. Take a quick breather and give it another go in a minute, aye? I'm still here for you 😊", 'nova');
+        appendMsg("Hey mate, sorry about that — Nova's a bit busy right now. Take a breather and try again in a minute, aye? I'm still here for you 😊", 'nova');
       }
 
       userInput.focus();
     }
 
-    // Mensaje inicial cálido en inglés
+    // Mensaje inicial profesional y cálido (NZ style)
     window.onload = () => {
-      const initialMsg = "Kia ora — I'm Nova. I'm here to support you with honesty, warmth, and no judgement. This chat is completely private and nothing is stored permanently. I'm an AI, not a healthcare professional. What's on your mind today?";
+      const initialMsg = "Kia ora — I'm Nova. I'm here to support you with honesty, warmth, and no judgement. This chat is completely private — nothing is stored permanently. I'm an AI, not a healthcare professional. What's on your mind today?";
       appendMsg(initialMsg, 'nova');
     };
   </script>
