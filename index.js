@@ -355,11 +355,10 @@ V7 (2026-02) — Versión Final Consolidada
   Te Whare Tapa Whā, 6 Momentos, recursos NZ completos.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;
-
 // --- GEMINI CONFIGURATION ---
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
+  model: "gemini-1.5-flash-latest", // <-- El todoterreno
   systemInstruction: NOVA_SYSTEM_PROMPT,
 });
 
