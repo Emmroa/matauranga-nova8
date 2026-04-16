@@ -355,17 +355,14 @@
 </head>
 <body>
 
-<!-- Fondo orgánico animado -->
 <div class="bg-orbs">
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
 </div>
 
-<!-- Widget principal -->
 <div class="widget">
 
-  <!-- Header -->
   <div class="header">
     <div class="avatar">🌿</div>
     <div class="header-info">
@@ -378,10 +375,8 @@
     <div class="header-badge">Gemini Flash</div>
   </div>
 
-  <!-- Mensajes -->
   <div class="messages" id="messages">
 
-    <!-- Pantalla de bienvenida -->
     <div class="welcome" id="welcomeScreen">
       <div class="welcome-icon">✨</div>
       <div class="welcome-title">Kia ora, soy Nova</div>
@@ -397,7 +392,6 @@
       </div>
     </div>
 
-    <!-- Typing indicator -->
     <div class="typing-bubble" id="typingIndicator">
       <span class="typing-dot"></span>
       <span class="typing-dot"></span>
@@ -406,7 +400,6 @@
 
   </div>
 
-  <!-- Área de input -->
   <div class="input-area">
     <div class="input-wrap">
       <textarea
@@ -422,7 +415,6 @@
     </button>
   </div>
 
-  <!-- Footer -->
   <div class="footer">
     Nova puede cometer errores &mdash; verifica información importante &middot;
     <a href="https://burnettnz.co.nz" target="_blank" rel="noopener">Burnett Foundation NZ</a>
@@ -432,10 +424,9 @@
 
 <script>
   // ─────────────────────────────────────────────────────
-  // CONFIGURACIÓN
-  // En producción: usa tu dominio real en lugar de localhost
+  // CONFIGURACIÓN CONECTADA A RENDER
   // ─────────────────────────────────────────────────────
-  const API_URL = "/chat";
+  const API_URL = "https://matauranga-nova8.onrender.com/chat";
 
   // ── Referencias del DOM ────────────────────────────────
   const messagesEl   = document.getElementById("messages");
@@ -461,104 +452,5 @@
     inputEl.style.height = "44px";
 
     // Activar estado de carga
-    setLoading(true);
+    setLoading
 
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text }),
-      });
-
-      // Parsear respuesta JSON
-      const data = await response.json();
-
-      if (!response.ok) {
-        // El backend devolvió un error con mensaje descriptivo
-        const errorMsg = data?.error || "El servidor devolvió un error inesperado.";
-        appendMessage("error", `⚠️ ${errorMsg}`);
-        return;
-      }
-
-      // Validar que 'reply' existe y tiene contenido real
-      const reply = data?.reply;
-      if (!reply || typeof reply !== "string" || reply.trim() === "") {
-        appendMessage("error", "⚠️ Nova no pudo generar una respuesta. Intenta reformular tu pregunta.");
-        return;
-      }
-
-      // ✅ Mostrar la respuesta de Nova
-      appendMessage("nova", reply.trim());
-
-    } catch (networkError) {
-      // Error de red (servidor caído, sin conexión, CORS, etc.)
-      console.error("Error de red:", networkError);
-      appendMessage(
-        "error",
-        "⚠️ No se pudo conectar con el servidor.\n" +
-        "Verifica que el backend esté corriendo en localhost:3000."
-      );
-    } finally {
-      setLoading(false);
-      scrollToBottom();
-    }
-  }
-
-  // ── Sugerencias rápidas (chips) ────────────────────────
-  function sendSuggestion(text) {
-    inputEl.value = text;
-    sendMessage();
-  }
-
-  // ── Agregar mensaje al chat ────────────────────────────
-  function appendMessage(role, text) {
-    const wrapper = document.createElement("div");
-    wrapper.className = `msg ${role}`;
-
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.textContent = text; // textContent es seguro contra XSS
-
-    wrapper.appendChild(bubble);
-
-    // Insertar antes del typing indicator (siempre al final visible)
-    messagesEl.insertBefore(wrapper, typingEl);
-    scrollToBottom();
-  }
-
-  // ── Control de estado de carga ─────────────────────────
-  function setLoading(state) {
-    isLoading = state;
-    sendBtn.disabled = state;
-    inputEl.disabled = state;
-    typingEl.classList.toggle("visible", state);
-    if (state) scrollToBottom();
-  }
-
-  // ── Scroll suave al fondo ──────────────────────────────
-  function scrollToBottom() {
-    setTimeout(() => {
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }, 50);
-  }
-
-  // ── Auto-resize del textarea ───────────────────────────
-  function autoResize(el) {
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 120) + "px";
-  }
-
-  // ── Enter para enviar (Shift+Enter = nueva línea) ──────
-  function handleKeydown(event) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      sendMessage();
-    }
-  }
-
-  // ── Focus automático al cargar ─────────────────────────
-  window.addEventListener("load", () => inputEl.focus());
-</script>
-
-</body>
-</html>
