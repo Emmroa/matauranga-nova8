@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Mātauranga Nova — Tu Companion en VIH</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <title>Mātauranga Nova — Your HIV Companion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #0f1c17;
       --surface: rgba(26, 43, 36, 0.95);
       --accent: #4a7043;
       --accent-light: #6b9e7e;
-      --gold: #d4a83c;
       --text: #e8f5e9;
       --muted: #a8c4b0;
       --radius: 24px;
@@ -27,10 +26,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
     }
 
-    /* Subtle background gradient + soft orbs */
     .bg {
       position: fixed;
       inset: 0;
@@ -59,14 +56,12 @@
       .widget {
         height: 92dvh;
         border-radius: var(--radius);
-        box-shadow: 0 30px 80px rgba(0,0,0,0.5);
       }
     }
 
-    /* Header */
     .header {
       padding: 20px 24px;
-      background: rgba(15, 28, 23, 0.6);
+      background: rgba(15, 28, 23, 0.7);
       border-bottom: 1px solid rgba(107, 158, 126, 0.2);
       display: flex;
       align-items: center;
@@ -83,14 +78,13 @@
       align-items: center;
       justify-content: center;
       font-size: 28px;
-      box-shadow: 0 0 20px rgba(74, 112, 67, 0.4);
+      box-shadow: 0 0 25px rgba(74, 112, 67, 0.5);
     }
 
     .header-info h1 {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 22px;
       font-weight: 600;
-      color: var(--text);
     }
 
     .header-status {
@@ -101,15 +95,8 @@
       gap: 6px;
     }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #4ade80;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #4ade80;
-    }
+    .status-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80; }
 
-    /* Messages */
     .messages {
       flex: 1;
       overflow-y: auto;
@@ -117,41 +104,35 @@
       display: flex;
       flex-direction: column;
       gap: 18px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--accent-light) transparent;
     }
 
     .msg {
       max-width: 85%;
       padding: 14px 18px;
       border-radius: 20px;
-      line-height: 1.55;
+      line-height: 1.6;
       font-size: 15.5px;
       animation: fadeIn 0.4s ease;
     }
 
     .msg.user {
       align-self: flex-end;
-      background: rgba(74, 112, 43, 0.85);
+      background: rgba(74, 112, 43, 0.9);
       border-bottom-right-radius: 6px;
     }
 
     .msg.nova {
       align-self: flex-start;
-      background: rgba(26, 43, 36, 0.95);
-      border: 1px solid rgba(107, 158, 126, 0.25);
+      background: rgba(26, 43, 36, 0.98);
+      border: 1px solid rgba(107, 158, 126, 0.3);
       border-bottom-left-radius: 6px;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Input */
     .input-area {
       padding: 20px 24px;
-      background: rgba(15, 28, 23, 0.8);
+      background: rgba(15, 28, 23, 0.85);
       border-top: 1px solid rgba(107, 158, 126, 0.2);
       display: flex;
       gap: 12px;
@@ -160,8 +141,8 @@
 
     textarea {
       flex: 1;
-      background: rgba(26, 43, 36, 0.9);
-      border: 1px solid rgba(107, 158, 126, 0.3);
+      background: rgba(26, 43, 36, 0.95);
+      border: 1px solid rgba(107, 158, 126, 0.35);
       border-radius: 18px;
       padding: 14px 18px;
       color: var(--text);
@@ -177,6 +158,8 @@
       background: var(--accent);
       border: none;
       border-radius: 16px;
+      color: white;
+      font-size: 22px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -184,24 +167,20 @@
       transition: all 0.3s ease;
     }
 
-    button:hover {
-      background: var(--accent-light);
-      transform: scale(1.08);
-    }
+    button:hover { background: var(--accent-light); transform: scale(1.08); }
 
-    /* Welcome chips */
     .chips {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
-      margin-top: 20px;
+      margin: 20px 0;
     }
 
     .chip {
       padding: 10px 18px;
-      background: rgba(107, 158, 126, 0.12);
-      border: 1px solid rgba(107, 158, 126, 0.3);
+      background: rgba(107, 158, 126, 0.15);
+      border: 1px solid rgba(107, 158, 126, 0.4);
       border-radius: 30px;
       font-size: 13.5px;
       color: var(--accent-light);
@@ -210,17 +189,24 @@
     }
 
     .chip:hover {
-      background: rgba(107, 158, 126, 0.25);
+      background: rgba(107, 158, 126, 0.3);
       transform: translateY(-2px);
     }
 
-    /* Disclaimer */
     .disclaimer {
       font-size: 11.5px;
       color: var(--muted);
       text-align: center;
-      padding: 12px 24px;
-      background: rgba(0,0,0,0.3);
+      padding: 14px 24px;
+      background: rgba(0,0,0,0.4);
+      border-top: 1px solid rgba(107, 158, 126, 0.15);
+    }
+
+    .typing {
+      color: var(--muted);
+      font-style: italic;
+      padding: 8px 0;
+      align-self: flex-start;
     }
   </style>
 </head>
@@ -229,56 +215,52 @@
   <div class="bg"></div>
 
   <div class="widget">
-    <!-- Header -->
     <div class="header">
       <div class="avatar">🌿</div>
       <div class="header-info">
         <h1>Mātauranga Nova</h1>
         <div class="header-status">
-          <span class="status-dot"></span> 
-          Siempre disponible • Privado
+          <span class="status-dot"></span> Always available • 100% private
         </div>
       </div>
     </div>
 
-    <!-- Chat -->
     <div class="messages" id="chat-box">
       <div id="welcome">
-        <div style="text-align:center; margin-bottom:24px;">
-          <div style="font-size:42px; margin-bottom:12px;">✨</div>
-          <p style="font-size:18px; font-weight:600; color:var(--accent-light);">Kia ora, soy Nova</p>
-          <p style="color:var(--muted); font-size:14.5px;">Un espacio seguro para hablar sin miedo ni juicio.</p>
+        <div style="text-align:center; margin: 30px 0 20px;">
+          <div style="font-size: 48px; margin-bottom: 12px;">🌿</div>
+          <p style="font-size: 19px; font-weight: 600; color: var(--accent-light);">Kia ora, I'm Nova</p>
+          <p style="color: var(--muted); max-width: 280px; margin: 0 auto;">A safe space to talk honestly and without judgement.</p>
         </div>
         <div class="chips">
-          <div class="chip" onclick="quickMsg('¿Qué es U=U?')">💊 ¿Qué es U=U?</div>
-          <div class="chip" onclick="quickMsg('Háblame de PrEP')">🛡️ PrEP</div>
-          <div class="chip" onclick="quickMsg('Me siento solo/a')">💭 Apoyo emocional</div>
+          <div class="chip" onclick="quickMsg('What is U=U?')">💊 What is U=U?</div>
+          <div class="chip" onclick="quickMsg('Tell me about PrEP')">🛡️ PrEP in NZ</div>
+          <div class="chip" onclick="quickMsg('I feel alone with this')">💭 Emotional support</div>
         </div>
       </div>
-      <div class="typing" id="typing" style="display:none; color:var(--muted); font-style:italic; padding:10px 0;">Nova está escribiendo...</div>
+      <div class="typing" id="typing">Nova is typing...</div>
     </div>
 
-    <!-- Input -->
     <div class="input-area">
-      <textarea id="userInput" rows="1" placeholder="Escribe tu mensaje aquí..." oninput="autoHeight(this)" onkeydown="checkEnter(event)"></textarea>
+      <textarea id="userInput" rows="1" placeholder="Type your message..." 
+                oninput="autoHeight(this)" onkeydown="checkEnter(event)"></textarea>
       <button onclick="sendMessage()">↑</button>
     </div>
 
-    <!-- Disclaimer fuerte (importante para el jurado) -->
     <div class="disclaimer">
-      NOVA es una IA creada por Emanuel. No reemplaza atención médica profesional. 
-      Esta conversación es privada y nada se guarda permanentemente.
+      NOVA is an AI created especially for the Burnett Foundation Innovation Challenge 2026. 
+      This is not a substitute for professional medical advice. This conversation is private and nothing is stored permanently.
     </div>
   </div>
 
   <script>
-    // Tu script anterior corregido + streaming básico (puedes agregar el full streaming después)
     const API_URL = "https://matauranga-nova8.onrender.com/chat";
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('userInput');
     const typing = document.getElementById('typing');
     const welcome = document.getElementById('welcome');
     let sessionId = "nova-" + Date.now();
+    let currentNovaMsg = null;
 
     function autoHeight(el) {
       el.style.height = 'auto';
@@ -297,12 +279,20 @@
       sendMessage();
     }
 
-    function appendMsg(text, sender) {
+    function appendUserMsg(text) {
       const div = document.createElement('div');
-      div.className = `msg ${sender}`;
+      div.className = 'msg user';
       div.innerText = text;
       chatBox.insertBefore(div, typing);
       chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function createNovaMsg() {
+      const div = document.createElement('div');
+      div.className = 'msg nova';
+      chatBox.insertBefore(div, typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return div;
     }
 
     function setLoading(state) {
@@ -314,33 +304,63 @@
       if (!text) return;
 
       welcome.style.display = 'none';
-      appendMsg(text, 'user');
+      appendUserMsg(text);
       userInput.value = '';
       userInput.style.height = 'auto';
+
       setLoading(true);
+      currentNovaMsg = createNovaMsg();
+      let accumulated = "";
 
       try {
-        const res = await fetch(API_URL, {
+        const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: text, sessionId })
+          body: JSON.stringify({ prompt: text, sessionId: sessionId })
         });
 
-        const data = await res.json();
-        const clean = (data.reply || "Sin respuesta").replace(/\[TAG:.*?\]/g, '').trim();
-        appendMsg(clean || "Nova está aquí para acompañarte.", 'nova');
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.chunk) {
+                  accumulated += data.chunk;
+                  currentNovaMsg.innerText = accumulated;
+                  chatBox.scrollTop = chatBox.scrollHeight;
+                }
+                if (data.done || data.error) {
+                  setLoading(false);
+                  return;
+                }
+              } catch (e) {}
+            }
+          }
+        }
       } catch (err) {
-        appendMsg("Hubo un problema de conexión. Intentá de nuevo.", 'nova');
+        if (currentNovaMsg) currentNovaMsg.innerText = "There was a connection error. Please try again.";
       } finally {
         setLoading(false);
         userInput.focus();
       }
     }
 
-    // Inicialización
+    // Mensaje inicial en inglés (NZ casual + cálido)
     window.onload = () => {
-      appendMsg("Kia ora — soy NOVA. Vivo con VIH desde 2011 y estoy acá para acompañarte con honestidad y sin juicio. Esta charla es privada. ¿Qué te trae hoy?", 'nova');
-      userInput.focus();
+      const initialMsg = "Kia ora — I'm Nova. I'm here to support you with HIV-related topics with honesty, warmth, and no judgement. This chat is completely private and nothing is stored permanently. I'm an AI, not a healthcare professional. What's on your mind today?";
+      const div = document.createElement('div');
+      div.className = 'msg nova';
+      div.innerText = initialMsg;
+      chatBox.insertBefore(div, typing);
     };
   </script>
 </body>
