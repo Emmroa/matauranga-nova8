@@ -17,7 +17,7 @@ const limiter = rateLimit({
 });
 app.use('/chat', limiter);
 
-// Stats para el dashboard
+// Stats para dashboard
 let stats = {
   totalSessions: 0,
   thisMonthSessions: 0,
@@ -39,9 +39,9 @@ Esta conversación es 100% privada — nada se guarda permanentemente.
 Responde siempre en el idioma del usuario. Sé natural y útil.`;
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });   // ← Modelo corregido
 
-// Chat
+// Chat endpoint
 app.post('/chat', async (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: "Mensaje vacío" });
@@ -55,7 +55,7 @@ app.post('/chat', async (req, res) => {
     const reply = result.response.text();
     res.json({ reply });
   } catch (err) {
-    console.error(err);
+    console.error("Gemini error:", err);
     res.status(500).json({ reply: "Lo siento, hubo un error. Inténtalo de nuevo." });
   }
 });
@@ -63,7 +63,7 @@ app.post('/chat', async (req, res) => {
 // Stats endpoint
 app.get('/stats', (req, res) => res.json(stats));
 
-// Servir las páginas HTML
+// Servir páginas
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 
