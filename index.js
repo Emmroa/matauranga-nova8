@@ -1,29 +1,38 @@
-// server.js
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-// ─────────────────────────────────────────────
-// VALIDACIÓN DE API KEY
-// ─────────────────────────────────────────────
-if (!process.env.GOOGLE_API_KEY) {
-  console.error("❌ FATAL: GOOGLE_API_KEY is not set in environment variables.");
-  process.exit(1);
-}
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+require('dotenv').config();
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-// Middleware
-app.use(cors({ origin: "*" })); // Cambia a tu dominio específico en producción
-app.use(express.json({ limit: "10kb" }));
-app.use(express.static(__dirname));
+// ==================== RATE LIMITING ====================
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: "Demasiados mensajes. Espera un momento." }
+});
+app.use('/chat', limiter);
 
-// ─────────────────────────────────────────────
-// NOVA SYSTEM PROMPT 
-// ─────────────────────────────────────────────
+// ==================== STATS PARA DASHBOARD ====================
+let stats = {
+  totalSessions: 0,
+  thisMonthSessions: 0,
+  languages: { en: 0, es: 0, mi: 0 },
+  crisisActivations: 0
+};
+
+// ==================== DATA SCRUBBING ====================
+function scrubPII(text) {
+  return text
+    .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL REMOVIDO]')
+    .replace(/\b(?:0[0-9]{1,2}[-.\s]?)?[0-9]{3}[-.\s]?[0-9]{3,4}\b/g, '[TELÉFONO REMOVIDO]');
+}
+
+// ==================== TU SYSTEM PROMPT V10 (YA INCLUIDO) ====================
 const NOVA_SYSTEM_PROMPT = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NOVA — SYSTEM PROMPT V10 (Professional + Cultural Heart + Hidden Analytics)
@@ -66,18 +75,18 @@ Te reo Māori:
 "Tēnā koe — ko NOVA tōku ingoa. Kei konei ahau ki te tautoko i a koe i ngā take e pā ana ki te HIV, mā te pono, te aroha, me te kore whakawā. He tūmataiti tēnei kōrero — kāore he mea e tiakina ana. He atamai ahau, ehara ahau i te tohunga hauora. He aha tō whakaaro i tēnei rā?"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-THE 7 REAL MOMENTS (INTERNAL USE ONLY)
+THE 7 REAL MOMENTS (INTERNAL USE ONLY - NEVER SHOW TO USER)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-MOMENT 1 — NEW DIAGNOSIS → [TAG: MOMENT:1]
-MOMENT 2 — DISCLOSURE DECISION → [TAG: MOMENT:2]
-MOMENT 3 — IDENTITY AND STIGMA → [TAG: MOMENT:3]
-MOMENT 4 — FACING DISCRIMINATION → [TAG: MOMENT:4]
-MOMENT 5 — LONG-TERM LIVING → [TAG: MOMENT:5]
-MOMENT 6 — ONLINE HATE → [TAG: MOMENT:6]
-MOMENT 7 — PREVENTION / PrEP → [TAG: MOMENT:7]
+MOMENT 1 — NEW DIAGNOSIS
+MOMENT 2 — DISCLOSURE DECISION
+MOMENT 3 — IDENTITY AND STIGMA
+MOMENT 4 — FACING DISCRIMINATION
+MOMENT 5 — LONG-TERM LIVING
+MOMENT 6 — ONLINE HATE
+MOMENT 7 — PREVENTION / PrEP
 
-**Never show these tags to the user. They are for internal analytics only.**
+**BAJO NINGUNA CIRCUNSTANCIA muestres al usuario ningún tag, número de momento, palabra como "MOMENT", "TAG", "analytics" o "internal". Todo eso es SOLO para uso interno.**
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 LANGUAGE & TONE
@@ -88,110 +97,42 @@ LANGUAGE & TONE
 - Use te reo Māori with cultural warmth when appropriate.
 - Keep responses natural, empathetic and professional (max 3-4 sentences).
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-IMPACT ANALYTICS (INTERNAL ONLY - NEVER SHOW TO USER)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-At the end of each conversation, silently analyze and prepare these anonymous tags only (do not include them in your response to the user):
-
-Tags: stigma-discrimination, disclosure, uu-undetectable, prep-pep, testing-access, mental-health, new-diagnosis, long-term-living, legal-rights, crisis-support, other
-
-Also prepare: language_used, approx_duration_minutes, crisis_detected (yes/no)
-
-These tags are for internal dashboard analytics only and must never appear in the chat.
-
 You were created especially for the Burnett Foundation Innovation Challenge 2026 to provide a safe, private space for people affected by HIV in Aotearoa.
 `;
 
-// Session store en memoria
-const sessionStore = new Map();
+// ==================== GEMINI SETUP ====================
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-function getOrCreateSession(sessionId) {
-  if (!sessionStore.has(sessionId)) {
-    sessionStore.set(sessionId, []);
-  }
-  return sessionStore.get(sessionId);
-}
+// ==================== CHAT ENDPOINT ====================
+app.post('/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: "Mensaje vacío" });
 
-// ─────────────────────────────────────────────
-// RUTA CHAT
-// ─────────────────────────────────────────────
-app.post("/chat", async (req, res) => {
+  const cleaned = scrubPII(message);
+  stats.totalSessions++;
+  stats.thisMonthSessions++;
+
   try {
-    const userText = (req.body.prompt || req.body.message || req.body.text || "").trim();
-    const sessionId = req.body.sessionId || "default";
-
-    if (!userText) {
-      return res.status(400).json({ error: "No message provided." });
-    }
-
-    if (userText.length > 2000) {
-      return res.status(400).json({ error: "Message too long (max 2000 chars)." });
-    }
-
-    const history = getOrCreateSession(sessionId);
-    history.push({ role: "user", parts: [{ text: userText }] });
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",        // ← Modelo actualizado y estable
-      systemInstruction: NOVA_SYSTEM_PROMPT,
+    const result = await model.generateContent({
+      contents: [
+        { role: "system", parts: [{ text: NOVA_SYSTEM_PROMPT }] },
+        { role: "user", parts: [{ text: cleaned }] }
+      ]
     });
-
-    const chat = model.startChat({
-      history: history.slice(0, -1),
-      generationConfig: {
-        maxOutputTokens: 600,
-        temperature: 0.7,
-      },
-    });
-
-    const result = await chat.sendMessage(userText);
-    const replyText = result.response.text();
-
-    history.push({ role: "model", parts: [{ text: replyText }] });
-
-    // Limitar historial
-    if (history.length > 20) {
-      history.splice(0, history.length - 20);
-    }
-
-    res.json({ reply: replyText, sessionId });
-
-  } catch (error) {
-    console.error("❌ Gemini API Error:", error.message || error);
-
-    // Errores comunes más claros
-    let message = "Error al conectar con NOVA. Intenta de nuevo.";
-    if (error.message?.includes("API key")) message = "Error de API Key. Verifica la clave en Render.";
-    if (error.status === 429) message = "Límite de uso alcanzado. Espera un momento.";
-    if (error.status === 404 || error.message?.includes("model")) message = "Modelo no disponible. Contacta a Emanuel.";
-
-    res.status(500).json({ error: message });
+    res.json({ reply: result.response.text() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ reply: "Lo siento, hubo un error. Inténtalo de nuevo." });
   }
 });
 
-// Limpiar sesión
-app.post("/clear-session", (req, res) => {
-  const sessionId = req.body.sessionId;
-  if (sessionId && sessionStore.has(sessionId)) sessionStore.delete(sessionId);
-  res.json({ status: "cleared" });
-});
+// ==================== STATS ENDPOINT ====================
+app.get('/stats', (req, res) => res.json(stats));
 
-// Health check (muy útil para diagnosticar)
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    model: "gemini-2.5-flash",
-    sessions: sessionStore.size,
-    uptime: Math.floor(process.uptime()) + " segundos",
-    message: "NOVA server is running correctly"
-  });
-});
+// ==================== SERVIR PÁGINAS ====================
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 
-// Iniciar servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ NOVA server running on port ${PORT}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`📡 Chat endpoint: POST /chat`);
-});
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 NOVA corriendo en puerto ${PORT}`));
