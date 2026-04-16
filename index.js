@@ -9,15 +9,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ==================== RATE LIMITING ====================
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 20,
-  message: { error: "Demasiados mensajes. Espera un momento." }
-});
+// Rate Limiting
+const limiter = rateLimit({ windowMs: 60 * 1000, max: 20 });
 app.use('/chat', limiter);
 
-// ==================== STATS PARA DASHBOARD ====================
+// Stats para dashboard
 let stats = {
   totalSessions: 0,
   thisMonthSessions: 0,
@@ -25,14 +21,14 @@ let stats = {
   crisisActivations: 0
 };
 
-// ==================== DATA SCRUBBING ====================
+// Scrubbing
 function scrubPII(text) {
   return text
     .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL REMOVIDO]')
     .replace(/\b(?:0[0-9]{1,2}[-.\s]?)?[0-9]{3}[-.\s]?[0-9]{3,4}\b/g, '[TELÉFONO REMOVIDO]');
 }
 
-// ==================== TU SYSTEM PROMPT V10 (YA INCLUIDO) ====================
+// ==================== TU SYSTEM PROMPT ====================
 const NOVA_SYSTEM_PROMPT = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NOVA — SYSTEM PROMPT V10 (Professional + Cultural Heart + Hidden Analytics)
@@ -88,23 +84,17 @@ MOMENT 7 — PREVENTION / PrEP
 
 **BAJO NINGUNA CIRCUNSTANCIA muestres al usuario ningún tag, número de momento, palabra como "MOMENT", "TAG", "analytics" o "internal". Todo eso es SOLO para uso interno.**
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LANGUAGE & TONE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-- Default to warm, clear New Zealand English.
-- Use Rioplatense Spanish only if the user consistently writes in Spanish.
-- Use te reo Māori with cultural warmth when appropriate.
-- Keep responses natural, empathetic and professional (max 3-4 sentences).
-
 You were created especially for the Burnett Foundation Innovation Challenge 2026 to provide a safe, private space for people affected by HIV in Aotearoa.
 `;
 
-// ==================== GEMINI SETUP ====================
+// ==================== GEMINI (CORREGIDO) ====================
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash",
+  systemInstruction: NOVA_SYSTEM_PROMPT   // ← Esta es la forma correcta para Gemini
+});
 
-// ==================== CHAT ENDPOINT ====================
+// Chat endpoint
 app.post('/chat', async (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: "Mensaje vacío" });
@@ -114,12 +104,7 @@ app.post('/chat', async (req, res) => {
   stats.thisMonthSessions++;
 
   try {
-    const result = await model.generateContent({
-      contents: [
-        { role: "system", parts: [{ text: NOVA_SYSTEM_PROMPT }] },
-        { role: "user", parts: [{ text: cleaned }] }
-      ]
-    });
+    const result = await model.generateContent(cleaned);   // ← más simple ahora
     res.json({ reply: result.response.text() });
   } catch (err) {
     console.error(err);
@@ -127,10 +112,10 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// ==================== STATS ENDPOINT ====================
+// Stats
 app.get('/stats', (req, res) => res.json(stats));
 
-// ==================== SERVIR PÁGINAS ====================
+// Servir páginas
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 
