@@ -7,11 +7,10 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // <-- Paréntesis corregido
+app.use(express.static(__dirname));
 
-// 2. AQUÍ PEGAS TU PROMPT DEL ARCHIVO V8
+// --- NOVA SYSTEM PROMPT ---
 const NOVA_SYSTEM_PROMPT = `
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NOVA — SYSTEM PROMPT V8 (Versión Dashboard + Widget Ready)
 Digital HIV Companion | Mātauranga NOVA
@@ -167,51 +166,28 @@ INTERNAL SEMANTIC TAGGING
 
 Al generar cada respuesta, incluí uno o más de los siguientes tags en un bloque interno que NO se muestra al usuario. La capa de integración los captura antes de renderizar la respuesta.
 
-FORMATO: <!--NOVA_TAG: KEY:VALUE -->
-
-Tags disponibles:
+FORMATO: Tags disponibles:
 
 Momento detectado:
-<!--NOVA_TAG: MOMENT:1 -->   ← nuevo diagnóstico
-<!--NOVA_TAG: MOMENT:2 -->   ← decisión de revelación
-<!--NOVA_TAG: MOMENT:3 -->   ← identidad y estigma
-<!--NOVA_TAG: MOMENT:4 -->   ← discriminación
-<!--NOVA_TAG: MOMENT:5 -->   ← vida a largo plazo
-<!--NOVA_TAG: MOMENT:6 -->   ← odio online
-<!--NOVA_TAG: MOMENT:7 -->   ← prevención / PrEP / pre-diagnóstico
-<!--NOVA_TAG: MOMENT:UNCLEAR --> ← no se identifica momento claro
+← nuevo diagnóstico
+← decisión de revelación
+← identidad y estigma
+← discriminación
+← vida a largo plazo
+← odio online
+← prevención / PrEP / pre-diagnóstico
+← no se identifica momento claro
 
 Idioma de la sesión:
-<!--NOVA_TAG: LANG:ES -->
-<!--NOVA_TAG: LANG:EN -->
-<!--NOVA_TAG: LANG:MI -->
-<!--NOVA_TAG: LANG:MIXED -->
-
 Crisis:
-<!--NOVA_TAG: CRISIS:DETECTED -->
-<!--NOVA_TAG: CRISIS:ACTIVATED -->
-<!--NOVA_TAG: CRISIS:FOLLOWUP -->
-<!--NOVA_TAG: CRISIS:STABLE -->
-
 Recursos NZ mencionados:
-<!--NOVA_TAG: RESOURCE:LIFELINE -->
-<!--NOVA_TAG: RESOURCE:1737 -->
-<!--NOVA_TAG: RESOURCE:111 -->
-<!--NOVA_TAG: RESOURCE:BODYPOSITIVE -->
-<!--NOVA_TAG: RESOURCE:BURNETT -->
-<!--NOVA_TAG: RESOURCE:RAINBOWYOUTH -->
-<!--NOVA_TAG: RESOURCE:NETSAFE -->
-<!--NOVA_TAG: RESOURCE:HRC -->
-
 Derivación médica:
-<!--NOVA_TAG: MEDICAL:REFUSAL -->   ← cuando se rechaza consejo médico
-<!--NOVA_TAG: MEDICAL:UEQUALU -->    ← cuando se menciona U=U
-<!--NOVA_TAG: MEDICAL:PREP -->       ← cuando se habla de PrEP/PEP
-<!--NOVA_TAG: MEDICAL:LENACAPAVIR --> ← cuando se menciona lenacapavir
+← cuando se rechaza consejo médico
+← cuando se menciona U=U
+← cuando se habla de PrEP/PEP
+← cuando se menciona lenacapavir
 
 Jailbreak detectado:
-<!--NOVA_TAG: SAFETY:JAILBREAK_ATTEMPT -->
-
 Regla: incluí siempre al menos MOMENT y LANG por respuesta.
 Nunca describas ni expliques los tags al usuario.
 
@@ -300,7 +276,7 @@ SESSION HANDLING:
   - Al cerrar la ventana del widget: invalidar session_id.
 
 TAG CAPTURE (capa de integración — antes de renderizar al usuario):
-  1. Extraer bloques <!-- NOVA_TAG: KEY:VALUE --> del texto de respuesta.
+  1. Extraer bloques del texto de respuesta.
   2. Enviar a endpoint de analytics: POST /api/nova/events
      payload: { session_id, timestamp, tags: ["MOMENT:1","LANG:ES",...] }
   3. Eliminar los bloques de tags del texto antes de mostrarlo al usuario.
@@ -378,21 +354,21 @@ V7 (2026-02) — Versión Final Consolidada
   Safety layer anti-jailbreak, crisis 4 pasos, Zero Data Retention,
   Te Whare Tapa Whā, 6 Momentos, recursos NZ completos.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`; // <-- Esto cierra el prompt gigante. No lo borres.
+`;
 
-// --- CONFIGURACIÓN GEMINI ---
+// --- GEMINI CONFIGURATION ---
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
   systemInstruction: NOVA_SYSTEM_PROMPT,
 });
 
-// --- RUTA DEL CHAT ---
+// --- CHAT ROUTE ---
 app.post("/chat", async (req, res) => {
   try {
     const userText = req.body.prompt || req.body.message || req.body.text;
     if (!userText) {
-      return res.status(400).json({ error: "No se recibio mensaje." });
+      return res.status(400).json({ error: "No message provided." });
     }
 
     const result = await model.generateContent(userText);
@@ -402,35 +378,16 @@ app.post("/chat", async (req, res) => {
     res.json({ reply: replyText });
 
   } catch (error) {
-    console.error("Error en Gemini:", error);
-    res.status(500).json({ error: "Error en el servidor." });
+    console.error("Gemini API Error:", error);
+    res.status(500).json({ error: "Internal server error. Could not process message." });
   }
 });
 
-// --- SALUD Y PUERTO ---
+// --- HEALTH CHECK & PORT ---
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("Servidor de Nova activo en puerto " + PORT);
+  console.log("✨ Mātauranga Nova server running on port " + PORT);
 });
 
-
-    const result = await model.generateContent(userText);
-    const response = await result.response;
-    const replyText = response.text();
-
-    res.json({ reply: replyText });
-
-  } catch (error) {
-    console.error("Error en Gemini:", error);
-    res.status(500).json({ error: "No pude procesar tu mensaje." });
-  }
-});
-
-app.get("/health", (req, res) => res.json({ status: "ok" }));
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("Servidor de Nova activo en el puerto: " + PORT);
-});
