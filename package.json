@@ -1,19 +1,19 @@
 {
-  "name": "matauranga-nova-backend",
+  "name": "matauranga-nova",
   "version": "1.0.0",
-  "description": "Backend servidor para el ecosistema Mātauranga Nova — IA educativa.",
+  "description": "NOVA HIV Companion",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "@google/generative-ai": "^0.24.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "dotenv": "^16.4.7"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "20.x"
   }
 }
