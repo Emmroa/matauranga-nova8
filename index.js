@@ -22,6 +22,14 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.static(__dirname));
 
 // ─────────────────────────────────────────────
+// GEMINI CONFIGURATION
+// ─────────────────────────────────────────────
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash"
+});
+
+// ─────────────────────────────────────────────
 // NOVA SYSTEM PROMPT (single declaration)
 // ─────────────────────────────────────────────
 const NOVA_SYSTEM_PROMPT = `
