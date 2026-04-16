@@ -3,24 +3,31 @@ const express = require("express");
 const cors = require("cors");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// ─────────────────────────────────────────────
-// VALIDATION: Fail fast if API key is missing
-// ─────────────────────────────────────────────
 if (!process.env.GOOGLE_API_KEY) {
   console.error("❌ FATAL: GOOGLE_API_KEY is not set in environment variables.");
   process.exit(1);
 }
 
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+
 const app = express();
 
-app.use(cors({
-  origin: "*", // Adjust to your frontend domain in production
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"],
-}));
+app.use(cors({ origin: "*" })); // Cambia "*" por tu dominio frontend en producción
 app.use(express.json({ limit: "10kb" }));
-app.use(express.static(__dirname));
+app.use(express.static(__dirname)); // para servir HTML/CSS/JS si tienes frontend estático
 
+// Ruta principal para generar contenido
+app.post("/generate", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required" });
+    }
+
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash"   // o "gemini-1.5-pro" si tienes acceso
+    });
+    
 // ─────────────────────────────────────────────
 // GEMINI CONFIGURATION
 // ─────────────────────────────────────────────
