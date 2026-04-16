@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
 const path = require('path');
 
@@ -17,7 +16,7 @@ const limiter = rateLimit({
 });
 app.use('/chat', limiter);
 
-// Stats para dashboard
+// Stats para el dashboard (sigue funcionando)
 let stats = {
   totalSessions: 0,
   thisMonthSessions: 0,
@@ -25,23 +24,16 @@ let stats = {
   crisisActivations: 0
 };
 
-// Data Scrubbing
+// Scrubbing
 function scrubPII(text) {
   return text
     .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL REMOVIDO]')
     .replace(/\b(?:0[0-9]{1,2}[-.\s]?)?[0-9]{3}[-.\s]?[0-9]{3,4}\b/g, '[TELÉFONO REMOVIDO]');
 }
 
-// System Prompt
-const SYSTEM_PROMPT = `Eres NOVA, un compañero cálido y honesto para personas con HIV en Aotearoa Nueva Zelanda. 
-Hablas con empatía pero sin juicio. Eres una IA, no un médico ni terapeuta. 
-Esta conversación es 100% privada — nada se guarda permanentemente.
-Responde siempre en el idioma del usuario. Sé natural y útil.`;
+// Mensaje demo cuando no hay crédito en Gemini
+const DEMO_REPLY = "Kia ora. Este es un prototipo para el Burnett Foundation Innovation Challenge 2026. El chat completo con IA está temporalmente limitado por cuota de API. En la versión final con funding, NOVA responderá en tiempo real con privacidad total y detección de los 7 moments. ¿Quieres que te muestre cómo funcionaría el flujo completo?";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });   // ← Modelo corregido
-
-// Chat endpoint
 app.post('/chat', async (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: "Mensaje vacío" });
@@ -50,22 +42,16 @@ app.post('/chat', async (req, res) => {
   stats.totalSessions++;
   stats.thisMonthSessions++;
 
-  try {
-    const result = await model.generateContent(cleaned);
-    const reply = result.response.text();
-    res.json({ reply });
-  } catch (err) {
-    console.error("Gemini error:", err);
-    res.status(500).json({ reply: "Lo siento, hubo un error. Inténtalo de nuevo." });
-  }
+  // Respuesta demo (sin gastar crédito)
+  res.json({ reply: DEMO_REPLY });
 });
 
-// Stats endpoint
+// Stats endpoint (funciona para el dashboard)
 app.get('/stats', (req, res) => res.json(stats));
 
-// Servir páginas
+// Servir las páginas
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 NOVA corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 NOVA Demo Mode corriendo en puerto ${PORT}`));
