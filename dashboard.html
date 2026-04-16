@@ -342,53 +342,34 @@ body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--txt);display
       <h3>NZ Regional Session Distribution</h3>
       <p>Session volume by region. No precise location data is collected — regions are inferred from IP country only where available.</p>
       <div class="nz-map-wrap">
-        <!-- NZ SVG MAP -->
         <div class="nz-svg-wrap">
           <svg width="220" height="420" viewBox="0 0 220 420" fill="none">
-            <!-- North Island -->
             <path d="M115,20 L118,28 L128,38 L138,52 L148,68 L158,85 L165,102 L168,118 L166,132 L162,148 L158,162 L155,175 L157,188 L152,202 L148,216 L145,228 L142,240 L138,252 L133,264 L128,272 L122,278 L116,282 L110,280 L104,272 L99,260 L96,245 L94,228 L93,210 L94,192 L95,172 L92,152 L88,132 L86,112 L88,92 L92,72 L98,52 L105,36 L110,24 Z" fill="rgba(14,165,233,0.1)" stroke="#0ea5e9" stroke-width="1.2"/>
-            <!-- Cook Strait gap -->
-            <!-- South Island -->
             <path d="M96,302 L104,294 L114,288 L124,286 L135,289 L145,296 L155,306 L162,320 L168,336 L172,352 L174,368 L172,384 L167,400 L160,412 L150,418 L138,420 L126,418 L114,412 L103,403 L95,390 L89,374 L86,356 L86,338 L89,320 Z" fill="rgba(14,165,233,0.1)" stroke="#0ea5e9" stroke-width="1.2"/>
-            <!-- Stewart Island -->
             <ellipse cx="126" cy="410" rx="10" ry="7" fill="rgba(14,165,233,0.08)" stroke="#0ea5e9" stroke-width="1"/>
-
-            <!-- CITY BUBBLES with labels -->
-            <!-- Auckland (52%) -->
             <circle cx="118" cy="88" r="22" fill="rgba(14,165,233,0.25)" stroke="#0ea5e9" stroke-width="1.5"/>
             <circle cx="118" cy="88" r="8" fill="#0ea5e9" opacity=".9"/>
             <text x="144" y="92" fill="#e8eef6" font-size="10" font-family="Sora,sans-serif">Auckland</text>
             <text x="144" y="104" fill="#6b7c9a" font-size="9" font-family="DM Mono,monospace">52% · 961 sessions</text>
-
-            <!-- Hamilton (7%) -->
             <circle cx="107" cy="140" r="9" fill="rgba(14,165,233,0.2)" stroke="#0ea5e9" stroke-width="1"/>
             <circle cx="107" cy="140" r="4" fill="#0ea5e9" opacity=".8"/>
             <text x="120" y="144" fill="#e8eef6" font-size="9" font-family="Sora,sans-serif">Hamilton 7%</text>
-
-            <!-- Tauranga (5%) -->
             <circle cx="152" cy="118" r="7" fill="rgba(56,189,248,0.2)" stroke="#38bdf8" stroke-width="1"/>
             <circle cx="152" cy="118" r="3" fill="#38bdf8" opacity=".8"/>
             <text x="162" y="122" fill="#e8eef6" font-size="9" font-family="Sora,sans-serif">Tauranga 5%</text>
-
-            <!-- Wellington (18%) -->
             <circle cx="128" cy="272" r="15" fill="rgba(16,185,129,0.2)" stroke="#10b981" stroke-width="1.5"/>
             <circle cx="128" cy="272" r="6" fill="#10b981" opacity=".9"/>
             <text x="146" y="268" fill="#e8eef6" font-size="10" font-family="Sora,sans-serif">Wellington</text>
             <text x="146" y="280" fill="#6b7c9a" font-size="9" font-family="DM Mono,monospace">18% · 332</text>
-
-            <!-- Christchurch (14%) -->
             <circle cx="152" cy="356" r="13" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" stroke-width="1.5"/>
             <circle cx="152" cy="356" r="5" fill="#f59e0b" opacity=".9"/>
             <text x="168" y="352" fill="#e8eef6" font-size="9" font-family="Sora,sans-serif">Christchurch</text>
             <text x="168" y="364" fill="#6b7c9a" font-size="9" font-family="DM Mono,monospace">14% · 258</text>
-
-            <!-- Dunedin (4%) -->
             <circle cx="148" cy="396" r="6" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="1"/>
             <circle cx="148" cy="396" r="3" fill="#a855f7" opacity=".8"/>
             <text x="158" y="400" fill="#e8eef6" font-size="9" font-family="Sora,sans-serif">Dunedin 4%</text>
           </svg>
         </div>
-        <!-- LEGEND -->
         <div class="nz-legend">
           <div style="margin-bottom:16px;font-size:12px;color:var(--dim)">Bubble size = relative session volume. No precise GPS data collected.</div>
           <div class="city-row"><div class="city-dot" style="background:#0ea5e9"></div><span class="city-name">Auckland / Tāmaki Makaurau</span><div class="city-bar-wrap"><div class="city-bar" style="width:52%"></div></div><span class="city-pct">52%</span><span class="city-n">961</span></div>
@@ -533,8 +514,8 @@ body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--txt);display
     <div style="padding:24px 0;text-align:center;font-size:12px;color:var(--dim);border-top:1px solid var(--bdr);margin-top:36px">
       NOVA Impact Dashboard · Burnett Foundation Innovation Challenge 2026 · Zero Data Retention · NZ Privacy Act 2020 · Built by Emanuel Figueroa
     </div>
-  </div><!-- /content -->
-</div><!-- /main -->
+  </div>
+</div>
 
 <script>
 // === DATE ===
@@ -702,7 +683,7 @@ new Chart(document.getElementById('stigmaChart'), {
   }
 });
 
-/ === 9. LANGUAGE DONUT ===
+// === 9. LANGUAGE DONUT ===
 new Chart(document.getElementById('langDonut'), {
   type: 'doughnut',
   data: {
@@ -879,40 +860,21 @@ document.querySelectorAll('.sb-link[href^="#"]').forEach(link=>{
     link.classList.add('active');
   });
 });
-</script>
 
 // === CONEXIÓN REAL CON EL BACKEND ===
 async function loadRealStats() {
   try {
     const response = await fetch('/stats');
     const data = await response.json();
-
-    // Actualiza los KPIs principales
     if (document.getElementById('kpi1')) {
       document.getElementById('kpi1').textContent = data.thisMonthSessions || 247;
     }
-
     console.log("✅ Dashboard conectado - Stats reales:", data);
   } catch (error) {
     console.log("⚠️ No se pudo conectar al backend. Usando datos mock.");
   }
 }
-
-// Cargar los datos reales cuando se abre la página
 window.addEventListener('load', loadRealStats);
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-                                                          
