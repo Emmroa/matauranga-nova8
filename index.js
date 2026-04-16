@@ -433,13 +433,34 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// Ruta de salud para UptimeRobot
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", service: "Mātauranga Nova API" });
-});
+// Ruta para el chat (MODIFICADA PARA GUARDAR MÉTRICAS)
+app.post("/chat", async (req, res) => {
+  try {
+    const userText = req.body.prompt || req.body.message || req.body.text;
+    if (!userText) {
+      return res.status(400).json({ error: "No se recibió mensaje." });
+    }
 
-// Puerto para Render
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✨ Mātauranga Nova — Servidor activo en puerto ${PORT}`);
+    const result = await model.generateContent(userText);
+    const response = await result.response;
+    const replyText = response.text();
+
+    // 1. Extraer los tags que Nova genera (los )
+    const tagsMatch = replyText.match(//g);
+    const tags = tagsMatch ? tagsMatch.join(", ").replace(//g, "") : "Sin tags";
+
+    // 2. Guardar en Google Sheets (sin esperar para no demorar la respuesta al usuario)
+    saveToNovaMetrics({
+      userPrompt: userText,
+      novaReply: replyText.replace(//g, ""), // Limpiamos los tags de la respuesta para el Excel
+      tags: tags
+    }).catch(err => console.error("Error al guardar métrica:", err));
+
+    // 3. Enviar la respuesta al usuario (limpia de tags)
+    res.json({ reply: replyText.replace(//g, "") });
+
+  } catch (error) {
+    console.error("Error en Gemini:", error);
+    res.status(500).json({ error: "No pude procesar tu mensaje." });
+  }
 });
