@@ -1,121 +1,106 @@
 <script>
-    const API_URL = "https://matauranga-nova8.onrender.com/chat";
-    const chatBox = document.getElementById('chat-box');
-    const userInput = document.getElementById('userInput');
-    const typing = document.getElementById('typing');
-    const sendBtn = document.getElementById('sendBtn');
-    const welcome = document.getElementById('welcome');
+  const API_URL = "https://matauranga-nova8.onrender.com/chat";
+  const chatBox = document.getElementById('chat-box');
+  const userInput = document.getElementById('userInput');
+  const typing = document.getElementById('typing');
+  const sendBtn = document.getElementById('sendBtn');
+  const welcome = document.getElementById('welcome');
 
-    // Session ID único por usuario
-    let sessionId = "session-" + Date.now();
+  let sessionId = "session-" + Date.now();
 
-    function autoHeight(el) {
-      el.style.height = 'auto';
-      el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-    }
+  // Función segura para agregar mensaje
+  function appendMsg(text, sender) {
+    const div = document.createElement('div');
+    div.className = `msg ${sender}`;
+    div.innerText = text;
+    chatBox.insertBefore(div, typing || null);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
-    function checkEnter(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    }
+  function setLoading(state) {
+    if (typing) typing.style.display = state ? 'block' : 'none';
+    if (sendBtn) sendBtn.disabled = state;
+    if (userInput) userInput.disabled = state;
+  }
 
-    function quickMsg(text) {
-      userInput.value = text;
-      sendMessage();
-    }
+  async function sendMessage() {
+    const text = userInput ? userInput.value.trim() : '';
+    if (!text) return;
 
-    function appendMsg(text, sender) {
-      const div = document.createElement('div');
-      div.className = `msg ${sender}`;
-      div.innerText = text;
-      chatBox.insertBefore(div, typing);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    if (welcome) welcome.style.display = 'none';
 
-    function setLoading(state) {
-      typing.style.display = state ? 'block' : 'none';
-      sendBtn.disabled = state;
-      userInput.disabled = state;
-    }
-
-    async function sendMessage() {
-      const text = userInput.value.trim();
-      if (!text) return;
-
-      // Ocultar welcome y agregar mensaje del usuario
-      if (welcome) welcome.style.display = 'none';
-      
-      appendMsg(text, 'user');
+    appendMsg(text, 'user');
+    if (userInput) {
       userInput.value = '';
       userInput.style.height = 'auto';
-
-      setLoading(true);
-
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            prompt: text,
-            sessionId: sessionId 
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.reply) {
-          // Limpiar posibles tags del system prompt
-          const cleanText = data.reply
-            .replace(/\[TAG:.*?\]/g, '')
-            .replace(/\[CRISIS:.*?\]/g, '')
-            .trim();
-          
-          appendMsg(cleanText, 'nova');
-        } 
-        else if (data.error) {
-          appendMsg("Nova: " + data.error, 'nova');
-        }
-        else {
-          appendMsg("Lo siento, no recibí una respuesta clara.", 'nova');
-        }
-
-      } catch (err) {
-        console.error("Fetch error:", err);
-        appendMsg("Error de conexión. Verifica que el servidor esté activo.", 'nova');
-      } finally {
-        setLoading(false);
-        userInput.focus();
-      }
     }
 
-    // Mostrar mensaje inicial de NOVA al cargar
-    function showWelcomeMessage() {
-      const initialMsg = "Kia ora — soy NOVA. Vivo con VIH desde 2011 y estoy acá para acompañarte. Esta charla es privada. ¿Qué te anda pasando hoy?";
-      appendMsg(initialMsg, 'nova');
+    setLoading(true);
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text, sessionId: sessionId })
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+
+      const cleanText = (data.reply || data.fullReply || "Sin respuesta").replace(/\[TAG:.*?\]/g, '').trim();
+      appendMsg(cleanText || "Nova no respondió correctamente.", 'nova');
+
+    } catch (err) {
+      console.error("Error:", err);
+      appendMsg("Error de conexión con NOVA. El servidor está activo pero hubo un problema.", 'nova');
+    } finally {
+      setLoading(false);
+      if (userInput) userInput.focus();
     }
+  }
 
-    // Inicialización
-    window.onload = () => {
-      // Mostrar mensaje de bienvenida de Nova
-      showWelcomeMessage();
-      
-      // Auto-focus en el input
-      userInput.focus();
+  function checkEnter(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
 
-      // Health check opcional (para debug)
+  function quickMsg(text) {
+    if (userInput) userInput.value = text;
+    sendMessage();
+  }
+
+  function autoHeight(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  // Mostrar mensaje inicial seguro
+  function initChat() {
+    appendMsg("Kia ora — soy NOVA. Vivo con VIH desde 2011 y estoy acá para acompañarte. Esta charla es privada. ¿Qué te anda pasando hoy?", 'nova');
+  }
+
+  // Inicialización con protección contra errores
+  window.onload = function() {
+    try {
+      initChat();
+      if (userInput) userInput.focus();
+
+      // Health check en consola
       fetch(API_URL.replace('/chat', '/health'))
-        .then(res => res.json())
-        .then(data => {
-          console.log("✅ Backend OK:", data);
-        })
-        .catch(() => {
-          console.warn("⚠️ No se pudo conectar al health check");
-        });
-    };
+        .then(r => r.json())
+        .then(data => console.log("✅ Backend OK", data))
+        .catch(() => console.warn("⚠️ Health check falló"));
+    } catch (e) {
+      console.error("Error crítico al iniciar:", e);
+      const errorDiv = document.createElement('div');
+      errorDiv.style.color = 'red';
+      errorDiv.style.padding = '20px';
+      errorDiv.innerHTML = `<strong>Error al cargar NOVA:</strong><br>${e.message}<br><br>Revisa la consola (F12) y avísale a Emanuel.`;
+      document.body.appendChild(errorDiv);
+    }
+  };
 </script>
