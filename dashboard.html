@@ -702,9 +702,217 @@ new Chart(document.getElementById('stigmaChart'), {
   }
 });
 
-// === 9. LANGUAGE DONUT ===
+/ === 9. LANGUAGE DONUT ===
 new Chart(document.getElementById('langDonut'), {
   type: 'doughnut',
   data: {
     labels: ['English','Español (Spanish)','Te reo Māori','Mixed / Other'],
-    datasets: [{ data:[1256,406,129,56], backgroundColor:['#0ea5e9','#f59e0b','#10b981','#6b7c
+    datasets: [{ data:[1256,406,129,56], backgroundColor:['#0ea5e9','#f59e0b','#10b981','#6b7c9a'], borderWidth:0, hoverOffset:8 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false, cutout:'65%',
+    plugins:{ legend:{position:'bottom', labels:{padding:12}}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+      callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} sessions (${((ctx.raw/1847)*100).toFixed(1)}%)`}} }
+  }
+});
+
+// === 10. LANGUAGE TREND ===
+new Chart(document.getElementById('langLine'), {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [
+      {label:'English',  data:[55,58,62,66,68,72,74,78,82,86,88,90], borderColor:'#0ea5e9', fill:false, tension:0.4, pointRadius:3},
+      {label:'Español',  data:[20,22,24,28,26,28,30,28,32,36,34,36], borderColor:'#f59e0b', fill:false, tension:0.4, pointRadius:3},
+      {label:'Te reo Māori', data:[5,6,7,7,8,8,9,9,10,9,8,9],        borderColor:'#10b981', fill:false, tension:0.4, pointRadius:3}
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+    plugins:{ legend:{position:'top', labels:{font:{size:11}}}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1} },
+    scales:{ x:{grid:{color:'rgba(255,255,255,.03)'}}, y:{grid:{color:'rgba(255,255,255,.03)'},beginAtZero:true, title:{display:true,text:'Sessions',font:{size:11}}} }
+  }
+});
+
+// === 11. CRISIS CHART ===
+new Chart(document.getElementById('crisisChart'), {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [{ label:'Crisis Activations', data:[4,5,6,5,7,6,8,7,9,10,9,12],
+      borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,0.12)', fill:true, tension:0.4, pointBackgroundColor:'#ef4444', pointRadius:4 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1} },
+    scales:{ x:{grid:{color:'rgba(255,255,255,.03)'}}, y:{grid:{color:'rgba(255,255,255,.03)'},beginAtZero:true, ticks:{stepSize:2}} }
+  }
+});
+
+// === 12. RESOURCES CHART ===
+new Chart(document.getElementById('resourcesChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Burnett Foundation','Lifeline 0800 543 354','Text / Call 1737','Body Positive NZ','Rainbow Youth','Netsafe NZ','Human Rights Commission','Emergency 111','Family Planning NZ','Sexual Health Services'],
+    datasets: [{ label:'Times Referenced', data:[234,142,128,98,76,64,48,52,38,44],
+      backgroundColor: ['rgba(14,165,233,0.75)','rgba(239,68,68,0.75)','rgba(239,68,68,0.6)','rgba(16,185,129,0.75)','rgba(245,158,11,0.75)','rgba(56,189,248,0.75)','rgba(168,85,247,0.75)','rgba(239,68,68,0.5)','rgba(16,185,129,0.5)','rgba(56,189,248,0.5)'],
+      borderRadius:4, borderSkipped:false }]
+  },
+  options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1} },
+    scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}, y:{grid:{display:false}} }
+  }
+});
+
+// === 13. PEAK HOURS ===
+const hourLabels = Array.from({length:24},(_,i)=>i===0?'12am':i<12?`${i}am`:i===12?'12pm':`${i-12}pm`);
+const hourData = [8,5,3,2,1,1,2,4,8,12,14,16,18,16,14,15,18,20,26,34,42,46,40,28];
+const hourColors = hourData.map(v => v > 35 ? 'rgba(168,85,247,0.85)' : v > 25 ? 'rgba(239,68,68,0.75)' : v > 15 ? 'rgba(14,165,233,0.7)' : 'rgba(14,165,233,0.35)');
+new Chart(document.getElementById('hoursChart'), {
+  type: 'bar',
+  data: {
+    labels: hourLabels,
+    datasets: [{ label:'Sessions', data:hourData, backgroundColor:hourColors, borderRadius:3, borderSkipped:false }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+      callbacks:{label:ctx=>`${ctx.raw} sessions`}} },
+    scales:{ x:{grid:{display:false}}, y:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true} }
+  }
+});
+
+// === FILTER UI ===
+function setFilter(btn, range){
+  document.querySelectorAll('.filter-btn').forEach(b=>{ if(['7d','30d','90d','12m','all'].some(r=>b.textContent.includes(r.replace('d',' days').replace('m',' months').replace('all','All time')))) b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+function toggleLang(btn){ btn.classList.toggle('active'); }
+
+// === EXPORT FUNCTIONS ===
+const exportData = {
+  generated: new Date().toISOString(),
+  period: '2025-05 to 2026-04',
+  privacy_note: 'All data is anonymised aggregate. No individual session data. NZ Privacy Act 2020 compliant.',
+  kpis: { sessions_total:1847, sessions_this_month:247, crisis_activations_total:87, crisis_activations_month:12, languages:3, peak_hour:'23:00 NZT', avg_session_min:8.4, resource_referrals_month:89 },
+  monthly_sessions: {labels:months, data:[82,95,110,124,138,152,165,178,198,215,231,247]},
+  moments: { '1_new_diagnosis':312, '2_disclosure':198, '3_identity_stigma':284, '4_discrimination':112, '5_long_term':221, '6_online_hate':89, '7_prevention_prep':234 },
+  topics: Object.fromEntries(topics.map((t,i)=>[t.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase(),topicCounts[i]])),
+  languages: { english:1256, spanish:406, te_reo_maori:129, other:56 },
+  geography: { auckland:961, wellington:332, christchurch:258, hamilton:129, tauranga:92, dunedin:74, other:1 },
+  resources: { burnett_foundation:234, lifeline:142, txt_call_1737:128, body_positive:98, rainbow_youth:76, netsafe:64, human_rights_commission:48, emergency_111:52 },
+  crisis: { monthly:[4,5,6,5,7,6,8,7,9,10,9,12], stability_followup_rate:'91%' },
+  peak_hours: Object.fromEntries(hourLabels.map((h,i)=>[h,hourData[i]]))
+};
+
+function exportCSV(){
+  const rows = [
+    ['NOVA Analytics Export - Burnett Foundation Aotearoa'],
+    ['Generated:', new Date().toLocaleDateString('en-NZ')],
+    ['Privacy:', 'All data anonymised aggregate. NZ Privacy Act 2020 compliant.'],
+    [],
+    ['=== KPIs ==='],
+    ['Metric','Value'],
+    ['Total Sessions',1847],['Sessions This Month',247],['Crisis Activations (All Time)',87],['Crisis Activations (Month)',12],['Languages Active',3],['Peak Hour (NZT)','23:00'],
+    [],
+    ['=== MONTHLY SESSIONS ==='],
+    ['Month',...months],
+    ['Sessions',82,95,110,124,138,152,165,178,198,215,231,247],
+    [],
+    ['=== 7 MOMENTS ==='],
+    ['Moment','Sessions'],
+    ['M1: New Diagnosis',312],['M2: Disclosure',198],['M3: Identity/Stigma',284],['M4: Discrimination',112],['M5: Long-term Living',221],['M6: Online Hate',89],['M7: Prevention/PrEP',234],
+    [],
+    ['=== FOUNDATION TOPICS ==='],
+    ['Topic','Sessions'],
+    ...topics.map((t,i)=>[t,topicCounts[i]]),
+    [],
+    ['=== LANGUAGES ==='],
+    ['Language','Sessions','Percentage'],
+    ['English',1256,'68.0%'],['Español',406,'22.0%'],['Te reo Māori',129,'7.0%'],['Other',56,'3.0%'],
+    [],
+    ['=== GEOGRAPHY ==='],
+    ['City','Sessions','Percentage'],
+    ['Auckland',961,'52%'],['Wellington',332,'18%'],['Christchurch',258,'14%'],['Hamilton',129,'7%'],['Tauranga',92,'5%'],['Dunedin',74,'4%'],
+    [],
+    ['=== RESOURCES REFERENCED ==='],
+    ['Resource','Times Referenced'],
+    ['Burnett Foundation',234],['Lifeline 0800 543 354',142],['Text/Call 1737',128],['Body Positive NZ',98],['Rainbow Youth',76],['Netsafe NZ',64],['Human Rights Commission',48],['Emergency 111',52],
+    [],
+    ['=== PEAK HOURS ==='],
+    ['Hour',...hourLabels],
+    ['Sessions',...hourData]
+  ];
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  download('nova-analytics-'+new Date().toISOString().split('T')[0]+'.csv', 'text/csv', csv);
+}
+
+function exportJSON(){
+  download('nova-analytics-'+new Date().toISOString().split('T')[0]+'.json', 'application/json', JSON.stringify(exportData,null,2));
+}
+
+function exportCrisis(){
+  const rows = [
+    ['NOVA Crisis Report - Burnett Foundation Aotearoa'],
+    ['Generated:', new Date().toLocaleDateString('en-NZ')],
+    ['Privacy:', 'Aggregate only. No individual session data.'],
+    [],
+    ['Month','Crisis Activations','Resource Surfaced','Stability Follow-up'],
+    ...months.map((m,i)=>[m,[4,5,6,5,7,6,8,7,9,10,9,12][i],'Yes (100%)',i<10?'Yes':'Pending']),
+    [],
+    ['TOTAL',87,87,'91% completed']
+  ];
+  download('nova-crisis-report-'+new Date().toISOString().split('T')[0]+'.csv', 'text/csv', rows.map(r=>r.join(',')).join('\n'));
+}
+
+function download(filename, type, content){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// === SMOOTH SIDEBAR LINKS ===
+document.querySelectorAll('.sb-link[href^="#"]').forEach(link=>{
+  link.addEventListener('click',e=>{
+    e.preventDefault();
+    const target = document.querySelector(link.getAttribute('href'));
+    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+    document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
+    link.classList.add('active');
+  });
+});
+</script>
+
+// === CONEXIÓN REAL CON EL BACKEND ===
+async function loadRealStats() {
+  try {
+    const response = await fetch('/stats');
+    const data = await response.json();
+
+    // Actualiza los KPIs principales
+    if (document.getElementById('kpi1')) {
+      document.getElementById('kpi1').textContent = data.thisMonthSessions || 247;
+    }
+
+    console.log("✅ Dashboard conectado - Stats reales:", data);
+  } catch (error) {
+    console.log("⚠️ No se pudo conectar al backend. Usando datos mock.");
+  }
+}
+
+// Cargar los datos reales cuando se abre la página
+window.addEventListener('load', loadRealStats);
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+                                                          
