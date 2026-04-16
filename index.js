@@ -358,7 +358,7 @@ V7 (2026-02) — Versión Final Consolidada
 // --- GEMINI CONFIGURATION ---
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash-latest", // <-- El todoterreno
+  model: "gemini-1.5-pro", // <-- El modelo robusto y estable
   systemInstruction: NOVA_SYSTEM_PROMPT,
 });
 
