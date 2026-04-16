@@ -166,13 +166,6 @@
 
     button:hover { background: var(--accent-light); transform: scale(1.08); }
 
-    .typing {
-      color: var(--muted);
-      font-style: italic;
-      padding: 8px 0;
-      align-self: flex-start;
-    }
-
     .disclaimer {
       font-size: 11.5px;
       color: var(--muted);
@@ -198,9 +191,7 @@
       </div>
     </div>
 
-    <div class="messages" id="chat-box">
-      <div class="typing" id="typing">Nova is typing...</div>
-    </div>
+    <div class="messages" id="chat-box"></div>
 
     <div class="input-area">
       <textarea id="userInput" rows="1" placeholder="Type your message..." 
@@ -215,10 +206,9 @@
   </div>
 
   <script>
-    const API_URL = "https://matauranga-nova8.onrender.com/chat";   // ← Cambia si tu URL es diferente
+    const API_URL = "https://matauranga-nova8.onrender.com/chat";
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('userInput');
-    const typing = document.getElementById('typing');
     let sessionId = "nova-" + Date.now();
 
     function autoHeight(el) {
@@ -241,10 +231,6 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function setLoading(state) {
-      typing.style.display = state ? 'block' : 'none';
-    }
-
     async function sendMessage() {
       const text = userInput.value.trim();
       if (!text) return;
@@ -253,7 +239,11 @@
       userInput.value = '';
       userInput.style.height = 'auto';
 
-      setLoading(true);
+      const loadingMsg = document.createElement('div');
+      loadingMsg.className = 'msg nova';
+      loadingMsg.innerText = "Nova is thinking...";
+      chatBox.appendChild(loadingMsg);
+      chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
         const response = await fetch(API_URL, {
@@ -262,30 +252,29 @@
           body: JSON.stringify({ prompt: text, sessionId: sessionId })
         });
 
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-
         const data = await response.json();
+
+        // Remover mensaje de "thinking"
+        chatBox.removeChild(loadingMsg);
 
         if (data.reply) {
           const cleanText = data.reply.replace(/\[TAG:.*?\]/g, '').trim();
           appendMsg(cleanText, 'nova');
         } else {
-          appendMsg("Sorry, I didn't receive a clear response. Please try again.", 'nova');
+          appendMsg("Sorry, I didn't get a clear response. Could you try again?", 'nova');
         }
       } catch (err) {
-        console.error(err);
-        appendMsg("Connection error. Please check your internet and try again.", 'nova');
-      } finally {
-        setLoading(false);
-        userInput.focus();
+        chatBox.removeChild(loadingMsg);
+        // Mensaje kiwi amigable cuando hay error (incluido 429)
+        appendMsg("Hey, sorry about that mate — Nova's a bit busy right now. Take a quick breather and give it another go in a minute, aye? I'm still here for you 😊", 'nova');
       }
+
+      userInput.focus();
     }
 
-    // Mensaje inicial en inglés
+    // Mensaje inicial cálido en inglés
     window.onload = () => {
-      const initialMsg = "Kia ora — I'm Nova. I'm here to support you with HIV-related topics with honesty, warmth, and no judgement. This chat is completely private and nothing is stored permanently. I'm an AI, not a healthcare professional. What's on your mind today?";
+      const initialMsg = "Kia ora — I'm Nova. I'm here to support you with honesty, warmth, and no judgement. This chat is completely private and nothing is stored permanently. I'm an AI, not a healthcare professional. What's on your mind today?";
       appendMsg(initialMsg, 'nova');
     };
   </script>
