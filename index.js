@@ -445,22 +445,18 @@ app.post("/chat", async (req, res) => {
     const response = await result.response;
     const replyText = response.text();
 
-        // 1. Extraer los tags que Nova genera
+       kreplyText.replace(//g, ""), 
+      tags: tags
+// 1. Extraer los tags que Nova genera
     const tagsMatch = replyText.match(//g);
     const tags = tagsMatch ? tagsMatch.join(", ").replace(//g, "") : "Sin tags";
 
-    // 2. Guardar en Google Sheets
+    // 2. Guardar en Google Sheets (usando un bloque try/catch interno para que no rompa el chat)
     saveToNovaMetrics({
       userPrompt: userText,
       novaReply: replyText.replace(//g, ""), 
       tags: tags
     }).catch(err => console.error("Error al guardar métrica:", err));
 
-    // 3. Enviar respuesta limpia
+    // 3. Enviar respuesta limpia al usuario
     res.json({ reply: replyText.replace(//g, "") });
-
-  } catch (error) {
-    console.error("Error en Gemini:", error);
-    res.status(500).json({ error: "No pude procesar tu mensaje." });
-  }
-});
