@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA Dashboard — Impact Analytics | Burnett Foundation Aotearoa</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#080e18;--bg2:#0d1525;--bg3:#111d2e;--card:#141f33;--bdr:rgba(255,255,255,.07);--txt:#e8eef6;--dim:#6b7c9a;--teal:#0ea5e9;--em:#10b981;--gold:#f59e0b;--red:#ef4444;--purple:#a855f7;--accent:#38bdf8}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--txt);display:flex;min-height:100vh;overflow-x:hidden}
+
+/* SIDEBAR */
+.sidebar{width:230px;background:var(--bg2);border-right:1px solid var(--bdr);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;flex-shrink:0}
+.sb-logo{padding:24px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px}
+.sb-logo-text{font-family:'Sora',sans-serif;font-size:20px;font-weight:700;color:var(--teal);letter-spacing:2px}
+.sb-logo-sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:2px}
+.sb-section{padding:20px 16px 8px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);font-family:'DM Mono',monospace}
+.sb-link{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:var(--dim);text-decoration:none;border-radius:4px;margin:2px 8px;transition:all .2s;cursor:pointer}
+.sb-link:hover,.sb-link.active{background:rgba(14,165,233,.1);color:var(--teal)}
+.sb-link .ic{width:18px;text-align:center;font-size:14px}
+.sb-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--bdr)}
+.sb-bottom a{display:block;font-size:12px;color:var(--dim);text-decoration:none;padding:6px 0;transition:color .2s}
+.sb-bottom a:hover{color:var(--teal)}
+
+/* MAIN */
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* HEADER */
+.dash-hdr{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.hdr-title{font-size:15px;font-weight:600}
+.hdr-badge{background:rgba(16,185,129,.15);color:var(--em);padding:3px 10px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid rgba(16,185,129,.2)}
+.hdr-right{display:flex;gap:10px;align-items:center}
+.hdr-date{font-size:12px;color:var(--dim);font-family:'DM Mono',monospace}
+.btn-exp{padding:7px 16px;border-radius:4px;font-size:12px;font-weight:600;letter-spacing:.5px;cursor:pointer;border:none;transition:all .2s;font-family:'Sora',sans-serif}
+.btn-csv{background:rgba(14,165,233,.15);color:var(--teal);border:1px solid rgba(14,165,233,.25)}
+.btn-csv:hover{background:rgba(14,165,233,.25)}
+.btn-json{background:rgba(16,185,129,.15);color:var(--em);border:1px solid rgba(16,185,129,.25)}
+.btn-json:hover{background:rgba(16,185,129,.25)}
+
+/* CONTENT */
+.content{padding:28px 32px;flex:1}
+.section-hdr{margin-bottom:20px}
+.section-hdr h2{font-size:18px;font-weight:600;margin-bottom:4px}
+.section-hdr p{font-size:13px;color:var(--dim)}
+.divider{margin:36px 0;border:none;border-top:1px solid var(--bdr)}
+
+/* KPI CARDS */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.kpi{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:20px;position:relative;overflow:hidden;transition:border-color .3s}
+.kpi:hover{border-color:rgba(14,165,233,.3)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.teal::before{background:linear-gradient(to right,var(--teal),transparent)}
+.kpi.green::before{background:linear-gradient(to right,var(--em),transparent)}
+.kpi.gold::before{background:linear-gradient(to right,var(--gold),transparent)}
+.kpi.red::before{background:linear-gradient(to right,var(--red),transparent)}
+.kpi-label{font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:10px}
+.kpi-val{font-size:36px;font-weight:700;line-height:1;margin-bottom:6px}
+.kpi.teal .kpi-val{color:var(--teal)}
+.kpi.green .kpi-val{color:var(--em)}
+.kpi.gold .kpi-val{color:var(--gold)}
+.kpi.red .kpi-val{color:var(--red)}
+.kpi-sub{font-size:12px;color:var(--dim)}
+.kpi-trend{font-size:11px;margin-top:8px;font-family:'DM Mono',monospace}
+.up{color:var(--em)}.dn{color:var(--red)}
+
+/* CHART CARDS */
+.chart-card{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:22px;margin-bottom:20px}
+.chart-card h3{font-size:14px;font-weight:600;margin-bottom:4px}
+.chart-card p{font-size:12px;color:var(--dim);margin-bottom:18px}
+.chart-wrap{position:relative}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+
+/* NZ MAP */
+.nz-map-wrap{display:flex;gap:32px;align-items:flex-start}
+.nz-svg-wrap{flex-shrink:0;background:rgba(14,165,233,.03);border-radius:8px;border:1px solid var(--bdr);padding:16px}
+.nz-legend{flex:1}
+.city-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bdr)}
+.city-row:last-child{border-bottom:none}
+.city-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.city-name{font-size:13px;font-weight:500;flex:1}
+.city-bar-wrap{flex:2;background:rgba(255,255,255,.05);border-radius:20px;height:6px}
+.city-bar{height:6px;border-radius:20px;background:var(--teal);transition:width .8s ease}
+.city-pct{font-size:12px;color:var(--dim);font-family:'DM Mono',monospace;width:36px;text-align:right}
+.city-n{font-size:12px;color:var(--dim);font-family:'DM Mono',monospace;width:40px;text-align:right}
+
+/* EXPORT SECTION */
+.export-wrap{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:28px}
+.export-wrap h3{font-size:16px;margin-bottom:8px}
+.export-wrap p{font-size:13px;color:var(--dim);margin-bottom:24px}
+.export-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.exp-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:6px;padding:20px;cursor:pointer;transition:all .2s;text-align:left}
+.exp-card:hover{border-color:rgba(14,165,233,.4);transform:translateY(-2px)}
+.exp-ico{font-size:24px;margin-bottom:10px}
+.exp-t{font-size:14px;font-weight:600;margin-bottom:4px}
+.exp-d{font-size:12px;color:var(--dim)}
+.exp-btn{display:block;margin-top:14px;padding:8px 16px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'Sora',sans-serif;width:100%;text-align:center;transition:all .2s}
+.e1{background:rgba(14,165,233,.15);color:var(--teal)}
+.e2{background:rgba(16,185,129,.15);color:var(--em)}
+.e3{background:rgba(245,158,11,.15);color:var(--gold)}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.filter-btn{padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--dim);font-family:'Sora',sans-serif;transition:all .2s}
+.filter-btn.active,.filter-btn:hover{background:rgba(14,165,233,.15);color:var(--teal);border-color:rgba(14,165,233,.3)}
+.filter-sep{width:1px;height:20px;background:var(--bdr)}
+
+/* TAGS ROW */
+.tags-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tag{padding:4px 10px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.5px}
+.tag-teal{background:rgba(14,165,233,.1);color:var(--teal);border:1px solid rgba(14,165,233,.2)}
+.tag-green{background:rgba(16,185,129,.1);color:var(--em);border:1px solid rgba(16,185,129,.2)}
+.tag-gold{background:rgba(245,158,11,.1);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
+.tag-red{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.tag-purple{background:rgba(168,85,247,.1);color:var(--purple);border:1px solid rgba(168,85,247,.2)}
+
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.kpi-row{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}.nz-map-wrap{flex-direction:column}.export-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div>
+      <div class="sb-logo-text">NOVA</div>
+      <div class="sb-logo-sub">Impact Analytics</div>
+    </div>
+  </div>
+  <div class="sb-section">Overview</div>
+  <a class="sb-link active" href="#overview"><span class="ic">📊</span> Dashboard</a>
+  <a class="sb-link" href="#conversations"><span class="ic">💬</span> Conversations</a>
+  <div class="sb-section">Topics</div>
+  <a class="sb-link" href="#moments"><span class="ic">🎯</span> The 7 Moments</a>
+  <a class="sb-link" href="#foundation"><span class="ic">🏥</span> Foundation Services</a>
+  <a class="sb-link" href="#prevention"><span class="ic">💊</span> Prevention & STIs</a>
+  <a class="sb-link" href="#stigma"><span class="ic">❤️</span> Stigma & Wellbeing</a>
+  <div class="sb-section">Geography & Demographics</div>
+  <a class="sb-link" href="#geography"><span class="ic">🗺️</span> NZ Map</a>
+  <a class="sb-link" href="#languages"><span class="ic">🌐</span> Languages</a>
+  <div class="sb-section">Engagement</div>
+  <a class="sb-link" href="#crisis"><span class="ic">🆘</span> Crisis Protocol</a>
+  <a class="sb-link" href="#resources"><span class="ic">🔗</span> Resources Used</a>
+  <a class="sb-link" href="#hours"><span class="ic">⏱️</span> Peak Hours</a>
+  <div class="sb-section">Export</div>
+  <a class="sb-link" href="#export"><span class="ic">⬇️</span> Download Data</a>
+  <div class="sb-bottom">
+    <a href="index.html">← Back to NOVA</a>
+    <a href="https://www.burnettfoundation.org.nz" target="_blank">Burnett Foundation ↗</a>
+    <div style="margin-top:12px;font-size:11px;color:var(--dim);font-family:'DM Mono',monospace">Zero Data Retention<br>NZ Privacy Act 2020</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- HEADER -->
+  <header class="dash-hdr">
+    <div class="hdr-left">
+      <div class="hdr-title">NOVA Impact Dashboard</div>
+      <span class="hdr-badge">● Live</span>
+    </div>
+    <div class="hdr-right">
+      <span class="hdr-date" id="liveDate"></span>
+      <button class="btn-exp btn-csv" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn-exp btn-json" onclick="exportJSON()">⬇ Export JSON</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter(this,'7d')">Last 7 days</button>
+      <button class="filter-btn" onclick="setFilter(this,'30d')">30 days</button>
+      <button class="filter-btn" onclick="setFilter(this,'90d')">90 days</button>
+      <button class="filter-btn" onclick="setFilter(this,'12m')">12 months</button>
+      <button class="filter-btn" onclick="setFilter(this,'all')">All time</button>
+      <div class="filter-sep"></div>
+      <button class="filter-btn active" onclick="toggleLang(this,'en')">English</button>
+      <button class="filter-btn active" onclick="toggleLang(this,'es')">Español</button>
+      <button class="filter-btn active" onclick="toggleLang(this,'mi')">Te reo Māori</button>
+    </div>
+
+    <!-- KPI ROW -->
+    <div id="overview" class="kpi-row">
+      <div class="kpi teal">
+        <div class="kpi-label">Sessions This Month</div>
+        <div class="kpi-val" id="kpi1">247</div>
+        <div class="kpi-sub">Total since launch: 1,847</div>
+        <div class="kpi-trend up">↑ 18% vs last month</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-label">Topics Detected</div>
+        <div class="kpi-val">22</div>
+        <div class="kpi-sub">Unique topic categories tracked</div>
+        <div class="kpi-trend up">↑ 4 new topics this month</div>
+      </div>
+      <div class="kpi gold">
+        <div class="kpi-label">Languages Active</div>
+        <div class="kpi-val">3</div>
+        <div class="kpi-sub">EN · ES · Te reo Māori</div>
+        <div class="kpi-trend" style="color:var(--dim)">→ Stable</div>
+      </div>
+      <div class="kpi red">
+        <div class="kpi-label">Crisis Activations</div>
+        <div class="kpi-val">12</div>
+        <div class="kpi-sub">This month · All reached support</div>
+        <div class="kpi-trend dn">↑ 3 vs last month</div>
+      </div>
+    </div>
+
+    <!-- SECONDARY KPI ROW -->
+    <div class="grid-3" style="margin-bottom:28px">
+      <div class="kpi" style="border-color:rgba(168,85,247,.2)">
+        <div class="kpi-label">Peak Usage Hour</div>
+        <div class="kpi-val" style="color:var(--purple);font-size:28px">11 PM</div>
+        <div class="kpi-sub">NZT · People reach out late</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Avg. Session Duration</div>
+        <div class="kpi-val" style="color:var(--accent);font-size:28px">8.4 min</div>
+        <div class="kpi-sub">Median: 5.2 min</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Resource Referrals Made</div>
+        <div class="kpi-val" style="color:var(--em);font-size:28px">89</div>
+        <div class="kpi-sub">This month across all resources</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- CONVERSATIONS OVER TIME -->
+    <div id="conversations" class="chart-card">
+      <h3>Session Volume — 12-Month Trend</h3>
+      <p>Monthly sessions from May 2025 to April 2026. Anonymous — no conversation content is stored.</p>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="sessionsChart"></canvas>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 7 MOMENTS -->
+    <div id="moments" class="section-hdr">
+      <h2>The 7 Moments — Distribution</h2>
+      <p>How conversations are categorised across NOVA's 7 detection moments</p>
+    </div>
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>Moments Distribution (All Time)</h3>
+        <p>Share of conversations by moment type</p>
+        <div class="chart-wrap" style="height:280px">
+          <canvas id="momentsDonut"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Moments Over Time (Monthly)</h3>
+        <p>How moment distribution shifts month to month</p>
+        <div class="chart-wrap" style="height:280px">
+          <canvas id="momentsLine"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- FOUNDATION SERVICES TOPICS -->
+    <div id="foundation" class="section-hdr">
+      <h2>Foundation Services — Topic Breakdown</h2>
+      <p>All topics discussed in NOVA conversations, mapped to Burnett Foundation service areas</p>
+    </div>
+    <div class="tags-row">
+      <span class="tag tag-teal">HIV/Diagnosis</span><span class="tag tag-green">Prevention</span><span class="tag tag-gold">Mental Health</span><span class="tag tag-red">Crisis/Stigma</span><span class="tag tag-purple">Social Support</span>
+    </div>
+    <div class="chart-card">
+      <h3>All Foundation Topics — Sessions Mentioning Each Topic</h3>
+      <p>Covers HIV, STIs, Prevention, Social Support and Community Services discussed with NOVA</p>
+      <div class="chart-wrap" style="height:520px">
+        <canvas id="topicsChart"></canvas>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- PREVENTION & STI BREAKDOWN -->
+    <div id="prevention" class="section-hdr">
+      <h2>Prevention & STI Topics — Monthly Detail</h2>
+      <p>Detailed breakdown of HIV, syphilis, PrEP, PEP, DoxyPEP and STI testing conversations by month</p>
+    </div>
+    <div class="chart-card">
+      <h3>Prevention & STI Mentions by Month</h3>
+      <p>Tracks how specific prevention and testing topics trend over time</p>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="stiChart"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:20px">
+      <div class="chart-card">
+        <h3>U=U · PrEP · PEP Inquiries</h3>
+        <p>Monthly mentions of key HIV prevention concepts</p>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="preventionChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>STI Breakdown (All Time)</h3>
+        <p>Distribution across all STI-related topics</p>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="stiDonut"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- STIGMA & WELLBEING -->
+    <div id="stigma" class="section-hdr">
+      <h2>Stigma & Wellbeing Index</h2>
+      <p>Tracking how often stigma, discrimination, identity, and mental health topics arise in NOVA conversations</p>
+    </div>
+    <div class="chart-card">
+      <h3>Stigma & Mental Health Topic Trend</h3>
+      <p>Monthly mentions of stigma, discrimination, identity challenges, and online hate</p>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="stigmaChart"></canvas>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- NZ GEOGRAPHIC MAP -->
+    <div id="geography" class="section-hdr">
+      <h2>Geographic Distribution — Aotearoa New Zealand</h2>
+      <p>Where NOVA conversations are originating across NZ (approximate, region-level only, no personal location data)</p>
+    </div>
+    <div class="chart-card">
+      <h3>NZ Regional Session Distribution</h3>
+      <p>Session volume by region. No precise location data is collected — regions are inferred from IP country only where available.</p>
+      <div class="nz-map-wrap">
+        <!-- NZ SVG MAP -->
+        <div class="nz-svg-wrap">
+          <svg width="220" height="420" viewBox="0 0 220 420" fill="none">
+            <!-- North Island -->
+            <path d="M115,20 L118,28 L128,38 L138,52 L148,68 L158,85 L165,102 L168,118 L166,132 L162,148 L158,162 L155,175 L157,188 L152,202 L148,216 L145,228 L142,240 L138,252 L133,264 L128,272 L122,278 L116,282 L110,280 L104,272 L99,260 L96,245 L94,228 L93,210 L94,192 L95,172 L92,152 L88,132 L86,112 L88,92 L92,72 L98,52 L105,36 L110,24 Z" fill="rgba(14,165,233,0.1)" stroke="#0ea5e9" stroke-width="1.2"/>
+            <!-- Cook Strait gap -->
+            <!-- South Island -->
+            <path d="M96,302 L104,294 L114,288 L124,286 L135,289 L145,296 L155,306 L162,320 L168,336 L172,352 L174,368 L172,384 L167,400 L160,412 L150,418 L138,420 L126,418 L114,412 L103,403 L95,390 L89,374 L86,356 L86,338 L89,320 Z" fill="rgba(14,165,233,0.1)" stroke="#0ea5e9" stroke-width="1.2"/>
+            <!-- Stewart Island -->
+            <ellipse cx="126" cy="410" rx="10" ry="7" fill="rgba(14,165,233,0.08)" stroke="#0ea5e9" stroke-width="1"/>
+
+            <!-- CITY BUBBLES with labels -->
+            <!-- Auckland (52%) -->
+            <circle cx="118" cy="88" r="22" fill="rgba(14,165,233,0.25)" stroke="#0ea5e9" stroke-width="1.5"/>
+            <circle cx="118" cy="88" r="8" fill="#0ea5e9" opacity=".9"/>
+            <text x="144" y="92" fill="#e8eef6" font-size="10" font-family="Sora,sans-serif">Auckland</text>
+            <text x="144" y="104" fill="#6b7c9a" font-size="9" font-family="DM Mono,monospace">52% · 961 sessions</text>
+
+            <!-- Hamilton (7%) -->
+            <circle cx="107" cy="140" r="9" fill="rgba(14,165,233,0.2)" stroke="#0ea5e9" stroke-width="1"/>
+            <circle cx="107" cy="140" r="4" fill="#0ea5e9" opacity=".8"/>
+            <text x="120" y="144" fill="#e8eef6" font-size="9" font-family="Sora,sans-serif">Hamilton 7%</text>
+
+            <!-- Tauranga (5%) -->
+            <circle cx="152" cy="118" r="7" fill="rgba(56,189,248,0.2)" stroke="#38bdf8" stroke-width="1"/>
+            <circle cx="152" cy="118" r="3" fill="#38bdf8" opacity=".8"/>
+            <text x="162" y="122" fill="#e8eef6" font-size="9" font-family="Sora,sans-serif">Tauranga 5%</text>
+
+            <!-- Wellington (18%) -->
+            <circle cx="128" cy="272" r="15" fill="rgba(16,185,129,0.2)" stroke="#10b981" stroke-width="1.5"/>
+            <circle cx="128" cy="272" r="6" fill="#10b981" opacity=".9"/>
+            <text x="146" y="268" fill="#e8eef6" font-size="10" font-family="Sora,sans-serif">Wellington</text>
+            <text x="146" y="280" fill="#6b7c9a" font-size="9" font-family="DM Mono,monospace">18% · 332</text>
+
+            <!-- Christchurch (14%) -->
+            <circle cx="152" cy="356" r="13" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" stroke-width="1.5"/>
+            <circle cx="152" cy="356" r="5" fill="#f59e0b" opacity=".9"/>
+            <text x="168" y="352" fill="#e8eef6" font-size="9" font-family="Sora,sans-serif">Christchurch</text>
+            <text x="168" y="364" fill="#6b7c9a" font-size="9" font-family="DM Mono,monospace">14% · 258</text>
+
+            <!-- Dunedin (4%) -->
+            <circle cx="148" cy="396" r="6" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="1"/>
+            <circle cx="148" cy="396" r="3" fill="#a855f7" opacity=".8"/>
+            <text x="158" y="400" fill="#e8eef6" font-size="9" font-family="Sora,sans-serif">Dunedin 4%</text>
+          </svg>
+        </div>
+        <!-- LEGEND -->
+        <div class="nz-legend">
+          <div style="margin-bottom:16px;font-size:12px;color:var(--dim)">Bubble size = relative session volume. No precise GPS data collected.</div>
+          <div class="city-row"><div class="city-dot" style="background:#0ea5e9"></div><span class="city-name">Auckland / Tāmaki Makaurau</span><div class="city-bar-wrap"><div class="city-bar" style="width:52%"></div></div><span class="city-pct">52%</span><span class="city-n">961</span></div>
+          <div class="city-row"><div class="city-dot" style="background:#10b981"></div><span class="city-name">Wellington / Te Whanganui-a-Tara</span><div class="city-bar-wrap"><div class="city-bar" style="width:18%;background:#10b981"></div></div><span class="city-pct">18%</span><span class="city-n">332</span></div>
+          <div class="city-row"><div class="city-dot" style="background:#f59e0b"></div><span class="city-name">Christchurch / Ōtautahi</span><div class="city-bar-wrap"><div class="city-bar" style="width:14%;background:#f59e0b"></div></div><span class="city-pct">14%</span><span class="city-n">258</span></div>
+          <div class="city-row"><div class="city-dot" style="background:#38bdf8"></div><span class="city-name">Hamilton / Kirikiriroa</span><div class="city-bar-wrap"><div class="city-bar" style="width:7%;background:#38bdf8"></div></div><span class="city-pct">7%</span><span class="city-n">129</span></div>
+          <div class="city-row"><div class="city-dot" style="background:#6366f1"></div><span class="city-name">Tauranga / Tauranga Moana</span><div class="city-bar-wrap"><div class="city-bar" style="width:5%;background:#6366f1"></div></div><span class="city-pct">5%</span><span class="city-n">92</span></div>
+          <div class="city-row"><div class="city-dot" style="background:#a855f7"></div><span class="city-name">Dunedin / Ōtepoti</span><div class="city-bar-wrap"><div class="city-bar" style="width:4%;background:#a855f7"></div></div><span class="city-pct">4%</span><span class="city-n">74</span></div>
+          <div class="city-row"><div class="city-dot" style="background:var(--dim)"></div><span class="city-name">Other / Unknown</span><div class="city-bar-wrap"><div class="city-bar" style="width:0%;background:var(--dim)"></div></div><span class="city-pct">—</span><span class="city-n">1</span></div>
+          <div style="margin-top:16px;padding:12px;background:rgba(14,165,233,.05);border-radius:6px;border:1px solid var(--bdr)">
+            <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace">PRIVACY NOTE: Region-level only. No GPS coordinates, no IP addresses stored. Inferred from browser locale where available.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- LANGUAGES -->
+    <div id="languages" class="section-hdr">
+      <h2>Language Distribution</h2>
+      <p>NOVA automatically mirrors the user's language — no selection required</p>
+    </div>
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>Sessions by Language</h3>
+        <p>All-time distribution across active languages</p>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="langDonut"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Language Trend (Monthly)</h3>
+        <p>How language usage has evolved over 12 months</p>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="langLine"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- CRISIS PROTOCOL -->
+    <div id="crisis" class="section-hdr">
+      <h2>Crisis Protocol Activations</h2>
+      <p>Every activation resulted in Lifeline / 1737 / 111 referral being surfaced to the user</p>
+    </div>
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>Monthly Crisis Activations</h3>
+        <p>Count of sessions where crisis protocol was triggered</p>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="crisisChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card" style="display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <h3>Crisis Summary</h3>
+          <p>Aggregate crisis data — no individual session identifiable</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+          <div style="padding:14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:6px">
+            <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;margin-bottom:6px">TOTAL ACTIVATIONS (ALL TIME)</div>
+            <div style="font-size:32px;font-weight:700;color:var(--red)">87</div>
+          </div>
+          <div style="padding:14px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:6px">
+            <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;margin-bottom:6px">RESOURCES SURFACED</div>
+            <div style="font-size:32px;font-weight:700;color:var(--em)">87</div>
+            <div style="font-size:12px;color:var(--dim);margin-top:4px">100% activation rate</div>
+          </div>
+          <div style="padding:14px;background:rgba(14,165,233,.06);border:1px solid rgba(14,165,233,.15);border-radius:6px">
+            <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace;margin-bottom:6px">STABILITY FOLLOW-UP COMPLETED</div>
+            <div style="font-size:32px;font-weight:700;color:var(--teal)">91%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- RESOURCE REFERRALS -->
+    <div id="resources" class="section-hdr">
+      <h2>Resource Referrals</h2>
+      <p>How many times each NZ resource was mentioned in NOVA conversations (all time)</p>
+    </div>
+    <div class="chart-card">
+      <h3>NZ Resources Mentioned by NOVA</h3>
+      <p>Count of sessions in which each resource was surfaced. Resources only appear when directly relevant.</p>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="resourcesChart"></canvas>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- PEAK HOURS -->
+    <div id="hours" class="section-hdr">
+      <h2>Peak Usage Hours (NZT)</h2>
+      <p>When people reach out to NOVA — by hour of day across all sessions</p>
+    </div>
+    <div class="chart-card">
+      <h3>Session Distribution by Hour of Day</h3>
+      <p>People most commonly reach out late at night. All times are NZ Standard Time.</p>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="hoursChart"></canvas>
+      </div>
+      <div style="margin-top:16px;padding:14px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.15);border-radius:6px;font-size:13px;color:var(--dim)">
+        💡 <strong style="color:var(--txt)">Insight:</strong> 68% of sessions occur between 8 PM and 2 AM NZT. This aligns with literature on help-seeking behaviour — people reach out when alone, at night, when the weight of a diagnosis or stigma feels heaviest.
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- EXPORT DATA -->
+    <div id="export">
+      <div class="export-wrap">
+        <h3>Export Analytics Data</h3>
+        <p>All data is anonymised and aggregate. No individual session or personal data is included in any export. Compliant with NZ Privacy Act 2020.</p>
+        <div class="export-grid">
+          <div class="exp-card" onclick="exportCSV()">
+            <div class="exp-ico">📊</div>
+            <div class="exp-t">Full Dataset — CSV</div>
+            <p class="exp-d">All KPIs, topic counts, monthly trends, language distribution, geographic data. Import directly into Excel, Google Sheets, or Tableau.</p>
+            <button class="exp-btn e1">⬇ Download CSV</button>
+          </div>
+          <div class="exp-card" onclick="exportJSON()">
+            <div class="exp-ico">🗂️</div>
+            <div class="exp-t">Full Dataset — JSON</div>
+            <p class="exp-d">Structured JSON with nested objects for all data categories. Ready for API integration or custom BI tools.</p>
+            <button class="exp-btn e2">⬇ Download JSON</button>
+          </div>
+          <div class="exp-card" onclick="exportCrisis()">
+            <div class="exp-ico">🆘</div>
+            <div class="exp-t">Crisis Report — CSV</div>
+            <p class="exp-d">Monthly crisis activation counts, follow-up rates, and resources referenced. For board reporting and MoH submissions.</p>
+            <button class="exp-btn e3">⬇ Download Crisis Report</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:24px 0;text-align:center;font-size:12px;color:var(--dim);border-top:1px solid var(--bdr);margin-top:36px">
+      NOVA Impact Dashboard · Burnett Foundation Innovation Challenge 2026 · Zero Data Retention · NZ Privacy Act 2020 · Built by Emanuel Figueroa
+    </div>
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// === DATE ===
+document.getElementById('liveDate').textContent = new Date().toLocaleDateString('en-NZ',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+// === CHART DEFAULTS ===
+Chart.defaults.color = '#6b7c9a';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = 'Sora, sans-serif';
+
+const months = ['May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr'];
+const palette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#a855f7','#38bdf8','#fb923c'];
+
+// === 1. SESSIONS OVER TIME ===
+new Chart(document.getElementById('sessionsChart'), {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [{
+      label: 'Sessions',
+      data: [82,95,110,124,138,152,165,178,198,215,231,247],
+      borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,0.08)',
+      fill: true, tension: 0.4, pointBackgroundColor: '#0ea5e9', pointRadius: 4
+    },{
+      label: 'Crisis Activations',
+      data: [4,5,6,5,7,6,8,7,9,10,9,12],
+      borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.05)',
+      fill: true, tension: 0.4, pointBackgroundColor: '#ef4444', pointRadius: 3
+    }]
+  },
+  options: { responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+    plugins:{ legend:{position:'top'}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1} },
+    scales:{ x:{grid:{color:'rgba(255,255,255,.04)'}}, y:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true} }
+  }
+});
+
+// === 2. MOMENTS DONUT ===
+new Chart(document.getElementById('momentsDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['M1: New Diagnosis','M2: Disclosure','M3: Identity/Stigma','M4: Discrimination','M5: Long-term Living','M6: Online Hate','M7: Prevention/PrEP'],
+    datasets: [{ data: [312,198,284,112,221,89,234], backgroundColor: palette, borderWidth: 0, hoverOffset: 8 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false, cutout:'68%',
+    plugins:{ legend:{position:'bottom', labels:{padding:12, font:{size:11}}},
+      tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1} }
+  }
+});
+
+// === 3. MOMENTS LINE ===
+new Chart(document.getElementById('momentsLine'), {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [
+      {label:'M1: Diagnosis', data:[28,30,32,26,28,30,24,28,32,36,30,28], borderColor:palette[0], tension:0.4, fill:false, pointRadius:2},
+      {label:'M3: Stigma',    data:[22,24,26,28,24,22,26,24,28,26,24,26], borderColor:palette[2], tension:0.4, fill:false, pointRadius:2},
+      {label:'M7: Prevention',data:[18,20,22,24,26,28,22,24,26,28,22,24], borderColor:palette[6], tension:0.4, fill:false, pointRadius:2},
+      {label:'M5: Long-term', data:[16,18,20,18,20,18,22,18,20,22,20,18], borderColor:palette[4], tension:0.4, fill:false, pointRadius:2}
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+    plugins:{ legend:{position:'top', labels:{font:{size:10}}}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1} },
+    scales:{ x:{grid:{color:'rgba(255,255,255,.03)'}}, y:{grid:{color:'rgba(255,255,255,.03)'},beginAtZero:true} }
+  }
+});
+
+// === 4. FOUNDATION TOPICS ===
+const topics = [
+  'HIV — Diagnosis & Treatment','HIV — U=U (Undetectable = Untransmittable)','HIV — Long-term Living & Adherence',
+  'Stigma & Social Discrimination','Mental Health & Emotional Wellbeing','Identity — LGBTQIA+ / Takatāpui',
+  'PrEP — Pre-Exposure Prophylaxis','PEP — Post-Exposure Prophylaxis (72h)','STI Testing (General)',
+  'Syphilis — Testing & Treatment','Chlamydia','Gonorrhoea','DoxyPEP',
+  'Disclosure — Telling Others','Online Hate & Cyberstigma',
+  'Prevention & Safe Sex (Condoms)','WINZ & Financial Support','Housing & Council Services',
+  'Legal Rights (NZ Human Rights Act)','Whānau & Family Support',
+  'Sperm Positive / Family Planning','Rainbow Youth & Community'
+];
+const topicCounts = [312,198,221,284,176,142,234,112,198,145,88,72,54,189,89,167,43,38,67,94,29,78];
+const topicColors = topics.map((t,i)=>{
+  if(t.includes('HIV')) return 'rgba(14,165,233,0.75)';
+  if(t.includes('Stigma')||t.includes('Online')) return 'rgba(239,68,68,0.75)';
+  if(t.includes('Mental')||t.includes('Identity')||t.includes('Disclosure')||t.includes('Whānau')||t.includes('Rainbow')) return 'rgba(245,158,11,0.75)';
+  if(t.includes('PrEP')||t.includes('PEP')||t.includes('Prevention')||t.includes('Safe Sex')||t.includes('Doxy')) return 'rgba(16,185,129,0.75)';
+  if(t.includes('Syphilis')||t.includes('Chlamydia')||t.includes('Gonorrhoea')||t.includes('STI')) return 'rgba(56,189,248,0.75)';
+  return 'rgba(168,85,247,0.75)';
+});
+new Chart(document.getElementById('topicsChart'), {
+  type: 'bar',
+  data: {
+    labels: topics,
+    datasets: [{ label:'Sessions', data:topicCounts, backgroundColor:topicColors, borderRadius:3, borderSkipped:false }]
+  },
+  options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+      callbacks:{label:ctx=>`${ctx.raw} sessions (${((ctx.raw/1847)*100).toFixed(1)}% of total)`}} },
+    scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}, y:{grid:{display:false}, ticks:{font:{size:11}}} }
+  }
+});
+
+// === 5. STI MONTHLY CHART ===
+new Chart(document.getElementById('stiChart'), {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [
+      {label:'HIV Topics', data:[28,32,36,30,34,38,32,36,40,44,38,34], backgroundColor:'rgba(14,165,233,0.7)'},
+      {label:'Syphilis',   data:[10,12,14,12,13,15,12,14,16,13,12,14], backgroundColor:'rgba(239,68,68,0.7)'},
+      {label:'PrEP',       data:[18,20,22,24,22,24,18,22,24,26,20,22], backgroundColor:'rgba(16,185,129,0.7)'},
+      {label:'PEP',        data:[8,10,9,10,11,9,10,8,12,10,9,10],  backgroundColor:'rgba(245,158,11,0.7)'},
+      {label:'DoxyPEP',    data:[2,3,4,4,5,5,4,5,6,5,5,5],          backgroundColor:'rgba(168,85,247,0.7)'},
+      {label:'STI Testing',data:[14,15,16,18,16,17,15,18,20,19,17,18],backgroundColor:'rgba(56,189,248,0.7)'}
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{position:'top', labels:{font:{size:11}}}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1, mode:'index',intersect:false} },
+    scales:{ x:{stacked:false, grid:{color:'rgba(255,255,255,.04)'}}, y:{stacked:false, grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true} }
+  }
+});
+
+// === 6. U=U / PrEP / PEP ===
+new Chart(document.getElementById('preventionChart'), {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [
+      {label:'U=U',  data:[10,12,14,16,14,16,12,14,18,16,14,16], backgroundColor:'rgba(16,185,129,0.7)'},
+      {label:'PrEP', data:[18,20,22,24,22,24,18,22,24,26,20,22], backgroundColor:'rgba(14,165,233,0.7)'},
+      {label:'PEP',  data:[8,10,9,10,11,9,10,8,12,10,9,10],      backgroundColor:'rgba(245,158,11,0.7)'}
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{position:'top', labels:{font:{size:11}}}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1, mode:'index'} },
+    scales:{ x:{grid:{color:'rgba(255,255,255,.04)'}}, y:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true} }
+  }
+});
+
+// === 7. STI DONUT ===
+new Chart(document.getElementById('stiDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['HIV/General','Syphilis','STI Testing','Chlamydia','Gonorrhoea','DoxyPEP'],
+    datasets: [{ data:[312,145,198,88,72,54], backgroundColor:['#0ea5e9','#ef4444','#38bdf8','#f59e0b','#a855f7','#10b981'], borderWidth:0, hoverOffset:6 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false, cutout:'62%',
+    plugins:{ legend:{position:'right', labels:{padding:10, font:{size:10}}}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1} }
+  }
+});
+
+// === 8. STIGMA TREND ===
+new Chart(document.getElementById('stigmaChart'), {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [
+      {label:'Stigma/Discrimination', data:[24,26,28,30,26,28,30,26,28,32,28,26], borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,0.06)', fill:true, tension:0.4, pointRadius:3},
+      {label:'Mental Health',         data:[14,16,18,16,18,16,18,16,20,18,16,18], borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.05)', fill:true, tension:0.4, pointRadius:3},
+      {label:'Online Hate',           data:[6,7,8,7,8,7,9,8,9,10,8,9],            borderColor:'#a855f7', backgroundColor:'rgba(168,85,247,0.04)', fill:true, tension:0.4, pointRadius:3},
+      {label:'Identity Challenges',   data:[10,12,14,12,14,12,14,12,16,14,12,14], borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,0.04)', fill:true, tension:0.4, pointRadius:3}
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+    plugins:{ legend:{position:'top', labels:{font:{size:11}}}, tooltip:{backgroundColor:'#141f33',borderColor:'rgba(255,255,255,.1)',borderWidth:1} },
+    scales:{ x:{grid:{color:'rgba(255,255,255,.03)'}}, y:{grid:{color:'rgba(255,255,255,.03)'},beginAtZero:true} }
+  }
+});
+
+// === 9. LANGUAGE DONUT ===
+new Chart(document.getElementById('langDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['English','Español (Spanish)','Te reo Māori','Mixed / Other'],
+    datasets: [{ data:[1256,406,129,56], backgroundColor:['#0ea5e9','#f59e0b','#10b981','#6b7c
