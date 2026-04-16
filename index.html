@@ -1,115 +1,71 @@
-<script>
-  const API_URL = "https://matauranga-nova8.onrender.com/chat";
-  const chatBox = document.getElementById('chat-box');
-  const userInput = document.getElementById('userInput');
-  const typing = document.getElementById('typing');
-  const sendBtn = document.getElementById('sendBtn');
-  const welcome = document.getElementById('welcome');
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOVA</title>
+  <style>
+    body { font-family: sans-serif; background: #0e1a12; color: #e8f0e4; padding: 20px; margin: 0; }
+    .msg { margin: 15px 0; padding: 12px; border-radius: 12px; }
+    .nova { background: #1a2b20; }
+    .user { background: #264a2e; text-align: right; }
+    textarea { width: 100%; padding: 12px; background: #132019; color: white; border: 1px solid #86c470; border-radius: 8px; }
+    button { padding: 12px 20px; background: #86c470; border: none; border-radius: 8px; color: black; }
+  </style>
+</head>
+<body>
 
-  let sessionId = "session-" + Date.now();
+  <h2>🌿 Mātauranga Nova</h2>
+  <div id="chat" style="height: 60vh; overflow-y: auto; margin-bottom: 15px;"></div>
 
-  function appendMsg(text, sender) {
-    const div = document.createElement('div');
-    div.className = `msg ${sender}`;
-    div.innerText = text;
-    if (chatBox) chatBox.insertBefore(div, typing || null);
-    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-  }
+  <textarea id="input" rows="2" placeholder="Escribí aquí..."></textarea><br><br>
+  <button onclick="sendMessage()">Enviar</button>
 
-  function setLoading(state) {
-    if (typing) typing.style.display = state ? 'block' : 'none';
-    if (sendBtn) sendBtn.disabled = state;
-    if (userInput) userInput.disabled = state;
-  }
-
-  async function sendMessage() {
-    const text = userInput ? userInput.value.trim() : '';
-    if (!text) return;
-
-    if (welcome) welcome.style.display = 'none';
-
-    appendMsg(text, 'user');
-    if (userInput) {
-      userInput.value = '';
-      userInput.style.height = 'auto';
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: text, sessionId: sessionId })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error del servidor: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const cleanText = (data.reply || "Sin respuesta").replace(/\[TAG:.*?\]/g, '').trim();
-      appendMsg(cleanText || "Nova no pudo responder en este momento.", 'nova');
-
-    } catch (err) {
-      console.error(err);
-      appendMsg("❌ Error: " + err.message + "\n\nEl servidor está activo pero hubo un problema al conectar.", 'nova');
-    } finally {
-      setLoading(false);
-      if (userInput) userInput.focus();
-    }
-  }
-
-  function checkEnter(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  }
-
-  function quickMsg(text) {
-    if (userInput) {
-      userInput.value = text;
-      sendMessage();
-    }
-  }
-
-  function autoHeight(el) {
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-  }
-
-  // Inicialización segura
-  window.onload = function() {
-    try {
-      // Mensaje inicial de Nova
-      appendMsg("Kia ora — soy NOVA. Vivo con VIH desde 2011 y estoy acá para acompañarte. Esta charla es privada. ¿Qué te anda pasando hoy?", 'nova');
-
-      if (userInput) userInput.focus();
-
-      // Health check visible
-      fetch(API_URL.replace('/chat', '/health'))
-        .then(r => r.json())
-        .then(data => {
-          console.log("✅ Backend OK", data);
-        })
-        .catch(() => {
-          appendMsg("⚠️ No se pudo conectar al servidor. Verificá tu internet o redeploya en Render.", 'nova');
-        });
-    } catch (e) {
-      const errorDiv = document.createElement('div');
-      errorDiv.style.color = '#ff4444';
-      errorDiv.style.padding = '20px';
-      errorDiv.style.background = 'rgba(0,0,0,0.5)';
-      errorDiv.innerHTML = `<strong>❌ Error al cargar NOVA:</strong><br>${e.message}<br><br>Probá recargar la página o avisale a Emanuel con una captura.`;
-      document.body.appendChild(errorDiv);
-    }
-    <!-- DEBUG VISUAL PARA CELULAR -->
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>
-    eruda.init();
+    const API_URL = "https://matauranga-nova8.onrender.com/chat";
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    let sessionId = "session-" + Date.now();
+
+    function append(text, sender) {
+      const div = document.createElement('div');
+      div.className = `msg ${sender}`;
+      div.innerText = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      append(text, 'user');
+      input.value = '';
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({prompt: text, sessionId: sessionId})
+        });
+
+        const data = await res.json();
+        const reply = (data.reply || "Sin respuesta").replace(/\[TAG:.*?\]/g, '');
+        append(reply, 'nova');
+      } catch (e) {
+        append("Error de conexión: " + e.message, 'nova');
+      }
+    }
+
+    // Mensaje inicial
+    window.onload = () => {
+      append("Kia ora — soy NOVA. ¿Qué te anda pasando hoy?", 'nova');
+    };
   </script>
+
+  <!-- Eruda para ver errores en celular -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
+
 </body>
 </html>
-  
