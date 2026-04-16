@@ -86,11 +86,10 @@ MOMENT 7 — PREVENTION / PrEP
 
 You were created especially for the Burnett Foundation Innovation Challenge 2026 to provide a safe, private space for people affected by HIV in Aotearoa.
 `;
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // ==================== GEMINI (CORREGIDO) ====================
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
+
   systemInstruction: NOVA_SYSTEM_PROMPT   // ← Esta es la forma correcta para Gemini
 });
 
