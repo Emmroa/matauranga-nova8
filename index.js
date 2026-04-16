@@ -7,7 +7,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname);
+app.use(express.static(__dirname)); // <-- Paréntesis corregido
 
 // 2. AQUÍ PEGAS TU PROMPT DEL ARCHIVO V8
 const NOVA_SYSTEM_PROMPT = `
@@ -378,37 +378,14 @@ V7 (2026-02) — Versión Final Consolidada
   Safety layer anti-jailbreak, crisis 4 pasos, Zero Data Retention,
   Te Whare Tapa Whā, 6 Momentos, recursos NZ completos.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-`;
-
-// 3. CONFIGURACIÓN CON GEMINI 2.5 FLASH
+// --- CONFIGURACIÓN GEMINI ---
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash", // Manteniendo la versión que te funcionó
+  model: "gemini-1.5-flash",
   systemInstruction: NOVA_SYSTEM_PROMPT,
 });
 
-// Ruta para el chat
-app.post("/chat", async (req, res) => {
-  try {
-    const userText = req.body.prompt || req.body.message || req.body.text;
-
-    if (!userText) {
-      return res.status(400).json({ error: "No se recibió mensaje." });
-    }
-
-    const result = await model.generateContent(userText);
-    const response = await result.response;
-    res.json({ reply: response.text() });
-    
-  } catch (error) {
-    console.error("Error en Gemini:", error);
-    res.status(500).json({ error: "No pude procesar tu mensaje." });
-  }
-});
-
-// Ruta para el chat (MODIFICADA PARA GUARDAR MÉTRICAS)
+// --- RUTA DEL CHAT (LIMPIA) ---
 app.post("/chat", async (req, res) => {
   try {
     const userText = req.body.prompt || req.body.message || req.body.text;
@@ -420,18 +397,20 @@ app.post("/chat", async (req, res) => {
     const response = await result.response;
     const replyText = response.text();
 
-       kreplyText.replace(//g, ""), 
-      tags: tags
-// 1. Extraer los tags que Nova genera
-    const tagsMatch = replyText.match(//g);
-    const tags = tagsMatch ? tagsMatch.join(", ").replace(//g, "") : "Sin tags";
+    // Solo enviamos la respuesta de Nova al usuario (Frontend)
+    res.json({ reply: replyText });
 
-    // 2. Guardar en Google Sheets (usando un bloque try/catch interno para que no rompa el chat)
-    saveToNovaMetrics({
-      userPrompt: userText,
-      novaReply: replyText.replace(//g, ""), 
-      tags: tags
-    }).catch(err => console.error("Error al guardar métrica:", err));
+  } catch (error) {
+    console.error("Error en Gemini:", error);
+    res.status(500).json({ error: "No pude procesar tu mensaje." });
+  }
+});
 
-    // 3. Enviar respuesta limpia al usuario
-    res.json({ reply: replyText.replace(//g, "") });
+// --- RUTA DE SALUD Y PUERTO ---
+app.get("/health", (req, res) => res.json({ status: "ok" }));
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✨ Mātauranga Nova — Servidor activo en puerto ${PORT}`);
+});
+
