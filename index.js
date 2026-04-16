@@ -3,13 +3,37 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const { JWT } = require('google-auth-library');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// 1. Esto muestra tu página index.html
 app.use(express.static(__dirname));
+
+// --- CONFIGURACIÓN GOOGLE SHEETS ---
+const serviceAccountAuth = new JWT({
+  email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
+
+async function saveToNovaMetrics(analyticsData) {
+  try {
+    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
+    await doc.loadInfo();
+    const sheet = doc.sheetsByIndex[0];
+    await sheet.addRow({
+      Fecha: new Date().toLocaleString("en-NZ", { timeZone: "Pacific/Auckland" }),
+      Mensaje_Usuario: analyticsData.userPrompt,
+      Respuesta_Nova: analyticsData.novaReply,
+      Tags: analyticsData.tags
+    });
+    console.log('✅ Métrica guardada');
+  } catch (error) {
+    console.error('❌ Error en Sheets:', error);
+  }
+}
 
 // 2. AQUÍ PEGAS TU PROMPT DEL ARCHIVO V8
 const NOVA_SYSTEM_PROMPT = `
