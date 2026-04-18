@@ -15,7 +15,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-
+app.set('trust proxy', 1);
 // ═══════════════════════════════════════════════════════════
 // CAPA 4 — HELMET (headers HTTP de seguridad)
 // ═══════════════════════════════════════════════════════════
