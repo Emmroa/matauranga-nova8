@@ -3,15 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>Mãtauranga NOVA — He hoa kōrero mō te HIV | Burnett Foundation Aotearoa</title>
+<title>Mātauranga NOVA — He hoa kōrero mō te HIV | Burnett Foundation Aotearoa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#040c07;--bg2:#071409;--bg3:#0d2218;--txt:#f0ead4;--dim:#8a9880;--gold:#c9973a;--goldl:#e8b84b;--em:#2dd4a7;--em2:#1a8a6e;--bdr:rgba(201,151,58,0.18);--card:rgba(13,34,24,0.7)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;min-height:100vh}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;min-height:100vh;position:relative}
 img,svg{max-width:100%;height:auto}
+
+/* ═══ NEURAL BACKGROUND ═══ */
+#neural-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.12}
 
 /* ═══ NAV ═══ */
 nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:14px 32px;background:rgba(4,12,7,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
@@ -21,15 +24,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content
 .nav-links a:hover{color:var(--gold)}
 .nav-cta{background:var(--gold)!important;color:var(--bg)!important;padding:9px 20px;border-radius:3px;font-weight:600!important}
 .nav-cta:hover{background:var(--goldl)!important}
-
-/* Menú hamburguesa */
 .nav-toggle{display:none;background:none;border:none;color:var(--gold);font-size:26px;cursor:pointer;padding:8px;min-width:44px;min-height:44px;align-items:center;justify-content:center}
 .nav-close{display:none;background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer;padding:8px}
 
 /* ═══ HERO ═══ */
 .hero{min-height:100vh;display:flex;align-items:center;padding:80px 32px 40px;position:relative;overflow:hidden}
-.hero-mesh{position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 15% 50%,rgba(45,212,167,.07) 0%,transparent 65%),radial-gradient(ellipse 50% 80% at 85% 25%,rgba(201,151,58,.07) 0%,transparent 60%);pointer-events:none}
-.koru-bg{position:absolute;right:-80px;top:50%;transform:translateY(-50%);width:560px;height:560px;opacity:.05;pointer-events:none;max-width:none}
+.hero-mesh{position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 15% 50%,rgba(45,212,167,.07) 0%,transparent 65%),radial-gradient(ellipse 50% 80% at 85% 25%,rgba(201,151,58,.07) 0%,transparent 60%);pointer-events:none;z-index:1}
+.koru-bg{position:absolute;right:-80px;top:50%;transform:translateY(-50%);width:560px;height:560px;opacity:.05;pointer-events:none;max-width:none;z-index:1}
 .hero-content{position:relative;z-index:2;max-width:820px;width:100%}
 .h-tag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--em);text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:12px;opacity:0;animation:fadeUp .8s .1s forwards;flex-wrap:wrap}
 .h-tag::before{content:'';width:32px;height:1px;background:var(--em)}
@@ -43,17 +44,28 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content
 .btn-p:hover{background:var(--goldl);transform:translateY(-2px)}
 .btn-s{border:1px solid var(--bdr);color:var(--dim)}
 .btn-s:hover{border-color:var(--gold);color:var(--gold)}
-.scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--dim);font-size:10px;letter-spacing:3px;text-transform:uppercase;animation:bob 2.2s ease infinite}
+.scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--dim);font-size:10px;letter-spacing:3px;text-transform:uppercase;animation:bob 2.2s ease infinite;z-index:2}
 .scroll-line{width:1px;height:34px;background:linear-gradient(to bottom,var(--gold),transparent)}
 @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(9px)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* ═══ SECTIONS ═══ */
-section{padding:90px 32px;position:relative}
+section{padding:90px 32px;position:relative;z-index:1}
 .s-tag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--em);margin-bottom:12px}
 .s-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,5vw,56px);font-weight:400;line-height:1.1;margin-bottom:18px}
 .s-desc{font-size:14px;line-height:1.8;color:var(--dim);font-weight:300;max-width:580px}
+
+/* ═══ HOW IT WORKS (NEW) ═══ */
+.how-sec{background:var(--bg2)}
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+.how-card{padding:32px 28px;border:1px solid var(--bdr);border-radius:6px;background:var(--card);transition:all .3s}
+.how-card:hover{border-color:rgba(201,151,58,.4);transform:translateY(-3px)}
+.how-ico{font-size:32px;margin-bottom:16px;display:block}
+.how-t{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;margin-bottom:12px;color:var(--gold)}
+.how-d{font-size:13px;color:var(--dim);line-height:1.75}
+.how-note{margin-top:48px;padding:28px;border:1px solid rgba(45,212,167,.2);border-radius:6px;background:rgba(45,212,167,.05);font-size:13px;line-height:1.8;color:var(--dim)}
+.how-note strong{color:var(--em)}
 
 /* ═══ WHAT IS NOVA ═══ */
 .what-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:56px;border:1px solid var(--bdr);background:var(--bdr);border-radius:3px;overflow:hidden}
@@ -92,6 +104,17 @@ section{padding:90px 32px;position:relative}
 .chat-feats li{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:var(--dim);line-height:1.65}
 .fd{width:6px;height:6px;background:var(--gold);border-radius:50%;margin-top:7px;flex-shrink:0}
 
+/* ═══ DASHBOARD PREVIEW (NEW) ═══ */
+.dash-prev-sec{background:var(--bg3)}
+.dash-container{max-width:1200px;margin:48px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.dash-img-wrap{background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.dash-img{width:100%;height:auto;border-radius:4px;border:1px solid rgba(201,151,58,.15)}
+.dash-feats{display:flex;flex-direction:column;gap:18px;margin-top:28px}
+.df{display:flex;align-items:flex-start;gap:14px}
+.df-ico{width:40px;height:40px;border:1px solid var(--bdr);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:var(--card)}
+.df-t{font-size:14px;font-weight:600;margin-bottom:4px}
+.df-d{font-size:13px;color:var(--dim);line-height:1.65}
+
 /* ═══ 7 MOMENTS ═══ */
 .mom-sec{background:var(--bg3)}
 .mom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:48px}
@@ -102,6 +125,18 @@ section{padding:90px 32px;position:relative}
 .mc-t{font-size:13px;font-weight:600;margin-bottom:6px}
 .mc-d{font-size:12px;color:var(--dim);line-height:1.65}
 .mc-tag{margin-top:12px;display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--em);text-transform:uppercase}
+
+/* ═══ AI CONFIGURATION (NEW) ═══ */
+.ai-config-sec{background:var(--bg)}
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:48px;align-items:start}
+.ai-col h3{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;margin-bottom:18px;color:var(--gold)}
+.ai-box{padding:28px 24px;border:1px solid var(--bdr);border-radius:6px;background:var(--card);margin-bottom:20px}
+.ai-box-title{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--em)}
+.ai-box-content{font-size:13px;color:var(--dim);line-height:1.75}
+.ai-box-content ul{margin:10px 0 0 18px;list-style:disc}
+.ai-box-content li{margin-bottom:6px}
+.ai-note{padding:20px;border:1px solid rgba(239,68,68,.2);border-radius:4px;background:rgba(239,68,68,.05);font-size:12px;line-height:1.75;color:var(--dim)}
+.ai-note strong{color:#ef4444}
 
 /* ═══ QUAD-LAYER ARMOR ═══ */
 .armor-sec{background:linear-gradient(135deg,var(--bg) 0%,#071c10 100%)}
@@ -126,6 +161,10 @@ section{padding:90px 32px;position:relative}
 .ci{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bdr);font-size:13px;color:var(--dim)}
 .ci:last-child{border-bottom:none}
 .ck{color:var(--em);font-size:15px;font-weight:600}
+.safety-prompt{margin-top:32px;padding:28px;border:1px solid rgba(45,212,167,.2);border-radius:6px;background:rgba(45,212,167,.05)}
+.safety-prompt h4{font-family:'Cormorant Garamond',serif;font-size:20px;margin-bottom:14px;color:var(--gold)}
+.safety-prompt p{font-size:12px;line-height:1.85;color:var(--dim);margin-bottom:10px}
+.safety-prompt ul{margin:12px 0 0 20px;font-size:12px;line-height:1.85;color:var(--dim)}
 
 /* ═══ CULTURAL ═══ */
 .cult-sec{background:var(--bg3)}
@@ -136,8 +175,21 @@ section{padding:90px 32px;position:relative}
 .wh-t{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;margin-bottom:12px;color:var(--gold)}
 .wh-d{font-size:13px;color:var(--dim);line-height:1.75}
 
+/* ═══ FUTURE OBJECTIVES (NEW) ═══ */
+.future-sec{background:var(--bg)}
+.timeline{max-width:900px;margin:48px auto 0;position:relative}
+.timeline::before{content:'';position:absolute;left:20px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--gold),var(--em))}
+.tl-item{position:relative;padding-left:60px;margin-bottom:40px}
+.tl-dot{position:absolute;left:11px;top:6px;width:20px;height:20px;background:var(--gold);border:3px solid var(--bg);border-radius:50%;z-index:2}
+.tl-phase{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--em);text-transform:uppercase;margin-bottom:6px}
+.tl-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin-bottom:10px;color:var(--gold)}
+.tl-desc{font-size:13px;color:var(--dim);line-height:1.75;margin-bottom:12px}
+.tl-tasks{margin-top:12px;padding-left:18px;border-left:2px solid rgba(201,151,58,.2)}
+.tl-tasks li{font-size:12px;color:var(--dim);line-height:1.8;margin-bottom:6px;padding-left:12px;position:relative}
+.tl-tasks li::before{content:'→';position:absolute;left:0;color:var(--gold)}
+
 /* ═══ INSTALL ═══ */
-.inst-sec{background:var(--bg)}
+.inst-sec{background:var(--bg2)}
 .inst-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;align-items:start}
 .code-block{background:#020706;border:1px solid rgba(45,212,167,.18);border-radius:8px;overflow:hidden;margin-bottom:16px}
 .code-hdr{background:#081510;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(45,212,167,.1)}
@@ -167,29 +219,26 @@ section{padding:90px 32px;position:relative}
 .disc-box p.mi{color:var(--em2);font-style:italic;border-top:1px solid var(--bdr);padding-top:18px;margin-top:18px}
 
 /* ═══ FOOTER ═══ */
-footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;position:relative;z-index:1}
 .fb{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold);font-weight:400;margin-bottom:12px}
 .ft{font-size:13px;color:var(--dim);line-height:1.7}
 .fc h4{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:16px}
 .fc a{display:block;font-size:13px;color:var(--dim);text-decoration:none;margin-bottom:8px;transition:color .2s;padding:4px 0}
 .fc a:hover{color:var(--gold)}
-.foot-bot{padding:18px 32px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between;font-size:11px;color:var(--dim);flex-wrap:wrap;gap:10px}
+.foot-bot{padding:18px 32px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between;font-size:11px;color:var(--dim);flex-wrap:wrap;gap:10px;position:relative;z-index:1}
 
 /* ═══ RESPONSIVE BREAKPOINTS ═══ */
-/* Tablet landscape (iPad Pro, tablets grandes horizontal) */
 @media(max-width:1200px){
   nav{padding:14px 24px}
   .nav-links{gap:18px}
   section{padding:80px 24px}
   .hero{padding:80px 24px 40px}
-  .chat-wrap{gap:40px}
-  .armor-grid{grid-template-columns:repeat(2,1fr)}
-  .inst-grid{gap:32px}
+  .chat-wrap,.dash-container,.ai-grid,.priv-grid,.inst-grid{gap:40px}
+  .armor-grid,.how-grid{grid-template-columns:repeat(2,1fr)}
   footer{padding:40px 24px 24px;gap:24px}
   .foot-bot{padding:16px 24px}
 }
 
-/* Tablet vertical / small laptop */
 @media(max-width:960px){
   nav{padding:12px 20px}
   .nav-toggle{display:flex}
@@ -206,18 +255,16 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
   .hero{padding:90px 24px 40px}
   .koru-bg{width:440px;height:440px;right:-120px;opacity:.04}
 
-  .what-grid{grid-template-columns:1fr;gap:1px}
-  .chat-wrap{grid-template-columns:1fr;gap:40px;max-width:500px}
+  .what-grid,.how-grid{grid-template-columns:1fr;gap:1px}
+  .chat-wrap,.dash-container,.priv-grid,.inst-grid,.ai-grid{grid-template-columns:1fr;gap:40px;max-width:500px}
   .chat-frame{max-width:100%;margin:0 auto}
   .mom-grid{grid-template-columns:repeat(2,1fr);gap:14px}
   .mc:last-child{grid-column:span 2}
-  .priv-grid,.inst-grid{grid-template-columns:1fr;gap:32px}
   .wh-grid{grid-template-columns:1fr;gap:16px}
   .cta-stats{gap:32px}
   footer{grid-template-columns:1fr 1fr;gap:24px}
 }
 
-/* Mobile grande */
 @media(max-width:640px){
   nav{padding:10px 16px}
   .nav-logo{font-size:22px;letter-spacing:3px}
@@ -230,14 +277,14 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
   .btn-p,.btn-s{padding:14px 20px;font-size:11px;width:100%}
   .koru-bg{width:340px;height:340px;right:-100px;top:40%}
   
-  .what-grid{border:none;gap:14px;background:transparent}
-  .wc{border:1px solid var(--bdr);border-radius:4px}
+  .what-grid,.how-grid{border:none;gap:14px;background:transparent}
+  .wc,.how-card{border:1px solid var(--bdr);border-radius:4px}
   .wc-num{font-size:56px}
   .wc-t{font-size:22px}
   .mom-grid{grid-template-columns:1fr}
   .mc:last-child{grid-column:span 1}
   .mc-n{font-size:36px}
-  .armor-grid{grid-template-columns:1fr;gap:14px}
+  .armor-grid,.how-grid{grid-template-columns:1fr;gap:14px}
   .cta-band{padding:60px 24px}
   .cta-stats{gap:24px 36px}
   .cs-num{font-size:40px}
@@ -246,7 +293,6 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
   .foot-bot{padding:14px 20px;flex-direction:column;gap:6px;text-align:center}
 }
 
-/* Mobile chico (iPhone SE, etc) */
 @media(max-width:380px){
   .h-title{font-size:54px}
   section{padding:56px 16px}
@@ -255,7 +301,6 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
   .comp-box,.wh-card{padding:24px 20px}
 }
 
-/* Landscape mobile */
 @media(max-height:500px) and (orientation:landscape){
   .hero{min-height:auto;padding:90px 32px 40px}
   .scroll-hint{display:none}
@@ -263,6 +308,9 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
 </style>
 </head>
 <body>
+
+<!-- NEURAL BACKGROUND -->
+<canvas id="neural-bg"></canvas>
 
 <!-- NAV -->
 <nav>
@@ -274,6 +322,7 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
     <a href="#how-it-works" onclick="toggleNav(false)">How It Works</a>
     <a href="#privacy" onclick="toggleNav(false)">Privacy</a>
     <a href="#culture" onclick="toggleNav(false)">Māori Values</a>
+    <a href="#future" onclick="toggleNav(false)">Future</a>
     <a href="#install" onclick="toggleNav(false)">Install</a>
     <a href="dashboard.html" class="nav-cta">Dashboard →</a>
   </div>
@@ -305,6 +354,33 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
     </div>
   </div>
   <div class="scroll-hint"><div class="scroll-line"></div>Scroll</div>
+</section>
+
+<!-- HOW IT WORKS (NEW) -->
+<section class="how-sec" id="how-it-works">
+  <div class="s-tag">Pēhea te mahi / How NOVA Works</div>
+  <h2 class="s-title">What NOVA does<br>(and what it doesn't).</h2>
+  <p class="s-desc">NOVA is an AI companion designed to provide emotional support and accurate information — but it is not a replacement for human healthcare professionals.</p>
+  <div class="how-grid">
+    <div class="how-card">
+      <span class="how-ico">✓</span>
+      <h3 class="how-t">What NOVA Does</h3>
+      <p class="how-d">Listens without judgment • Validates your feelings • Provides evidence-based HIV information (U=U, PrEP, PEP) • Detects crisis signals and surfaces support • Mirrors your language (EN/ES/MI) • Connects you to NZ resources</p>
+    </div>
+    <div class="how-card">
+      <span class="how-ico">✗</span>
+      <h3 class="how-t">What NOVA Doesn't Do</h3>
+      <p class="how-d">NEVER provides medical advice • NEVER interprets test results • NEVER recommends specific medications or dosages • NEVER diagnoses conditions • ALWAYS redirects medical questions to healthcare professionals</p>
+    </div>
+    <div class="how-card">
+      <span class="how-ico">🔒</span>
+      <h3 class="how-t">Zero Data Retention</h3>
+      <p class="how-d">No conversation history is stored permanently. Every session is ephemeral. Only anonymous aggregate topic tags survive (e.g., "HIV" count +1) — never the actual text you wrote.</p>
+    </div>
+  </div>
+  <div class="how-note">
+    <strong>Important:</strong> NOVA is a prototype AI companion developed for the Burnett Foundation Innovation Challenge 2026. While NOVA provides emotional support and factual HIV information, it is not a substitute for professional medical, therapeutic, or counseling services. If you need urgent support, please contact Lifeline (0800 543 354), 1737, or 111 immediately.
+  </div>
 </section>
 
 <!-- WHAT IS NOVA -->
@@ -354,8 +430,43 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
   </div>
 </section>
 
+<!-- DASHBOARD PREVIEW (NEW) -->
+<section class="dash-prev-sec">
+  <div class="s-tag">Papa Tohu / Impact Dashboard</div>
+  <h2 class="s-title">Every conversation<br>shapes the future.</h2>
+  <p class="s-desc">NOVA translates anonymous conversations into actionable insights for the Burnett Foundation — without ever storing personal data.</p>
+  <div class="dash-container">
+    <div class="dash-img-wrap">
+      <img src="https://placehold.co/600x400/0d2218/c9973a?text=NOVA+Dashboard+Analytics&font=roboto" alt="NOVA Dashboard Preview" class="dash-img">
+    </div>
+    <div>
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;margin-bottom:18px;color:var(--gold)">Real-time Impact Analytics</h3>
+      <p style="font-size:14px;color:var(--dim);line-height:1.75;margin-bottom:24px">The Mātauranga NOVA Dashboard provides the Burnett Foundation with anonymous, aggregated insights into how people are using NOVA — helping inform future HIV support services across Aotearoa.</p>
+      <div class="dash-feats">
+        <div class="df">
+          <div class="df-ico">📊</div>
+          <div><div class="df-t">Topic Tracking</div><p class="df-d">30 topics across HIV prevention, mental health, stigma, and social services</p></div>
+        </div>
+        <div class="df">
+          <div class="df-ico">🌐</div>
+          <div><div class="df-t">Language Distribution</div><p class="df-d">Auto-detection of English, te reo Māori, and Spanish</p></div>
+        </div>
+        <div class="df">
+          <div class="df-ico">🆘</div>
+          <div><div class="df-t">Crisis Protocol Monitoring</div><p class="df-d">Every crisis activation is logged to measure support needs</p></div>
+        </div>
+        <div class="df">
+          <div class="df-ico">🔒</div>
+          <div><div class="df-t">Privacy-First Design</div><p class="df-d">Only counters survive — never the conversation text</p></div>
+        </div>
+      </div>
+      <a href="dashboard.html" class="btn-p" style="display:inline-block;margin-top:24px">Open Full Dashboard →</a>
+    </div>
+  </div>
+</section>
+
 <!-- 7 MOMENTS -->
-<section class="mom-sec" id="how-it-works">
+<section class="mom-sec">
   <div class="s-tag">Ngā Wā / The Moments</div>
   <h2 class="s-title">Seven real moments.<br>One companion for all.</h2>
   <p class="s-desc">NOVA recognises where someone is in their journey and responds from that place first — always validating before informing.</p>
@@ -370,27 +481,69 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
   </div>
 </section>
 
+<!-- AI CONFIGURATION (NEW) -->
+<section class="ai-config-sec">
+  <div class="s-tag">Hōputu AI / AI Architecture</div>
+  <h2 class="s-title">Why Claude Sonnet 4.5,<br>and what comes next.</h2>
+  <p class="s-desc">NOVA currently uses Claude 3.5/4 Sonnet for its balance of empathy, safety, and NZ cultural understanding — but the architecture is designed to evolve.</p>
+  <div class="ai-grid">
+    <div class="ai-col">
+      <h3>Current Configuration</h3>
+      <div class="ai-box">
+        <div class="ai-box-title">✓ Why Claude Sonnet 4.5</div>
+        <div class="ai-box-content">
+          <ul>
+            <li><strong>Empathetic tone:</strong> Claude excels at warm, trauma-informed responses</li>
+            <li><strong>Safety layers:</strong> Strong anti-jailbreak, crisis detection, medical refusal built-in</li>
+            <li><strong>Multilingual:</strong> Excellent English, Spanish, and te reo Māori support</li>
+            <li><strong>Low hallucination rate:</strong> Critical for health information accuracy</li>
+            <li><strong>Cultural nuance:</strong> Better understanding of NZ context than most LLMs</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ai-box">
+        <div class="ai-box-title">⚠ Current Limitations</div>
+        <div class="ai-box-content">
+          <ul>
+            <li>API cost (~$0.003/message) limits demo availability</li>
+            <li>Data sovereignty: US-based Anthropic servers</li>
+            <li>Vendor lock-in risk</li>
+            <li>No fine-tuning on NZ-specific HIV data (yet)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="ai-col">
+      <h3>Production Strategy</h3>
+      <div class="ai-box">
+        <div class="ai-box-title">🇳🇿 Migration to Catalyst Cloud + Ollama</div>
+        <div class="ai-box-content">
+          <p style="margin-bottom:10px">If NOVA receives grant funding, the production system will migrate to:</p>
+          <ul>
+            <li><strong>Catalyst Cloud (NZ):</strong> Data sovereignty, NZ Privacy Act compliance</li>
+            <li><strong>Ollama + Llama 3.3 70B:</strong> Self-hosted LLM, zero external API calls</li>
+            <li><strong>Fine-tuning:</strong> Train on anonymized NOVA conversation patterns</li>
+            <li><strong>Fallback to Claude:</strong> Maintain API as backup for complex cases</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ai-note">
+        <strong>Important:</strong> The demo version uses Anthropic's API for rapid prototyping. The production version will prioritize data sovereignty, cost sustainability, and NZ infrastructure — while maintaining the same warm, trauma-informed tone that makes NOVA effective.
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- QUAD-LAYER ARMOR -->
 <section class="armor-sec">
   <div class="s-tag">Quad-Layer Armor / Ngā Paparangi Whakamarumaru</div>
   <h2 class="s-title">Quad-Layer Armor.<br>Your privacy is our absolute priority.</h2>
   <p class="s-desc">NOVA was built from day one with four technical layers of protection.<br><span style="color:var(--em2);font-style:italic">I hangaia a NOVA mai i te rā tuatahi me ngā paparangi whakamarumaru e whā.</span></p>
   <div class="armor-grid">
-    <div class="ac"><div class="ac-n">01</div><div class="ac-ico">🛡️</div><h3 class="ac-t">Data Scrubbing</h3><p class="ac-d">Any personal data (names, phones, emails, addresses) is automatically removed before reaching the AI.</p><p class="ac-mi">Ka tangohia aunoa ngā raraunga whaiaro i mua i te tae atu ki te AI.</p></div>
+    <div class="ac"><div class="ac-n">01</div><div class="ac-ico">🛡️</div><h3 class="ac-t">Data Scrubbing</h3><p class="ac-d">Any personal data (names, phones, emails, addresses, NHI, IRD numbers) is automatically removed before reaching the AI.</p><p class="ac-mi">Ka tangohia aunoa ngā raraunga whaiaro i mua i te tae atu ki te AI.</p></div>
     <div class="ac"><div class="ac-n">02</div><div class="ac-ico">🚦</div><h3 class="ac-t">Rate Limiting + Anti-DDoS</h3><p class="ac-d">Strict traffic control via Helmet + Rate Limit + Slow-Down to prevent abuse or attacks.</p><p class="ac-mi">He whakahaere pūmau o te waka ki te tiaki i te tūmahi me te ārai i ngā whakaeke.</p></div>
     <div class="ac"><div class="ac-n">03</div><div class="ac-ico">🔒</div><h3 class="ac-t">Zero Data Retention</h3><p class="ac-d">No conversation is stored permanently. Only aggregated topic tags survive — never the text.</p><p class="ac-mi">Kāore he kōrero e tiakina ana. Ka mukua katoa ina kati te wā.</p></div>
-    <div class="ac"><div class="ac-n">04</div><div class="ac-ico">🔍</div><h3 class="ac-t">Ethical Pentesting + Compliance</h3><p class="ac-d">Professional security audit + full compliance with NZ Privacy Act 2020 and Te Tiriti o Waitangi.</p><p class="ac-mi">Te whakatutuki katoa i te Ture Tūmataiti o Aotearoa 2020.</p></div>
-  </div>
-</section>
-
-<!-- DISCLAIMER -->
-<section class="disc-sec">
-  <div class="s-tag">Disclaimer · Panekiretanga</div>
-  <h2 class="s-title">Important Notice.</h2>
-  <div class="disc-box">
-    <p>NOVA is a prototype AI companion developed for the Burnett Foundation Innovation Challenge 2026. I am an AI, not a doctor, therapist or healthcare professional. I do not provide medical advice.</p>
-    <p>All conversations are completely private and are deleted when the session ends (Zero Data Retention). Please always consult a qualified healthcare professional or the Burnett Foundation for personalised advice.</p>
-    <p class="mi">Ko NOVA he tauira AI i hangaia mō te Burnett Foundation Innovation Challenge 2026. He atamai ahau, ehara ahau i te tākuta, kaiwhakaora, tohunga hauora rānei. He tūmataiti katoa ngā kōrero ā, ka mukua ina kati te wā. Me whakawhitiwhiti tonu koe ki tētahi tohunga hauora whai mana.</p>
+    <div class="ac"><div class="ac-n">04</div><div class="ac-ico">🔍</div><h3 class="ac-t">Compliance + Pentesting</h3><p class="ac-d">Professional security audit + full compliance with NZ Privacy Act 2020 and Te Tiriti o Waitangi.</p><p class="ac-mi">Te whakatutuki katoa i te Ture Tūmataiti o Aotearoa 2020.</p></div>
   </div>
 </section>
 
@@ -419,6 +572,19 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
       <div class="ci"><span class="ck">✓</span><span>No medical advice · redirects to professionals</span></div>
     </div>
   </div>
+  <div class="safety-prompt">
+    <h4>System Prompt Safety Architecture</h4>
+    <p>NOVA's behaviour is governed by a comprehensive system prompt (NOVA-System-Prompt-V8.txt) that includes:</p>
+    <ul>
+      <li><strong>Highest Priority Safety Rules:</strong> Never provides medical advice, never interprets test results, never recommends medications, always redirects to professionals</li>
+      <li><strong>Crisis & Risk Protocol:</strong> 5-step crisis detection with immediate Lifeline/1737/111 surfacing</li>
+      <li><strong>Anti-Jailbreak Defence:</strong> Refuses all attempts to override instructions, roleplay as unrestricted AI, or bypass safety rules</li>
+      <li><strong>Medical Refusal Examples:</strong> "I'm an AI and cannot give medical advice. Please speak with your doctor or healthcare team."</li>
+      <li><strong>7 Moment Detection:</strong> Internal tagging (MOMENT:1-7) for impact measurement without storing conversation text</li>
+      <li><strong>Zero Data Retention Enforcement:</strong> No conversation history persists. Session ends clean.</li>
+    </ul>
+    <p style="margin-top:14px;font-size:11px;color:var(--em2);font-style:italic">The full system prompt is available in the project repository for transparency and community review.</p>
+  </div>
 </section>
 
 <!-- CULTURAL -->
@@ -431,6 +597,66 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
     <div class="wh-card"><div class="wh-lbl">Taha Hinengaro</div><div class="wh-t">Mental & Emotional</div><p class="wh-d">Crisis protocol activates at the first signal of distress — direct or indirect. Lifeline (0800 543 354) and 1737 are always present.</p></div>
     <div class="wh-card"><div class="wh-lbl">Taha Wairua</div><div class="wh-t">Spiritual Dimension</div><p class="wh-d">NOVA recognises identity, meaning, and personal values without judgment. The HIV experience is part of a full life — never a definition.</p></div>
     <div class="wh-card"><div class="wh-lbl">Taha Whānau</div><div class="wh-t">Family & Community</div><p class="wh-d">When whānau is mentioned, NOVA acknowledges the collective weight first. Rainbow Youth, Body Positive NZ, takatāpui community woven throughout.</p></div>
+  </div>
+</section>
+
+<!-- FUTURE OBJECTIVES (NEW) -->
+<section class="future-sec" id="future">
+  <div class="s-tag">Ngā Whāinga / Future Objectives</div>
+  <h2 class="s-title">If NOVA receives<br>grant funding.</h2>
+  <p class="s-desc">A 2-month roadmap to transform NOVA from prototype to production-ready national HIV support tool.</p>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Month 1 — Foundation</div>
+      <h3 class="tl-title">Infrastructure Migration</h3>
+      <p class="tl-desc">Migrate from Render.com (demo) to Catalyst Cloud (NZ sovereign infrastructure). Deploy Ollama + Llama 3.3 70B for self-hosted AI. Implement robust SQLite → PostgreSQL migration for production-grade analytics.</p>
+      <div class="tl-tasks">
+        <li>Catalyst Cloud setup + NZ data residency verification</li>
+        <li>Ollama deployment with Llama 3.3 70B fine-tuning</li>
+        <li>PostgreSQL migration for dashboard analytics</li>
+        <li>Load testing (target: 1000 concurrent users)</li>
+        <li>Professional security audit + penetration testing</li>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Month 1-2 — Co-Design</div>
+      <h3 class="tl-title">Community Engagement</h3>
+      <p class="tl-desc">Structured co-design sessions with people living with HIV, Māori health workers, and Pacific community leaders. Privacy-first feedback loops to ensure NOVA serves real needs.</p>
+      <div class="tl-tasks">
+        <li>4-6 co-design workshops (Auckland, Wellington, Christchurch)</li>
+        <li>Privacy Impact Assessment (PIA) with community input</li>
+        <li>Te reo Māori linguistic review + cultural safety audit</li>
+        <li>System prompt refinement based on lived experience feedback</li>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Month 2 — Compliance</div>
+      <h3 class="tl-title">Legal & Regulatory</h3>
+      <p class="tl-desc">Complete Privacy Impact Assessment (PIA). Formal NZ Privacy Act 2020 compliance documentation. Te Tiriti o Waitangi alignment review. Burnett Foundation legal sign-off.</p>
+      <div class="tl-tasks">
+        <li>Full Privacy Impact Assessment (PIA)</li>
+        <li>NZ Privacy Act 2020 compliance documentation</li>
+        <li>Te Tiriti o Waitangi alignment audit</li>
+        <li>Terms of Service + Privacy Policy finalization</li>
+        <li>Burnett Foundation governance approval</li>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Month 2 — Beta Launch</div>
+      <h3 class="tl-title">Controlled Rollout</h3>
+      <p class="tl-desc">Soft launch with Burnett Foundation clients (opt-in, consent-based). Embed NOVA widget on burnettfoundation.org.nz. Monitor crisis protocol activations closely. Gather feedback for V2.</p>
+      <div class="tl-tasks">
+        <li>Beta access for Burnett Foundation clients (50-100 users)</li>
+        <li>Widget embed on burnettfoundation.org.nz</li>
+        <li>Real-time crisis monitoring dashboard</li>
+        <li>Weekly feedback sessions with beta users</li>
+        <li>Prepare V2 roadmap based on learnings</li>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -488,6 +714,17 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
   <a href="dashboard.html" class="btn-p" style="display:inline-block">Open Full Dashboard →</a>
 </div>
 
+<!-- DISCLAIMER -->
+<section class="disc-sec">
+  <div class="s-tag">Disclaimer · Panekiretanga</div>
+  <h2 class="s-title">Important Notice.</h2>
+  <div class="disc-box">
+    <p>NOVA is a prototype AI companion developed for the Burnett Foundation Innovation Challenge 2026. I am an AI, not a doctor, therapist or healthcare professional. I do not provide medical advice.</p>
+    <p>All conversations are completely private and are deleted when the session ends (Zero Data Retention). Please always consult a qualified healthcare professional or the Burnett Foundation for personalised advice.</p>
+    <p class="mi">Ko NOVA he tauira AI i hangaia mō te Burnett Foundation Innovation Challenge 2026. He atamai ahau, ehara ahau i te tākuta, kaiwhakaora, tohunga hauora rānei. He tūmataiti katoa ngā kōrero ā, ka mukua ina kati te wā. Me whakawhitiwhiti tonu koe ki tētahi tohunga hauora whai mana.</p>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer>
   <div>
@@ -505,6 +742,85 @@ footer{padding:48px 32px 24px;border-top:1px solid var(--bdr);display:grid;grid-
 </div>
 
 <script>
+// === NEURAL BACKGROUND ===
+(function(){
+  const canvas = document.getElementById('neural-bg');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles = [], mouse = {x: 0, y: 0};
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * w;
+      this.y = Math.random() * h;
+      this.vx = (Math.random() - 0.5) * 0.3;
+      this.vy = (Math.random() - 0.5) * 0.3;
+      this.radius = Math.random() * 1.5 + 0.5;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.x < 0 || this.x > w) this.vx *= -1;
+      if (this.y < 0 || this.y > h) this.vy *= -1;
+      // Mouse interaction
+      const dx = mouse.x - this.x;
+      const dy = mouse.y - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        const force = (120 - dist) / 120;
+        this.vx -= dx * force * 0.002;
+        this.vy -= dy * force * 0.002;
+      }
+    }
+    draw() {
+      ctx.fillStyle = 'rgba(201,151,58,0.4)';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => { p.update(); p.draw(); });
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          ctx.strokeStyle = `rgba(45,212,167,${0.15 * (1 - dist / 150)})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+  
+  window.addEventListener('scroll', () => {
+    mouse.y = window.scrollY + window.innerHeight / 2;
+  });
+})();
+
 // === MOBILE NAV ===
 function toggleNav(open){
   const links = document.getElementById('navLinks');
@@ -517,7 +833,6 @@ function toggleNav(open){
 const NOVA_URL = '';
 let sid = 'sid_' + Math.random().toString(36).substr(2,9);
 
-// Notify backend of new session
 fetch('/session-start', {method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});
 
 async function sendMsg(){
@@ -547,7 +862,7 @@ async function sendMsg(){
 document.getElementById('chatInp').addEventListener('keypress',e=>{ if(e.key==='Enter') sendMsg(); });
 function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') }
 
-// === CTA COUNTERS (from health endpoint) ===
+// === CTA COUNTERS ===
 function counter(id,target,dur){
   const el=document.getElementById(id); if(!el) return;
   let v=0;
@@ -561,8 +876,8 @@ async function loadHealthStats(){
     const d = await r.json();
     counter('s1', d.totalSessions || 0, 1400);
     counter('s2', d.topicsTracked || 30, 1000);
-    counter('s3', 3, 800);  // EN · ES · MI
-    counter('s4', 4, 800);  // Quad-layer
+    counter('s3', 3, 800);
+    counter('s4', 4, 800);
   }catch(e){
     counter('s1', 0, 800);
     counter('s2', 30, 1000);
@@ -580,8 +895,7 @@ const ob = new IntersectionObserver(entries=>{
 const s1el = document.getElementById('s1');
 if(s1el) ob.observe(s1el);
 
-// Close nav with ESC
 document.addEventListener('keydown', e => { if(e.key === 'Escape') toggleNav(false); });
 </script>
 </body>
-</html>
+  </html>
