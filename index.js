@@ -35,7 +35,7 @@ app.use(helmet({
 
 app.use(cors({
   origin: [
-    'https://matauranga-nova8.onrender.com',
+    'https://matauranga-nova.onrender.com',
     'http://localhost:10000'
   ],
   methods: ['GET', 'POST'],
