@@ -1,0 +1,5 @@
+.env
+.env.bak
+.dashboard-password.txt
+stats.json.enc
+node_modules/
