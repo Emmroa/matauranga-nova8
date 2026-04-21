@@ -3,168 +3,257 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mātauranga NOVA Dashboard</title>
+<title>Mātauranga NOVA — Impact Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root{--bg:#080e18;--bg2:#0d1525;--bg3:#111d2e;--card:#141f33;--bdr:rgba(255,255,255,.07);--txt:#e8eef6;--dim:#6b7c9a;--teal:#0ea5e9;--em:#10b981;--gold:#f59e0b;--red:#ef4444;--purple:#a855f7}
+:root{
+  --bg:#080e18;--bg2:#0d1525;--bg3:#111d2e;--card:#141f33;
+  --bdr:rgba(255,255,255,.07);--txt:#e8eef6;--dim:#6b7c9a;
+  --teal:#0ea5e9;--em:#10b981;--gold:#f59e0b;--red:#ef4444;--purple:#a855f7;
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
 
-/* LOGIN */
-.login{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
-.login-box{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:36px 30px;max-width:420px;width:100%;text-align:center}
-.lg-logo{font-size:30px;font-weight:700;color:var(--teal);letter-spacing:4px;margin-bottom:4px}
-.lg-sub{font-size:11px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:22px}
-.lg-lock{font-size:34px;margin-bottom:12px}
-.lg-title{font-size:15px;font-weight:600;margin-bottom:6px}
-.lg-desc{font-size:13px;color:var(--dim);margin-bottom:20px;line-height:1.6}
-.lg-inp{width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--txt);padding:14px 16px;border-radius:6px;font-size:15px;outline:none;margin-bottom:12px;font-family:'Sora',sans-serif}
-.lg-btn{width:100%;background:var(--teal);color:#fff;padding:14px;border-radius:6px;border:none;font-weight:600;cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:12px;font-family:'Sora',sans-serif}
-.lg-err{color:var(--red);font-size:12px;margin-top:10px;min-height:18px}
-.lg-foot{margin-top:20px;padding-top:18px;border-top:1px solid var(--bdr);font-size:10px;color:var(--dim);font-family:'DM Mono',monospace;line-height:1.8}
-.dashboard{display:none}
-.dashboard.on{display:flex;min-height:100vh}
+/* ── LOGIN ─────────────────────────────────── */
+.login-screen{
+  position:fixed;inset:0;background:radial-gradient(ellipse at 30% 50%, rgba(14,165,233,.08), transparent 60%),var(--bg);
+  z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.login-box{
+  background:var(--card);border:1px solid var(--bdr);border-radius:14px;
+  padding:40px 32px;max-width:440px;width:100%;text-align:center;
+  box-shadow:0 40px 80px rgba(0,0,0,.6);position:relative;overflow:hidden;
+}
+.login-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(to right,var(--teal),var(--em));
+}
+.login-logo{font-size:32px;font-weight:700;color:var(--teal);letter-spacing:4px;margin-bottom:4px}
+.login-sub{font-size:10px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:28px}
+.login-lock{font-size:40px;margin-bottom:14px}
+.login-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.login-desc{font-size:12px;color:var(--dim);margin-bottom:22px;line-height:1.7}
+.login-inp{
+  width:100%;background:var(--bg2);border:1px solid var(--bdr);color:var(--txt);
+  padding:14px 16px;border-radius:7px;font-size:15px;outline:none;margin-bottom:12px;
+  font-family:'Sora',sans-serif;transition:border-color .2s;
+}
+.login-inp:focus{border-color:rgba(14,165,233,.4)}
+.login-btn{
+  width:100%;background:var(--teal);color:#fff;padding:14px;border-radius:7px;
+  border:none;font-weight:600;cursor:pointer;letter-spacing:1px;font-size:12px;
+  font-family:'Sora',sans-serif;text-transform:uppercase;transition:background .2s;
+}
+.login-btn:hover{background:#0284c7}
+.login-err{color:var(--red);font-size:12px;margin-top:10px;min-height:18px}
+.login-foot{margin-top:22px;padding-top:18px;border-top:1px solid var(--bdr);font-size:10px;color:var(--dim);font-family:'DM Mono',monospace;line-height:1.9}
+
+/* ── MAIN APP ──────────────────────────────── */
+.app{display:none}
+.app.on{display:flex;min-height:100vh}
 
 /* SIDEBAR */
-.sidebar{width:230px;background:var(--bg2);border-right:1px solid var(--bdr);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar{
+  width:230px;background:var(--bg2);border-right:1px solid var(--bdr);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;
+  overflow-y:auto;z-index:100;transition:transform .3s;
+}
 .sb-logo{padding:20px 18px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center}
 .sb-logo-text{font-size:20px;font-weight:700;color:var(--teal);letter-spacing:2px}
 .sb-logo-sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:2px}
 .sb-close{display:none;background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;width:36px;height:36px;align-items:center;justify-content:center;border-radius:50%}
-.sb-section{padding:16px 16px 6px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);font-family:'DM Mono',monospace}
-.sb-link{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:var(--dim);text-decoration:none;border-radius:4px;margin:2px 8px;cursor:pointer;min-height:40px}
+.sb-sec{padding:16px 16px 6px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);font-family:'DM Mono',monospace}
+.sb-link{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:var(--dim);text-decoration:none;border-radius:4px;margin:2px 8px;cursor:pointer;min-height:40px;transition:all .2s}
 .sb-link:hover,.sb-link.active{background:rgba(14,165,233,.1);color:var(--teal)}
 .sb-link .ic{width:20px;text-align:center;font-size:14px}
 .sb-bot{margin-top:auto;padding:14px;border-top:1px solid var(--bdr)}
 .sb-bot a,.sb-bot button{display:block;font-size:12px;color:var(--dim);text-decoration:none;padding:8px 0;background:none;border:none;cursor:pointer;font-family:'Sora',sans-serif;text-align:left;width:100%;min-height:36px}
 .sb-bot a:hover,.sb-bot button:hover{color:var(--teal)}
-.bt-out{color:var(--red)!important}
+.logout-btn{color:var(--red)!important}
+.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99}
+.sb-backdrop.on{display:block}
 
 /* MAIN */
 .main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh;width:calc(100% - 230px)}
-.hdr{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:12px}
+.hdr{
+  background:var(--bg2);border-bottom:1px solid var(--bdr);padding:0 24px;
+  height:58px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;gap:12px;
+}
 .hdr-l{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .menu-toggle{display:none;background:none;border:none;color:var(--teal);font-size:22px;cursor:pointer;padding:6px;min-width:40px;min-height:40px;align-items:center;justify-content:center;border-radius:4px}
 .hdr-t{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hdr-b{background:rgba(16,185,129,.15);color:var(--em);padding:3px 10px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid rgba(16,185,129,.2);white-space:nowrap}
-.hdr-b.err{background:rgba(239,68,68,.15);color:var(--red);border-color:rgba(239,68,68,.2)}
+.hdr-badge{background:rgba(16,185,129,.15);color:var(--em);padding:3px 10px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid rgba(16,185,129,.2);white-space:nowrap}
+.hdr-badge.err{background:rgba(239,68,68,.15);color:var(--red);border-color:rgba(239,68,68,.2)}
 .hdr-r{display:flex;gap:6px;align-items:center}
 .hdr-date{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace}
-.lang-sel{background:var(--bg3);border:1px solid var(--bdr);color:var(--txt);padding:7px 10px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;outline:none;min-height:32px}
-.btn{padding:7px 14px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:'Sora',sans-serif;min-height:32px}
+.btn{padding:7px 14px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:'Sora',sans-serif;min-height:32px;transition:all .2s}
 .btn-csv{background:rgba(14,165,233,.15);color:var(--teal);border:1px solid rgba(14,165,233,.25)}
 .btn-json{background:rgba(16,185,129,.15);color:var(--em);border:1px solid rgba(16,185,129,.25)}
+.btn-csv:hover{background:rgba(14,165,233,.28)}
+.btn-json:hover{background:rgba(16,185,129,.28)}
 
 .content{padding:22px 24px;flex:1;width:100%;overflow-x:hidden}
-.live{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:6px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--em);display:flex;align-items:center;gap:10px;font-family:'DM Mono',monospace}
-.live.err{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:var(--red)}
-.live-dot{width:8px;height:8px;background:var(--em);border-radius:50%;animation:p 2s infinite;flex-shrink:0}
-.live.err .live-dot{background:var(--red)}
-@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
 
-.sec-h{margin-bottom:14px}
-.sec-h h2{font-size:17px;font-weight:600;margin-bottom:2px;line-height:1.3}
-.sec-h p{font-size:12px;color:var(--dim)}
-.div{margin:26px 0;border:none;border-top:1px solid var(--bdr)}
+.live-bar{
+  background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);
+  border-radius:6px;padding:10px 14px;margin-bottom:18px;
+  font-size:12px;color:var(--em);display:flex;align-items:center;gap:10px;
+  font-family:'DM Mono',monospace;
+}
+.live-bar.err{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:var(--red)}
+.live-dot{width:8px;height:8px;background:var(--em);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
+.live-bar.err .live-dot{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
+/* KPIs */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
-.kpi{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:18px;position:relative;overflow:hidden}
+.kpi{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:18px;position:relative;overflow:hidden;transition:border-color .2s}
+.kpi:hover{border-color:rgba(14,165,233,.3)}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .kpi.teal::before{background:linear-gradient(to right,var(--teal),transparent)}
 .kpi.green::before{background:linear-gradient(to right,var(--em),transparent)}
 .kpi.gold::before{background:linear-gradient(to right,var(--gold),transparent)}
 .kpi.red::before{background:linear-gradient(to right,var(--red),transparent)}
+.kpi.purple::before{background:linear-gradient(to right,var(--purple),transparent)}
 .kpi-lbl{font-size:10px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:8px}
 .kpi-val{font-size:32px;font-weight:700;line-height:1;margin-bottom:4px}
-.kpi.teal .kpi-val{color:var(--teal)}
-.kpi.green .kpi-val{color:var(--em)}
-.kpi.gold .kpi-val{color:var(--gold)}
-.kpi.red .kpi-val{color:var(--red)}
+.kpi.teal .kpi-val{color:var(--teal)}.kpi.green .kpi-val{color:var(--em)}
+.kpi.gold .kpi-val{color:var(--gold)}.kpi.red .kpi-val{color:var(--red)}
+.kpi.purple .kpi-val{color:var(--purple)}
 .kpi-sub{font-size:11px;color:var(--dim)}
 
 .card{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:18px;margin-bottom:16px}
 .card h3{font-size:13px;font-weight:600;margin-bottom:2px}
-.card p{font-size:11px;color:var(--dim);margin-bottom:12px}
+.card p.sub{font-size:11px;color:var(--dim);margin-bottom:12px}
 .cwrap{position:relative;width:100%}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* Section headings */
+.sec-h{margin-bottom:14px}
+.sec-h h2{font-size:17px;font-weight:600;margin-bottom:2px}
+.sec-h p{font-size:12px;color:var(--dim)}
+.div{margin:26px 0;border:none;border-top:1px solid var(--bdr)}
+
+/* Crisis cards */
 .cr-card{text-align:center;padding:24px 16px}
-.cr-lbl{font-size:10px;color:var(--dim);font-family:'DM Mono',monospace;margin-bottom:8px;letter-spacing:2px}
+.cr-lbl{font-size:10px;color:var(--dim);font-family:'DM Mono',monospace;margin-bottom:8px;letter-spacing:2px;text-transform:uppercase}
 .cr-val{font-size:40px;font-weight:700;line-height:1}
 .cr-sub{font-size:11px;color:var(--dim);margin-top:6px}
 
-/* CHAT - SIEMPRE VISIBLE */
-.chat-fab{position:fixed!important;bottom:20px!important;right:20px!important;width:60px;height:60px;border-radius:50%;background:var(--teal);color:#fff;border:none;cursor:pointer;font-size:28px;box-shadow:0 8px 24px rgba(14,165,233,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
-.chat-fab:hover{transform:scale(1.08)}
-.chat-win{position:fixed;bottom:20px;right:20px;width:380px;height:540px;max-height:calc(100vh - 40px);background:var(--card);border:1px solid var(--bdr);border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);z-index:99999;display:none;flex-direction:column;overflow:hidden}
-.chat-win.on{display:flex}
-.chat-hd{background:var(--bg3);padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bdr)}
-.chat-av{width:32px;height:32px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
-.chat-ti{font-size:13px;font-weight:600}
-.chat-st{font-size:10px;color:var(--em);font-family:'DM Mono',monospace;letter-spacing:1px}
-.chat-x{margin-left:auto;background:none;border:none;color:var(--dim);cursor:pointer;font-size:20px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:90%;padding:10px 14px;border-radius:10px;font-size:12px;line-height:1.55}
-.msg.bot{align-self:flex-start;background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.2);border-radius:4px 10px 10px 10px}
-.msg.user{align-self:flex-end;background:var(--teal);color:#fff;border-radius:10px 4px 10px 10px}
-.msg b{color:var(--gold)}
-.quick-q{padding:10px 12px;border-top:1px solid var(--bdr);display:flex;gap:6px;flex-wrap:wrap;background:rgba(4,12,7,.3)}
-.qq{padding:8px 12px;background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);border-radius:14px;font-size:10px;color:var(--teal);cursor:pointer;font-family:'DM Mono',monospace}
-.chat-inp-row{padding:10px 12px;border-top:1px solid var(--bdr);display:flex;gap:8px;background:var(--bg2)}
-.chat-inp{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--bdr);color:var(--txt);padding:10px 14px;border-radius:6px;font-size:13px;font-family:'Sora',sans-serif;outline:none}
-.chat-send{background:var(--teal);color:#fff;border:none;padding:0 16px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:700;min-width:44px}
+/* Moments row */
+.moments-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
+.moment-cell{background:rgba(14,165,233,.06);border:1px solid rgba(14,165,233,.15);border-radius:6px;padding:10px 6px;text-align:center;transition:all .2s}
+.moment-cell:hover{border-color:rgba(14,165,233,.4);background:rgba(14,165,233,.12)}
+.moment-n{font-size:9px;color:var(--dim);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase}
+.moment-v{font-size:20px;font-weight:700;color:var(--teal);line-height:1;margin-bottom:3px}
+.moment-lbl{font-size:8px;color:var(--dim);line-height:1.4}
 
-.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99}
-.sb-backdrop.on{display:block}
+/* Ethical framework badge */
+.ethics-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:4px;margin-top:10px;
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.22);
+  font-size:9px;font-family:'DM Mono',monospace;letter-spacing:1.2px;color:var(--gold);
+  text-transform:uppercase;
+}
 
-@media(max-width:1200px){.sidebar{width:210px}.main{margin-left:210px;width:calc(100% - 210px)}.g3{grid-template-columns:1fr 1fr}.g3>*:nth-child(3){grid-column:span 2}}
-@media(max-width:960px){.sidebar{transform:translateX(-100%);width:260px}.sidebar.open{transform:translateX(0)}.sb-close{display:flex}.main{margin-left:0;width:100%}.menu-toggle{display:inline-flex}.kpi-row{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}.hdr-date{display:none}}
-@media(max-width:640px){.g3{grid-template-columns:1fr 1fr}.hdr{padding:8px 12px;height:auto;flex-wrap:wrap}.hdr-l{width:100%}.hdr-r{width:100%;justify-content:flex-end}.kpi-val{font-size:28px}.chat-win{width:calc(100vw - 20px);right:10px;bottom:10px;height:calc(100vh - 20px);max-height:none}}
-@media(max-width:420px){.kpi-row{grid-template-columns:1fr 1fr;gap:8px}.g3{grid-template-columns:1fr}}
+/* NZ HIV 2024 infobox */
+.nz-box{
+  background:rgba(14,165,233,.04);border:1px solid rgba(14,165,233,.18);
+  border-radius:8px;padding:20px;margin-top:16px;
+}
+.nz-box h4{font-size:14px;font-weight:600;color:var(--teal);margin-bottom:12px}
+.nz-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.nz-stat{text-align:center;padding:12px 8px;background:rgba(255,255,255,.03);border-radius:6px}
+.nz-stat-n{font-size:24px;font-weight:700;color:var(--gold);margin-bottom:3px}
+.nz-stat-l{font-size:10px;color:var(--dim);line-height:1.4}
+.nz-box p{font-size:12px;color:var(--dim);line-height:1.8;margin-bottom:8px}
+.nz-box p:last-child{margin-bottom:0}
+.nz-box cite{font-size:10px;font-style:italic;color:rgba(107,124,154,.6)}
+
+/* Footer */
+.page-foot{padding:20px 0;text-align:center;font-size:11px;color:var(--dim);border-top:1px solid var(--bdr);margin-top:26px;line-height:1.8}
+
+/* Responsive */
+@media(max-width:960px){
+  .sidebar{transform:translateX(-100%);width:260px}
+  .sidebar.open{transform:translateX(0)}
+  .sb-close{display:flex}
+  .main{margin-left:0;width:100%}
+  .menu-toggle{display:inline-flex}
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .g2{grid-template-columns:1fr}
+  .moments-grid{grid-template-columns:repeat(4,1fr)}
+  .nz-stats{grid-template-columns:1fr 1fr}
+  .hdr-date{display:none}
+}
+@media(max-width:640px){
+  .g3,.g4{grid-template-columns:1fr 1fr}
+  .moments-grid{grid-template-columns:repeat(3,1fr)}
+  .kpi-val{font-size:28px}
+  .content{padding:16px}
+  .hdr{padding:8px 12px}
+}
 </style>
 </head>
 <body>
 
-<div class="login" id="loginS">
+<!-- ══ LOGIN SCREEN ════════════════════════════════════════ -->
+<div class="login-screen" id="loginScreen">
   <div class="login-box">
-    <div class="lg-logo">NOVA</div>
-    <div class="lg-sub">Impact Analytics</div>
-    <div class="lg-lock">🔒</div>
-    <div class="lg-title" data-k="login_title">Restricted Access</div>
-    <div class="lg-desc" data-k="login_desc">This dashboard contains aggregated analytics. Access is limited to authorised personnel only.</div>
-    <input type="password" id="pwdInp" class="lg-inp" placeholder="Enter password · Tomokanga" />
-    <button class="lg-btn" id="loginBtn" data-k="login_btn">Unlock Dashboard →</button>
-    <div class="lg-err" id="pwdErr"></div>
-    <div class="lg-foot">Mātauranga NOVA · Burnett Foundation 2026<br>NZ Privacy Act 2020 · Zero Data Retention</div>
+    <div class="login-logo">NOVA</div>
+    <div class="login-sub">Impact Analytics Dashboard</div>
+    <div class="login-lock">🔒</div>
+    <div class="login-title">Restricted Access</div>
+    <div class="login-desc">This dashboard contains aggregated, anonymous analytics from the Mātauranga-NOVA platform. Access is limited to authorised Burnett Foundation personnel only.</div>
+    <input type="password" id="pwdInp" class="login-inp" placeholder="Enter dashboard password" autocomplete="current-password" />
+    <button class="login-btn" id="loginBtn">Unlock Dashboard →</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-foot">
+      Mātauranga NOVA · Burnett Foundation 2026<br>
+      NZ Privacy Act 2020 · Zero Data Retention<br>
+      <span id="ethicsBadge" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:3px 10px;border-radius:3px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);font-size:9px;color:#f59e0b;letter-spacing:1px">⚠ Ethical Framework: Provisional Draft v0.9-beta</span>
+    </div>
   </div>
 </div>
 
-<div class="dashboard" id="dash">
+<!-- ══ MAIN APP ═════════════════════════════════════════════ -->
+<div class="app" id="mainApp">
   <div class="sb-backdrop" id="sbBack"></div>
+
   <aside class="sidebar" id="sidebar">
     <div class="sb-logo">
       <div>
         <div class="sb-logo-text">NOVA</div>
         <div class="sb-logo-sub">Impact Analytics</div>
       </div>
-      <button class="sb-close" id="sbCloseBtn">✕</button>
+      <button class="sb-close" id="sbClose">✕</button>
     </div>
-    <div class="sb-section" data-k="nav_ov">Overview</div>
-    <a class="sb-link active" href="#s-over"><span class="ic">📊</span> <span data-k="nav_dash">Dashboard</span></a>
-    <a class="sb-link" href="#s-topics"><span class="ic">🏥</span> <span data-k="nav_top">30 Topics</span></a>
-    <div class="sb-section" data-k="nav_cat">Categories</div>
-    <a class="sb-link" href="#s-hiv"><span class="ic">💊</span> <span data-k="nav_hiv">HIV & Prevention</span></a>
-    <a class="sb-link" href="#s-mental"><span class="ic">❤️</span> <span data-k="nav_mental">Mental Health</span></a>
-    <a class="sb-link" href="#s-stigma"><span class="ic">🛡️</span> <span data-k="nav_stigma">Stigma</span></a>
-    <a class="sb-link" href="#s-social"><span class="ic">🏛️</span> <span data-k="nav_social">Social Services</span></a>
-    <div class="sb-section" data-k="nav_demo">Demographics</div>
-    <a class="sb-link" href="#s-lang"><span class="ic">🌐</span> <span data-k="nav_lang">Languages</span></a>
-    <a class="sb-link" href="#s-crisis"><span class="ic">🆘</span> <span data-k="nav_crisis">Crisis</span></a>
+
+    <div class="sb-sec">Overview</div>
+    <a class="sb-link active" href="#s-kpi"><span class="ic">📊</span>Dashboard</a>
+    <a class="sb-link" href="#s-moments"><span class="ic">🔁</span>7 Moments</a>
+    <a class="sb-link" href="#s-topics"><span class="ic">🏥</span>All Topics</a>
+
+    <div class="sb-sec">Categories</div>
+    <a class="sb-link" href="#s-hiv"><span class="ic">💊</span>HIV & Prevention</a>
+    <a class="sb-link" href="#s-mental"><span class="ic">❤️</span>Mental Health</a>
+    <a class="sb-link" href="#s-stigma"><span class="ic">🛡️</span>Stigma</a>
+    <a class="sb-link" href="#s-social"><span class="ic">🏛️</span>Social Services</a>
+
+    <div class="sb-sec">Demographics</div>
+    <a class="sb-link" href="#s-lang"><span class="ic">🌐</span>Languages</a>
+    <a class="sb-link" href="#s-crisis"><span class="ic">🆘</span>Crisis</a>
+    <a class="sb-link" href="#s-nz2024"><span class="ic">📋</span>NZ HIV 2024</a>
+
     <div class="sb-bot">
-      <a href="index.html">← <span data-k="back">Back to NOVA</span></a>
+      <a href="index.html">← Back to NOVA</a>
       <a href="https://www.burnettfoundation.org.nz" target="_blank">Burnett Foundation ↗</a>
-      <button id="logoutBtn" class="bt-out">🚪 <span data-k="logout">Logout</span></button>
+      <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
     </div>
   </aside>
 
@@ -172,365 +261,418 @@ body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--txt);min-hei
     <header class="hdr">
       <div class="hdr-l">
         <button class="menu-toggle" id="menuBtn">☰</button>
-        <div class="hdr-t" data-k="dash_t">Mātauranga NOVA Dashboard</div>
-        <span class="hdr-b" id="statusB">● Connecting...</span>
+        <div class="hdr-t">Mātauranga NOVA Dashboard</div>
+        <span class="hdr-badge" id="statusBadge">● Connecting…</span>
       </div>
       <div class="hdr-r">
         <span class="hdr-date" id="dateEl"></span>
-        <select class="lang-sel" id="langSel">
-          <option value="en">EN</option>
-          <option value="mi">MI</option>
-        </select>
         <button class="btn btn-csv" id="csvBtn">⬇ CSV</button>
         <button class="btn btn-json" id="jsonBtn">⬇ JSON</button>
       </div>
     </header>
 
     <div class="content">
-      <div class="live" id="liveB">
+      <div class="live-bar" id="liveBar">
         <span class="live-dot"></span>
-        <span id="liveT">Loading...</span>
+        <span id="liveText">Loading analytics…</span>
       </div>
 
-      <div id="s-over" class="kpi-row">
-        <div class="kpi teal"><div class="kpi-lbl" data-k="k_sess">Total Sessions</div><div class="kpi-val" id="kSess">0</div><div class="kpi-sub" data-k="k_sess_s">Since launch</div></div>
-        <div class="kpi green"><div class="kpi-lbl" data-k="k_msg">Messages</div><div class="kpi-val" id="kMsg">0</div><div class="kpi-sub" data-k="k_msg_s">Processed</div></div>
-        <div class="kpi gold"><div class="kpi-lbl" data-k="k_top">Topics Tracked</div><div class="kpi-val" id="kTopics">30</div><div class="kpi-sub" data-k="k_top_s">Categories</div></div>
-        <div class="kpi red"><div class="kpi-lbl" data-k="k_cr">Crisis Activations</div><div class="kpi-val" id="kCrisis">0</div><div class="kpi-sub" data-k="k_cr_s">Support surfaced</div></div>
+      <!-- KPIs -->
+      <div id="s-kpi" class="kpi-row">
+        <div class="kpi teal"><div class="kpi-lbl">Total Sessions</div><div class="kpi-val" id="kSess">0</div><div class="kpi-sub">Since launch</div></div>
+        <div class="kpi green"><div class="kpi-lbl">Messages</div><div class="kpi-val" id="kMsg">0</div><div class="kpi-sub">Processed</div></div>
+        <div class="kpi gold"><div class="kpi-lbl">Topics Tracked</div><div class="kpi-val" id="kTopics">32</div><div class="kpi-sub">Across categories</div></div>
+        <div class="kpi red"><div class="kpi-lbl">Crisis Activations</div><div class="kpi-val" id="kCrisis">0</div><div class="kpi-sub">Support surfaced</div></div>
       </div>
 
+      <!-- 7 Moments -->
       <hr class="div">
-      <div id="s-topics" class="sec-h"><h2 data-k="h_top">All 30 Topics</h2><p data-k="h_top_s">Local regex analysis. No text sent externally.</p></div>
-      <div class="card"><div class="cwrap" style="height:640px"><canvas id="cAll"></canvas></div></div>
+      <div id="s-moments" class="sec-h">
+        <h2>7 Moments Detected</h2>
+        <p>Anonymous detection of key HIV journey moments — local regex, no text stored</p>
+      </div>
+      <div class="moments-grid" id="momentsGrid">
+        <div class="moment-cell"><div class="moment-n">M1</div><div class="moment-v" id="m1">0</div><div class="moment-lbl">New Diagnosis</div></div>
+        <div class="moment-cell"><div class="moment-n">M2</div><div class="moment-v" id="m2">0</div><div class="moment-lbl">Disclosure</div></div>
+        <div class="moment-cell"><div class="moment-n">M3</div><div class="moment-v" id="m3">0</div><div class="moment-lbl">Stigma</div></div>
+        <div class="moment-cell"><div class="moment-n">M4</div><div class="moment-v" id="m4">0</div><div class="moment-lbl">Long-term</div></div>
+        <div class="moment-cell"><div class="moment-n">M5</div><div class="moment-v" id="m5">0</div><div class="moment-lbl">Prevention</div></div>
+        <div class="moment-cell"><div class="moment-n">M6</div><div class="moment-v" id="m6">0</div><div class="moment-lbl">Rights</div></div>
+        <div class="moment-cell"><div class="moment-n">M7</div><div class="moment-v" id="m7">0</div><div class="moment-lbl">Chemsex</div></div>
+      </div>
 
+      <!-- All Topics -->
       <hr class="div">
-      <div id="s-hiv" class="sec-h"><h2 data-k="h_hiv">HIV & Prevention</h2><p data-k="h_hiv_s">HIV diagnosis, treatment, PrEP, PEP, STIs</p></div>
+      <div id="s-topics" class="sec-h"><h2>All Topics</h2><p>Local regex analysis — no message text ever sent externally</p></div>
+      <div class="card"><div class="cwrap" style="height:660px"><canvas id="cAll"></canvas></div></div>
+
+      <!-- HIV & Prevention -->
+      <hr class="div">
+      <div id="s-hiv" class="sec-h"><h2>HIV & Prevention</h2><p>HIV diagnosis, treatment, PrEP, PEP, U=U, STIs</p></div>
       <div class="g2">
-        <div class="card"><h3 data-k="c_hiv">HIV Topics</h3><div class="cwrap" style="height:240px"><canvas id="cHiv"></canvas></div></div>
-        <div class="card"><h3 data-k="c_prev">Prevention & Testing</h3><div class="cwrap" style="height:240px"><canvas id="cPrev"></canvas></div></div>
+        <div class="card"><h3>HIV Topics</h3><p class="sub">Core HIV conversations</p><div class="cwrap" style="height:240px"><canvas id="cHiv"></canvas></div></div>
+        <div class="card"><h3>Prevention & Testing</h3><p class="sub">PrEP, PEP, DoxyPEP, STI screening</p><div class="cwrap" style="height:240px"><canvas id="cPrev"></canvas></div></div>
       </div>
-      <div class="card"><h3 data-k="c_sti">STIs Detail</h3><div class="cwrap" style="height:220px"><canvas id="cSti"></canvas></div></div>
+      <div class="card"><h3>STI Breakdown</h3><p class="sub">Syphilis, Chlamydia, Gonorrhoea</p><div class="cwrap" style="height:220px"><canvas id="cSti"></canvas></div></div>
 
+      <!-- Mental Health -->
       <hr class="div">
-      <div id="s-mental" class="sec-h"><h2 data-k="h_mental">Mental Health & Wellbeing</h2><p data-k="h_mental_s">Emotional distress signals detected</p></div>
-      <div class="card"><h3 data-k="c_mental">Mental Health Topics</h3><div class="cwrap" style="height:260px"><canvas id="cMent"></canvas></div></div>
+      <div id="s-mental" class="sec-h"><h2>Mental Health & Wellbeing</h2><p>Taha Hinengaro — emotional distress signals detected</p></div>
+      <div class="card"><h3>Mental Health Topics</h3><div class="cwrap" style="height:260px"><canvas id="cMent"></canvas></div></div>
 
+      <!-- Stigma -->
       <hr class="div">
-      <div id="s-stigma" class="sec-h"><h2 data-k="h_stig">Stigma & Discrimination</h2><p data-k="h_stig_s">Internal stigma, bullying, workplace and medical discrimination</p></div>
-      <div class="card"><h3 data-k="c_stig">Full Breakdown</h3><div class="cwrap" style="height:300px"><canvas id="cStig"></canvas></div></div>
+      <div id="s-stigma" class="sec-h"><h2>Stigma & Discrimination</h2><p>Internal shame, bullying, workplace and medical discrimination, online hate</p></div>
+      <div class="card"><h3>Full Breakdown</h3><div class="cwrap" style="height:300px"><canvas id="cStig"></canvas></div></div>
 
+      <!-- Social Services -->
       <hr class="div">
-      <div id="s-social" class="sec-h"><h2 data-k="h_soc">NZ Social Services</h2><p data-k="h_soc_s">WINZ, housing, legal rights, immigration</p></div>
-      <div class="card"><h3 data-k="c_soc">Service Topics</h3><div class="cwrap" style="height:220px"><canvas id="cSoc"></canvas></div></div>
+      <div id="s-social" class="sec-h"><h2>NZ Social Services</h2><p>WINZ, housing, legal rights, immigration — community needs</p></div>
+      <div class="card"><h3>Service Topics</h3><div class="cwrap" style="height:220px"><canvas id="cSoc"></canvas></div></div>
 
+      <!-- Language & Identity -->
       <hr class="div">
-      <div id="s-lang" class="sec-h"><h2 data-k="h_lang">Language & Identity</h2><p data-k="h_lang_s">Auto language detection + identity topics</p></div>
+      <div id="s-lang" class="sec-h"><h2>Language & Identity</h2><p>Auto language detection + LGBTQIA+, whānau, disclosure topics</p></div>
       <div class="g2">
-        <div class="card"><h3 data-k="c_lang">Sessions by Language</h3><div class="cwrap" style="height:240px"><canvas id="cLang"></canvas></div></div>
-        <div class="card"><h3 data-k="c_id">Identity Topics</h3><div class="cwrap" style="height:240px"><canvas id="cId"></canvas></div></div>
+        <div class="card"><h3>Sessions by Language</h3><div class="cwrap" style="height:240px"><canvas id="cLang"></canvas></div></div>
+        <div class="card"><h3>Identity Topics</h3><div class="cwrap" style="height:240px"><canvas id="cId"></canvas></div></div>
       </div>
 
+      <!-- Crisis -->
       <hr class="div">
-      <div id="s-crisis" class="sec-h"><h2 data-k="h_cr">Crisis Protocol Activations</h2><p data-k="h_cr_s">Every activation surfaces Lifeline / 1737 / 111</p></div>
+      <div id="s-crisis" class="sec-h"><h2>Crisis Protocol Activations</h2><p>Every activation immediately surfaces Lifeline / 1737 / 111 — pre-AI intercept active</p></div>
       <div class="g3">
-        <div class="card cr-card"><div class="cr-lbl" data-k="cr_s">SUICIDE IDEATION</div><div class="cr-val" style="color:var(--red)" id="crSuic">0</div><div class="cr-sub" data-k="cr_a">Crisis activated</div></div>
-        <div class="card cr-card"><div class="cr-lbl" data-k="cr_sh">SELF-HARM</div><div class="cr-val" style="color:var(--red)" id="crSelf">0</div><div class="cr-sub" data-k="cr_a">Crisis activated</div></div>
-        <div class="card cr-card"><div class="cr-lbl" data-k="cr_ac">ACUTE CRISIS</div><div class="cr-val" style="color:var(--gold)" id="crAc">0</div><div class="cr-sub" data-k="cr_a">Crisis activated</div></div>
+        <div class="card cr-card"><div class="cr-lbl">SUICIDE IDEATION</div><div class="cr-val" style="color:var(--red)" id="crSuic">0</div><div class="cr-sub">Crisis activated</div></div>
+        <div class="card cr-card"><div class="cr-lbl">SELF-HARM</div><div class="cr-val" style="color:var(--red)" id="crSelf">0</div><div class="cr-sub">Crisis activated</div></div>
+        <div class="card cr-card"><div class="cr-lbl">ACUTE CRISIS</div><div class="cr-val" style="color:var(--gold)" id="crAc">0</div><div class="cr-sub">Crisis activated</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>Medical Output Interceptions</h3>
+        <p class="sub">Layer 6 post-AI safety intercept — specific dosage/prescription responses blocked and replaced with Burnett Foundation referral</p>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:12px">
+          <div style="font-size:36px;font-weight:700;color:var(--purple)" id="kMedInt">0</div>
+          <div style="font-size:12px;color:var(--dim);line-height:1.7">Responses containing specific medical dosage terms were automatically replaced with an empathetic referral to the Burnett Foundation clinical team.</div>
+        </div>
       </div>
 
-      <div style="padding:20px 0;text-align:center;font-size:11px;color:var(--dim);border-top:1px solid var(--bdr);margin-top:26px">Mātauranga NOVA · Burnett Foundation 2026 · <span data-k="foot">Zero Data Retention · NZ Privacy Act 2020</span></div>
-    </div>
-  </div>
-</div>
+      <!-- NZ HIV 2024 -->
+      <hr class="div">
+      <div id="s-nz2024" class="sec-h">
+        <h2>NZ HIV Context — 2024 Annual Report</h2>
+        <p>Reference data for NOVA impact alignment</p>
+      </div>
+      <div class="nz-box">
+        <h4>📋 HIV in Aotearoa New Zealand — Key Statistics 2024</h4>
+        <div class="nz-stats">
+          <div class="nz-stat"><div class="nz-stat-n">60</div><div class="nz-stat-l">Locally acquired diagnoses in 2024 — historic low</div></div>
+          <div class="nz-stat"><div class="nz-stat-n">~3,900</div><div class="nz-stat-l">Estimated people living with HIV in NZ</div></div>
+          <div class="nz-stat"><div class="nz-stat-n">95/83/91</div><div class="nz-stat-l">UNAIDS 95-95-95 targets: NZ estimated progress (%)</div></div>
+          <div class="nz-stat"><div class="nz-stat-n">↓62%</div><div class="nz-stat-l">Decline in new local diagnoses since 2016 peak</div></div>
+          <div class="nz-stat"><div class="nz-stat-n">~3,500+</div><div class="nz-stat-l">New Zealanders on PrEP (2024 estimate)</div></div>
+          <div class="nz-stat"><div class="nz-stat-n">2030</div><div class="nz-stat-l">Goal: &lt;10 new local diagnoses/year · NZ HIV Action Plan</div></div>
+        </div>
+        <p>New Zealand has made significant progress toward ending HIV as a public health issue. The 2024 HIV Annual Surveillance Report (ESR / Ministry of Health) recorded 60 locally acquired diagnoses — the lowest since comprehensive recording began — reflecting the impact of expanded PrEP access, community testing programmes, and reduced stigma.</p>
+        <p>Despite progress, disparities persist. Gay, bisexual, and men who have sex with men (MSM) continue to represent the majority of new diagnoses. Māori and Pacific peoples face disproportionate barriers to testing and treatment access. Stigma remains a primary driver of late diagnosis.</p>
+        <p><strong>NOVA's role:</strong> NOVA directly addresses the stigma and access barriers identified in the 2024 report — providing 24/7 confidential information, normalising testing, and connecting people to NZ services in their own language.</p>
+        <p><cite>Sources: ESR HIV Annual Surveillance Report 2024 · UNAIDS 2024 Global AIDS Update · NZ Ministry of Health HIV Action Plan · Burnett Foundation Aotearoa</cite></p>
 
-<button class="chat-fab" id="chatFab" title="Ask about the data">🤖</button>
-<div class="chat-win" id="chatWin">
-  <div class="chat-hd">
-    <div class="chat-av">N</div>
-    <div>
-      <div class="chat-ti" data-k="ch_ti">Data Assistant</div>
-      <div class="chat-st" data-k="ch_st">● Analytics only · Privacy safe</div>
+        <div style="margin-top:16px">
+          <div class="ethics-badge">⚠ Ethical Framework: Provisional Draft v0.9-beta — Pending Burnett Foundation Review</div>
+        </div>
+      </div>
+
+      <div class="page-foot">
+        Mātauranga NOVA · Burnett Foundation Innovation Challenge 2026<br>
+        Zero Data Retention · NZ Privacy Act 2020 · He hoa kōrero mō te HIV<br>
+        <span style="color:rgba(107,124,154,.5);font-size:10px">Ethical Framework: Provisional Draft v0.9-beta based on Anthropic Constitutional AI · Pending Burnett Foundation approval</span>
+      </div>
     </div>
-    <button class="chat-x" id="chatCloseBtn">✕</button>
-  </div>
-  <div class="chat-body" id="chatBody">
-    <div class="msg bot" id="chWelcome">Kia ora. Ask me anything about the dashboard data. Try the quick questions below 👇</div>
-  </div>
-  <div class="quick-q">
-    <button class="qq" data-q="top5" data-k="qq_1">Top 5 topics</button>
-    <button class="qq" data-q="crisis" data-k="qq_2">Crisis summary</button>
-    <button class="qq" data-q="lang" data-k="qq_3">Languages</button>
-    <button class="qq" data-q="stigma" data-k="qq_4">Stigma</button>
-    <button class="qq" data-q="hiv" data-k="qq_5">HIV stats</button>
-  </div>
-  <div class="chat-inp-row">
-    <input class="chat-inp" id="chatInp" placeholder="Ask about the data…" />
-    <button class="chat-send" id="chatSendBtn">→</button>
   </div>
 </div>
 
 <script>
-(function(){
-var I18N = {
-  en:{login_title:"Restricted Access",login_desc:"This dashboard contains aggregated analytics. Access is limited to authorised personnel only.",login_btn:"Unlock Dashboard →",
-    nav_ov:"Overview",nav_dash:"Dashboard",nav_top:"30 Topics",nav_cat:"Categories",nav_hiv:"HIV & Prevention",nav_mental:"Mental Health",nav_stigma:"Stigma",nav_social:"Social Services",nav_demo:"Demographics",nav_lang:"Languages",nav_crisis:"Crisis",back:"Back to NOVA",logout:"Logout",
-    dash_t:"Mātauranga NOVA Dashboard",
-    k_sess:"Total Sessions",k_sess_s:"Since launch",k_msg:"Messages",k_msg_s:"Processed",k_top:"Topics Tracked",k_top_s:"Categories",k_cr:"Crisis Activations",k_cr_s:"Support surfaced",
-    h_top:"All 30 Topics",h_top_s:"Local regex analysis. No text sent externally.",
-    h_hiv:"HIV & Prevention",h_hiv_s:"HIV diagnosis, treatment, PrEP, PEP, STIs",c_hiv:"HIV Topics",c_prev:"Prevention & Testing",c_sti:"STIs Detail",
-    h_mental:"Mental Health & Wellbeing",h_mental_s:"Emotional distress signals detected",c_mental:"Mental Health Topics",
-    h_stig:"Stigma & Discrimination",h_stig_s:"Internal stigma, bullying, workplace and medical discrimination",c_stig:"Full Breakdown",
-    h_soc:"NZ Social Services",h_soc_s:"WINZ, housing, legal rights, immigration",c_soc:"Service Topics",
-    h_lang:"Language & Identity",h_lang_s:"Auto language detection + identity topics",c_lang:"Sessions by Language",c_id:"Identity Topics",
-    h_cr:"Crisis Protocol Activations",h_cr_s:"Every activation surfaces Lifeline / 1737 / 111",
-    cr_s:"SUICIDE IDEATION",cr_sh:"SELF-HARM",cr_ac:"ACUTE CRISIS",cr_a:"Crisis activated",
-    foot:"Zero Data Retention · NZ Privacy Act 2020",
-    ch_ti:"Data Assistant",ch_st:"● Analytics only · Privacy safe",
-    qq_1:"Top 5 topics",qq_2:"Crisis summary",qq_3:"Languages",qq_4:"Stigma",qq_5:"HIV stats",
-    live_ok:"Connected · Data refreshes every 30s",live_err:"Could not connect to backend.",
-    st_live:"● Live",st_err:"● Offline",
-    ch_welcome:"Kia ora. Ask me anything about the dashboard data. Try the quick questions below 👇",
-    msg_nodata:"No data loaded yet.",msg_notopic:"No topic data yet. Try chatting with NOVA first!",
-    msg_top:"Top 5 topics:",msg_crisis:"Crisis Summary:",msg_crisis_note:"Every activation surfaces Lifeline, 1737, or 111.",
-    msg_lang:"Languages:",msg_stig:"Stigma",msg_stig_tot:"total",msg_hiv:"HIV stats:",msg_hiv_none:"No HIV data yet.",
-    msg_tot:"Totals:",msg_try:'Try: "Top 5 topics", "Crisis summary", "Languages", "Stigma", "HIV stats".',
-    msg_tot_sess:"Sessions",msg_tot_msg:"Messages",msg_tot_top:"Topics"},
-  mi:{login_title:"Tomokanga Whakatika",login_desc:"He raraunga tātari rōpū kei konei. Mō ngā kaimahi whai mana anake.",login_btn:"Tuwhera te Papa →",
-    nav_ov:"Tirohanga",nav_dash:"Papa Tohu",nav_top:"30 Kaupapa",nav_cat:"Ngā Wehenga",nav_hiv:"HIV me te Ārai",nav_mental:"Hauora Hinengaro",nav_stigma:"Whakawā",nav_social:"Ratonga Hapori",nav_demo:"Taupori",nav_lang:"Reo",nav_crisis:"Taumaha",back:"Hoki ki NOVA",logout:"Putanga",
-    dash_t:"Papa Tohu Mātauranga NOVA",
-    k_sess:"Ngā Wā Katoa",k_sess_s:"Mai i te tīmatanga",k_msg:"Ngā Karere",k_msg_s:"Kua tukuna",k_top:"Kaupapa",k_top_s:"Ngā wehenga",k_cr:"Ngā Taumaha",k_cr_s:"Āwhina i tukuna",
-    h_top:"Ngā Kaupapa 30",h_top_s:"Tātari ā-rohe. Kāore he kōrero ki waho.",
-    h_hiv:"HIV me te Ārai",h_hiv_s:"Whakatau HIV, maimoatanga, PrEP, PEP",c_hiv:"Kaupapa HIV",c_prev:"Ārai me te Whakamātau",c_sti:"Ngā ITS",
-    h_mental:"Hauora Hinengaro",h_mental_s:"Ngā tohu pōuri i kitea",c_mental:"Kaupapa Hinengaro",
-    h_stig:"Whakawā me te Whakaparahako",h_stig_s:"Whakawā ā-roto, whakawā mahi me te hauora",c_stig:"Wehewehenga Katoa",
-    h_soc:"Ratonga Hapori Aotearoa",h_soc_s:"WINZ, whare, motika tangata, manene",c_soc:"Kaupapa Ratonga",
-    h_lang:"Reo me te Tuakiri",h_lang_s:"Kitenga aunoa o te reo",c_lang:"Wā mā Reo",c_id:"Kaupapa Tuakiri",
-    h_cr:"Whakaohohia te Taumaha",h_cr_s:"Ia whakaohooho, ka whakaatuhia a Lifeline / 1737 / 111",
-    cr_s:"WHAKAMOMORI",cr_sh:"WHAKAKINO-Ā-TINANA",cr_ac:"TAUMAHA KAHA",cr_a:"Whakaohohia",
-    foot:"Kāore he Raraunga · Ture Tūmataiti 2020",
-    ch_ti:"Kaiāwhina Raraunga",ch_st:"● Pāngarau anake · Tūmataiti",
-    qq_1:"Ngā 5 kaupapa",qq_2:"Whakarāpopoto taumaha",qq_3:"Ngā Reo",qq_4:"Whakawā",qq_5:"Pāngarau HIV",
-    live_ok:"Hono · Ka whakahouhia ia 30s",live_err:"Kāore i taea te hono.",
-    st_live:"● Ora",st_err:"● Moe",
-    ch_welcome:"Kia ora. Pātaihia mai he aha e pā ana ki ngā raraunga. Whakamātauria ngā pātai kei raro 👇",
-    msg_nodata:"Kāore anō he raraunga.",msg_notopic:"Kāore anō he kaupapa. Whakawhiti kōrero ki a NOVA tuatahi!",
-    msg_top:"Ngā kaupapa 5 nui rawa:",msg_crisis:"Whakarāpopoto taumaha:",msg_crisis_note:"Ia taumaha, ka whakaatuhia a Lifeline, 1737, 111.",
-    msg_lang:"Ngā reo:",msg_stig:"Whakawā",msg_stig_tot:"katoa",msg_hiv:"Pāngarau HIV:",msg_hiv_none:"Kāore anō he raraunga HIV.",
-    msg_tot:"Tapeke:",msg_try:'Whakamātauria: "Ngā 5 kaupapa", "Whakarāpopoto taumaha", "Ngā Reo", "Whakawā", "Pāngarau HIV".',
-    msg_tot_sess:"Wā",msg_tot_msg:"Karere",msg_tot_top:"Kaupapa"}
-};
+(function () {
+  'use strict';
 
-var currentLang = localStorage.getItem('novaLang') || 'en';
-function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || key; }
-function applyLang(){
-  document.querySelectorAll('[data-k]').forEach(function(el){
-    var k = el.getAttribute('data-k');
-    if(I18N[currentLang][k]) el.textContent = I18N[currentLang][k];
-  });
-  var sel = document.getElementById('langSel');
-  if(sel) sel.value = currentLang;
-  var w = document.getElementById('chWelcome');
-  if(w) w.textContent = tr('ch_welcome');
-  var inp = document.getElementById('chatInp');
-  if(inp) inp.placeholder = currentLang==='mi' ? 'Pātaihia e pā ana ki ngā raraunga…' : 'Ask about the data…';
-}
+  // ── State ──────────────────────────────────────────────────
+  let dashStats = null;
+  let charts    = {};
+  let authed    = false;
+  let dashPwd   = '';
 
-var authed = false, dashboardPwd = '', dashStats = null, charts = {};
+  // ── Saved auth ─────────────────────────────────────────────
+  const savedPwd = sessionStorage.getItem('nova_dash_pwd');
+  if (savedPwd) { dashPwd = savedPwd; tryAutoLogin(); }
 
-function doLogin(){
-  var pwd = document.getElementById('pwdInp').value;
-  var err = document.getElementById('pwdErr');
-  if(!pwd){ err.textContent='Please enter password.'; err.style.color='var(--red)'; return; }
-  err.textContent='Verifying...'; err.style.color='var(--dim)';
-  fetch('/stats',{headers:{'X-Dashboard-Auth':pwd}})
-    .then(function(r){ if(r.status===401){err.textContent='Incorrect password.';err.style.color='var(--red)';return null;} if(!r.ok)throw 0; return r.json(); })
-    .then(function(d){ if(d){ dashboardPwd=pwd; sessionStorage.setItem('novaAuth',pwd); authed=true; document.getElementById('loginS').style.display='none'; document.getElementById('dash').classList.add('on'); initDash(); }})
-    .catch(function(){ err.textContent='Could not connect.'; err.style.color='var(--red)'; });
-}
-function doLogout(){ sessionStorage.removeItem('novaAuth'); location.reload(); }
-
-function fetchStats(){
-  return fetch('/stats',{headers:{'X-Dashboard-Auth':dashboardPwd}})
-    .then(function(r){ if(!r.ok)throw 0; return r.json(); })
-    .then(function(d){
-      dashStats = d;
-      document.getElementById('statusB').textContent = tr('st_live');
-      document.getElementById('statusB').classList.remove('err');
-      document.getElementById('liveB').classList.remove('err');
-      document.getElementById('liveT').textContent = tr('live_ok');
-      return true;
-    })
-    .catch(function(){
-      document.getElementById('statusB').textContent = tr('st_err');
-      document.getElementById('statusB').classList.add('err');
-      document.getElementById('liveB').classList.add('err');
-      document.getElementById('liveT').textContent = tr('live_err');
-      return false;
-    });
-}
-
-function initDash(){
-  applyLang();
-  document.getElementById('dateEl').textContent = new Date().toLocaleDateString('en-NZ',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-  Chart.defaults.color='#6b7c9a'; Chart.defaults.borderColor='rgba(255,255,255,0.06)'; Chart.defaults.font.family='Sora,sans-serif';
-  fetchStats().then(function(ok){ if(ok) renderAll(); });
-  setInterval(function(){ fetchStats().then(function(ok){ if(ok) renderAll(); }); }, 30000);
-}
-
-function renderAll(){
-  if(!dashStats) return;
-  document.getElementById('kSess').textContent = (dashStats.totalSessions||0).toLocaleString();
-  document.getElementById('kMsg').textContent = (dashStats.totalMessages||0).toLocaleString();
-  document.getElementById('kTopics').textContent = Object.keys(dashStats.topics||{}).length;
-  document.getElementById('kCrisis').textContent = dashStats.crisisActivations || 0;
-  var t = dashStats.topics || {};
-  document.getElementById('crSuic').textContent = t.Suicide_Ideation || 0;
-  document.getElementById('crSelf').textContent = t.Self_Harm || 0;
-  document.getElementById('crAc').textContent = t.Crisis_Acute || 0;
-  renderCharts();
-}
-function destroyChart(k){ if(charts[k]){charts[k].destroy();delete charts[k];} }
-function renderCharts(){
-  var t = dashStats.topics || {};
-  var allLabels = Object.keys(t), allData = Object.values(t);
-  var allColors = allLabels.map(function(l){
-    if(/HIV|UeqU|Long_Term|ART/i.test(l)) return 'rgba(14,165,233,0.8)';
-    if(/PrEP|PEP|Doxy|STI|Syphilis|Chlamydia|Gonorrhoea/i.test(l)) return 'rgba(16,185,129,0.8)';
-    if(/Suicide|Self_Harm|Crisis|Anxiety|Depress|Loneliness/i.test(l)) return 'rgba(239,68,68,0.8)';
-    if(/Stigma|Discrimination|Bullying|Online_Hate|Workplace|Medical/i.test(l)) return 'rgba(245,158,11,0.8)';
-    if(/LGBT|Takatapui|Disclosure|Whanau/i.test(l)) return 'rgba(168,85,247,0.8)';
-    return 'rgba(56,189,248,0.75)';
-  });
-  destroyChart('all');
-  charts.all = new Chart(document.getElementById('cAll'),{type:'bar',data:{labels:allLabels,datasets:[{data:allData,backgroundColor:allColors,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
-  destroyChart('hiv');
-  charts.hiv = new Chart(document.getElementById('cHiv'),{type:'bar',data:{labels:['HIV','Diagnosis','U=U','Long-term','ART'],datasets:[{data:[t.HIV||0,t.New_Diagnosis||0,t.UeqU||0,t.Long_Term_Living||0,t.ART_Medication||0],backgroundColor:'rgba(14,165,233,0.8)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-  destroyChart('prev');
-  charts.prev = new Chart(document.getElementById('cPrev'),{type:'bar',data:{labels:['PrEP','PEP','DoxyPEP','STI Testing'],datasets:[{data:[t.PrEP||0,t.PEP||0,t.DoxyPEP||0,t.STI_Testing||0],backgroundColor:'rgba(16,185,129,0.8)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-  destroyChart('sti');
-  charts.sti = new Chart(document.getElementById('cSti'),{type:'doughnut',data:{labels:['Syphilis','Chlamydia','Gonorrhoea'],datasets:[{data:[t.Syphilis||0,t.Chlamydia||0,t.Gonorrhoea||0],backgroundColor:['#ef4444','#f59e0b','#a855f7'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right'}}}});
-  destroyChart('ment');
-  charts.ment = new Chart(document.getElementById('cMent'),{type:'bar',data:{labels:['Anxiety','Depression','Loneliness','Crisis','Suicide','Self-Harm'],datasets:[{data:[t.Anxiety||0,t.Depression||0,t.Loneliness||0,t.Crisis_Acute||0,t.Suicide_Ideation||0,t.Self_Harm||0],backgroundColor:['#f59e0b','#a855f7','#38bdf8','#ef4444','#dc2626','#b91c1c'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-  destroyChart('stig');
-  charts.stig = new Chart(document.getElementById('cStig'),{type:'bar',data:{labels:['Internal','External','Bullying','Online Hate','Workplace','Medical'],datasets:[{data:[t.Internal_Stigma||0,t.External_Discrimination||0,t.Bullying||0,t.Online_Hate||0,t.Workplace_Discrimination||0,t.Medical_Discrimination||0],backgroundColor:'rgba(245,158,11,0.8)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
-  destroyChart('soc');
-  charts.soc = new Chart(document.getElementById('cSoc'),{type:'bar',data:{labels:['WINZ','Housing','Legal','Immigration'],datasets:[{data:[t.WINZ||0,t.Housing_Council||0,t.Legal_Rights||0,t.Immigration||0],backgroundColor:['#0ea5e9','#10b981','#f59e0b','#a855f7'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-  var lg = dashStats.languages || {};
-  destroyChart('lang');
-  charts.lang = new Chart(document.getElementById('cLang'),{type:'doughnut',data:{labels:['English','Español','Te reo Māori'],datasets:[{data:[lg.en||0,lg.es||0,lg.mi||0],backgroundColor:['#0ea5e9','#f59e0b','#10b981'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom'}}}});
-  destroyChart('id');
-  charts.id = new Chart(document.getElementById('cId'),{type:'bar',data:{labels:['LGBTQIA+','Disclosure','Whānau'],datasets:[{data:[t.LGBTQIA_Takatapui||0,t.Disclosure||0,t.Whanau_Family||0],backgroundColor:['#a855f7','#38bdf8','#10b981'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-}
-
-function download(fn,type,content){ var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=fn;a.click();URL.revokeObjectURL(a.href); }
-function exportCSV(){
-  if(!dashStats) return alert('No data');
-  var rows=[['Mātauranga NOVA Analytics Export'],['Generated:',new Date().toLocaleString('en-NZ')],[],['KPIs'],['Sessions',dashStats.totalSessions||0],['Messages',dashStats.totalMessages||0],['Crisis',dashStats.crisisActivations||0],[],['Languages'],['EN',dashStats.languages?.en||0],['ES',dashStats.languages?.es||0],['MI',dashStats.languages?.mi||0],[],['Topics']];
-  Object.entries(dashStats.topics||{}).forEach(function(e){rows.push([e[0],e[1]])});
-  download('nova-'+new Date().toISOString().split('T')[0]+'.csv','text/csv',rows.map(function(r){return r.join(',');}).join('\n'));
-}
-function exportJSON(){ if(!dashStats) return alert('No data'); download('nova-'+new Date().toISOString().split('T')[0]+'.json','application/json',JSON.stringify(dashStats,null,2)); }
-
-function toggleSidebar(open){
-  var sb=document.getElementById('sidebar'),bd=document.getElementById('sbBack');
-  if(open){sb.classList.add('open');bd.classList.add('on');document.body.style.overflow='hidden';}
-  else{sb.classList.remove('open');bd.classList.remove('on');document.body.style.overflow='';}
-}
-
-function toggleChat(){
-  var w=document.getElementById('chatWin'),f=document.getElementById('chatFab');
-  if(w.classList.contains('on')){w.classList.remove('on');f.style.display='flex';}
-  else{w.classList.add('on');f.style.display='none';setTimeout(function(){document.getElementById('chatInp').focus();},200);}
-}
-function chatAppend(msg,type){
-  var body=document.getElementById('chatBody'),div=document.createElement('div');
-  div.className='msg '+type; div.innerHTML=msg;
-  body.appendChild(div); body.scrollTop=body.scrollHeight;
-}
-function chatAsk(type){
-  var qs={top5:tr('qq_1'),crisis:tr('qq_2'),lang:tr('qq_3'),stigma:tr('qq_4'),hiv:tr('qq_5')};
-  document.getElementById('chatInp').value = qs[type]||'';
-  chatSend();
-}
-function chatSend(){
-  var inp=document.getElementById('chatInp'),q=inp.value.trim();
-  if(!q) return;
-  chatAppend(q,'user'); inp.value='';
-  setTimeout(function(){ chatAppend(chatAnalyze(q),'bot'); },250);
-}
-function chatAnalyze(q){
-  if(!dashStats) return tr('msg_nodata');
-  var ql=q.toLowerCase(), t=dashStats.topics||{}, lg=dashStats.languages||{};
-  if(/top\s?5|principal|most|kaupapa|5 nui|ngā 5/i.test(ql)){
-    var sorted = Object.entries(t).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
-    if(sorted.every(function(x){return x[1]===0;})) return tr('msg_notopic');
-    var list = sorted.map(function(x,i){return '<b>'+(i+1)+'.</b> '+x[0].replace(/_/g,' ')+' — '+x[1];}).join('<br>');
-    return tr('msg_top')+'<br><br>'+list;
+  async function tryAutoLogin() {
+    try {
+      const r = await fetch('/stats', { headers: { 'X-Dashboard-Auth': dashPwd } });
+      if (r.ok) {
+        dashStats = await r.json();
+        showDash();
+      }
+    } catch { /* noop */ }
   }
-  if(/crisis|taumaha|suicid|whakamomori|self[\s-]?harm/i.test(ql)){
-    var tot=dashStats.crisisActivations||0;
-    return '<b>'+tr('msg_crisis')+'</b><br><br>Total: <b>'+tot+'</b><br>Suicide: <b>'+(t.Suicide_Ideation||0)+'</b><br>Self-harm: <b>'+(t.Self_Harm||0)+'</b><br>Acute: <b>'+(t.Crisis_Acute||0)+'</b><br><br>'+tr('msg_crisis_note');
-  }
-  if(/language|reo|idioma/i.test(ql)){
-    var tot2=(lg.en||0)+(lg.es||0)+(lg.mi||0);
-    var p=function(v){return tot2>0?((v/tot2)*100).toFixed(1)+'%':'0%';};
-    return '<b>'+tr('msg_lang')+'</b><br><br>EN: <b>'+(lg.en||0)+'</b> ('+p(lg.en||0)+')<br>ES: <b>'+(lg.es||0)+'</b> ('+p(lg.es||0)+')<br>MI: <b>'+(lg.mi||0)+'</b> ('+p(lg.mi||0)+')';
-  }
-  if(/stigma|whakaw|discriminat|bullying|hate/i.test(ql)){
-    var items=[['Internal',t.Internal_Stigma||0],['External',t.External_Discrimination||0],['Bullying',t.Bullying||0],['Online Hate',t.Online_Hate||0],['Workplace',t.Workplace_Discrimination||0],['Medical',t.Medical_Discrimination||0]];
-    var tot3=items.reduce(function(s,x){return s+x[1];},0);
-    var list=items.map(function(x){return '<b>'+x[0]+':</b> '+x[1];}).join('<br>');
-    return '<b>'+tr('msg_stig')+' ('+tot3+' '+tr('msg_stig_tot')+'):</b><br><br>'+list;
-  }
-  if(/hiv|vih|prep|pep|doxy|u=u/i.test(ql)){
-    var items2=[['HIV',t.HIV||0],['Diagnosis',t.New_Diagnosis||0],['PrEP',t.PrEP||0],['PEP',t.PEP||0],['DoxyPEP',t.DoxyPEP||0],['U=U',t.UeqU||0],['Long-term',t.Long_Term_Living||0],['ART',t.ART_Medication||0]];
-    var list2=items2.filter(function(x){return x[1]>0;}).map(function(x){return '<b>'+x[0]+':</b> '+x[1];}).join('<br>')||tr('msg_hiv_none');
-    return '<b>'+tr('msg_hiv')+'</b><br><br>'+list2;
-  }
-  if(/total|sessions|messages|wā|karere/i.test(ql)){
-    return '<b>'+tr('msg_tot')+'</b><br>'+tr('msg_tot_sess')+': '+(dashStats.totalSessions||0)+'<br>'+tr('msg_tot_msg')+': '+(dashStats.totalMessages||0)+'<br>'+tr('msg_tot_top')+': '+Object.keys(t).length;
-  }
-  return tr('msg_try');
-}
 
-document.addEventListener('DOMContentLoaded', function(){
+  // ── Login ──────────────────────────────────────────────────
   document.getElementById('loginBtn').addEventListener('click', doLogin);
-  document.getElementById('pwdInp').addEventListener('keypress', function(e){ if(e.key==='Enter') doLogin(); });
-  document.getElementById('logoutBtn').addEventListener('click', doLogout);
-  document.getElementById('menuBtn').addEventListener('click', function(){toggleSidebar(true);});
-  document.getElementById('sbCloseBtn').addEventListener('click', function(){toggleSidebar(false);});
-  document.getElementById('sbBack').addEventListener('click', function(){toggleSidebar(false);});
-  document.getElementById('csvBtn').addEventListener('click', exportCSV);
-  document.getElementById('jsonBtn').addEventListener('click', exportJSON);
-  document.getElementById('langSel').addEventListener('change', function(e){ currentLang=e.target.value; localStorage.setItem('novaLang',currentLang); applyLang(); if(authed) renderAll(); });
-  document.getElementById('chatFab').addEventListener('click', toggleChat);
-  document.getElementById('chatCloseBtn').addEventListener('click', toggleChat);
-  document.getElementById('chatSendBtn').addEventListener('click', chatSend);
-  document.getElementById('chatInp').addEventListener('keypress', function(e){ if(e.key==='Enter') chatSend(); });
-  document.querySelectorAll('.qq').forEach(function(b){ b.addEventListener('click', function(){chatAsk(b.getAttribute('data-q'));}); });
-  document.querySelectorAll('.sb-link[href^="#"]').forEach(function(link){
-    link.addEventListener('click', function(e){
+  document.getElementById('pwdInp').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
+
+  async function doLogin() {
+    const pwd = document.getElementById('pwdInp').value.trim();
+    const err = document.getElementById('loginErr');
+    if (!pwd) { err.textContent = 'Please enter password.'; return; }
+    err.textContent = 'Verifying…'; err.style.color = 'var(--dim)';
+    try {
+      const r = await fetch('/stats', { headers: { 'X-Dashboard-Auth': pwd } });
+      if (r.status === 401) { err.textContent = 'Incorrect password.'; err.style.color = 'var(--red)'; return; }
+      if (!r.ok) throw new Error(r.status);
+      dashStats = await r.json();
+      dashPwd   = pwd;
+      sessionStorage.setItem('nova_dash_pwd', pwd);
+      showDash();
+    } catch { err.textContent = 'Could not connect. Is the server running?'; err.style.color = 'var(--red)'; }
+  }
+
+  function showDash() {
+    authed = true;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').classList.add('on');
+    document.getElementById('dateEl').textContent = new Date().toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    Chart.defaults.color       = '#6b7c9a';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = 'Sora, sans-serif';
+    renderAll();
+    setInterval(refreshStats, 30000);
+  }
+
+  // ── Data refresh ───────────────────────────────────────────
+  async function refreshStats() {
+    if (!authed) return;
+    try {
+      const r = await fetch('/stats', { headers: { 'X-Dashboard-Auth': dashPwd } });
+      if (!r.ok) throw new Error(r.status);
+      dashStats = await r.json();
+      updateStatus(true);
+      renderAll();
+    } catch {
+      updateStatus(false);
+    }
+  }
+
+  function updateStatus(ok) {
+    const b = document.getElementById('statusBadge');
+    const l = document.getElementById('liveBar');
+    const t = document.getElementById('liveText');
+    if (ok) {
+      b.textContent = '● Live';      b.className = 'hdr-badge';
+      l.className   = 'live-bar';    t.textContent = 'Connected · Refreshes every 30s';
+    } else {
+      b.textContent = '● Offline';   b.className = 'hdr-badge err';
+      l.className   = 'live-bar err'; t.textContent = 'Connection error — retrying…';
+    }
+  }
+
+  // ── Render all ─────────────────────────────────────────────
+  function renderAll() {
+    if (!dashStats) return;
+    const s = dashStats;
+    const t = s.topics || {};
+    const m = s.moments || {};
+
+    // KPIs
+    document.getElementById('kSess').textContent   = (s.totalSessions || 0).toLocaleString();
+    document.getElementById('kMsg').textContent    = (s.totalMessages  || 0).toLocaleString();
+    document.getElementById('kTopics').textContent = Object.keys(t).length;
+    document.getElementById('kCrisis').textContent = s.crisisActivations || 0;
+    document.getElementById('kMedInt').textContent = s.medicalInterceptions || 0;
+
+    // Crisis cards
+    document.getElementById('crSuic').textContent = t.Suicide_Ideation || 0;
+    document.getElementById('crSelf').textContent = t.Self_Harm        || 0;
+    document.getElementById('crAc').textContent   = t.Crisis_Acute     || 0;
+
+    // 7 Moments
+    [1,2,3,4,5,6,7].forEach(n => {
+      const el = document.getElementById('m' + n);
+      if (el) el.textContent = m[n] || 0;
+    });
+
+    updateStatus(true);
+    buildCharts(t, s.languages || {});
+  }
+
+  // ── Charts ─────────────────────────────────────────────────
+  function destroy(k) { if (charts[k]) { charts[k].destroy(); delete charts[k]; } }
+
+  function buildCharts(t, lg) {
+    const allLabels = Object.keys(t);
+    const allData   = Object.values(t);
+    const allColors = allLabels.map(l => {
+      if (/HIV|UeqU|Long_Term|ART/i.test(l))              return 'rgba(14,165,233,0.82)';
+      if (/PrEP|PEP|Doxy|STI|Syphilis|Chlamydia|Gonorrhoea/i.test(l)) return 'rgba(16,185,129,0.82)';
+      if (/Suicide|Self_Harm|Crisis|Anxiety|Depress|Loneliness/i.test(l)) return 'rgba(239,68,68,0.82)';
+      if (/Stigma|Discrimination|Bullying|Online_Hate|Workplace|Medical/i.test(l)) return 'rgba(245,158,11,0.82)';
+      if (/LGBT|Takatapui|Disclosure|Whanau|Chemsex/i.test(l)) return 'rgba(168,85,247,0.82)';
+      return 'rgba(56,189,248,0.78)';
+    });
+
+    const baseOpts = (axis = 'y') => ({
+      indexAxis: axis,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true },
+        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    });
+
+    destroy('all');
+    charts.all = new Chart(document.getElementById('cAll'), {
+      type: 'bar',
+      data: { labels: allLabels, datasets: [{ data: allData, backgroundColor: allColors, borderRadius: 3 }] },
+      options: { ...baseOpts('y') }
+    });
+
+    destroy('hiv');
+    charts.hiv = new Chart(document.getElementById('cHiv'), {
+      type: 'bar',
+      data: { labels: ['HIV', 'Diagnosis', 'U=U', 'Long-term', 'ART'],
+              datasets: [{ data: [t.HIV||0, t.New_Diagnosis||0, t.UeqU||0, t.Long_Term_Living||0, t.ART_Medication||0], backgroundColor: 'rgba(14,165,233,0.82)', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    destroy('prev');
+    charts.prev = new Chart(document.getElementById('cPrev'), {
+      type: 'bar',
+      data: { labels: ['PrEP', 'PEP', 'DoxyPEP', 'STI Testing'],
+              datasets: [{ data: [t.PrEP||0, t.PEP||0, t.DoxyPEP||0, t.STI_Testing||0], backgroundColor: 'rgba(16,185,129,0.82)', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    destroy('sti');
+    charts.sti = new Chart(document.getElementById('cSti'), {
+      type: 'doughnut',
+      data: { labels: ['Syphilis', 'Chlamydia', 'Gonorrhoea'],
+              datasets: [{ data: [t.Syphilis||0, t.Chlamydia||0, t.Gonorrhoea||0], backgroundColor: ['#ef4444','#f59e0b','#a855f7'], borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'right' } } }
+    });
+
+    destroy('ment');
+    charts.ment = new Chart(document.getElementById('cMent'), {
+      type: 'bar',
+      data: { labels: ['Anxiety', 'Depression', 'Loneliness', 'Crisis', 'Suicide', 'Self-Harm'],
+              datasets: [{ data: [t.Anxiety||0, t.Depression||0, t.Loneliness||0, t.Crisis_Acute||0, t.Suicide_Ideation||0, t.Self_Harm||0],
+                backgroundColor: ['#f59e0b','#a855f7','#38bdf8','#ef4444','#dc2626','#b91c1c'], borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    destroy('stig');
+    charts.stig = new Chart(document.getElementById('cStig'), {
+      type: 'bar',
+      data: { labels: ['Internal', 'External', 'Bullying', 'Online Hate', 'Workplace', 'Medical'],
+              datasets: [{ data: [t.Internal_Stigma||0, t.External_Discrimination||0, t.Bullying||0, t.Online_Hate||0, t.Workplace_Discrimination||0, t.Medical_Discrimination||0],
+                backgroundColor: 'rgba(245,158,11,0.82)', borderRadius: 4 }] },
+      options: { ...baseOpts('y') }
+    });
+
+    destroy('soc');
+    charts.soc = new Chart(document.getElementById('cSoc'), {
+      type: 'bar',
+      data: { labels: ['WINZ', 'Housing', 'Legal', 'Immigration'],
+              datasets: [{ data: [t.WINZ||0, t.Housing_Council||0, t.Legal_Rights||0, t.Immigration||0],
+                backgroundColor: ['#0ea5e9','#10b981','#f59e0b','#a855f7'], borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    destroy('lang');
+    charts.lang = new Chart(document.getElementById('cLang'), {
+      type: 'doughnut',
+      data: { labels: ['English', 'Español', 'Te reo Māori'],
+              datasets: [{ data: [lg.en||0, lg.es||0, lg.mi||0], backgroundColor: ['#0ea5e9','#f59e0b','#10b981'], borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+    });
+
+    destroy('id');
+    charts.id = new Chart(document.getElementById('cId'), {
+      type: 'bar',
+      data: { labels: ['LGBTQIA+', 'Disclosure', 'Whānau', 'Chemsex'],
+              datasets: [{ data: [t.LGBTQIA_Takatapui||0, t.Disclosure||0, t.Whanau_Family||0, t.Chemsex||0],
+                backgroundColor: ['#a855f7','#38bdf8','#10b981','#f59e0b'], borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  // ── Exports ─────────────────────────────────────────────────
+  function dl(fn, type, content) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type }));
+    a.download = fn; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  document.getElementById('csvBtn').addEventListener('click', () => {
+    if (!dashStats) return alert('No data');
+    const t = dashStats.topics || {};
+    const rows = [
+      ['Mātauranga NOVA Analytics Export'],
+      ['Generated:', new Date().toLocaleString('en-NZ')],
+      ['Ethical Framework:', dashStats.ethicalFramework || 'provisional-draft-v0.9-beta'],
+      [],
+      ['KPIs'],
+      ['Sessions',  dashStats.totalSessions || 0],
+      ['Messages',  dashStats.totalMessages  || 0],
+      ['Crisis',    dashStats.crisisActivations || 0],
+      ['Medical Interceptions', dashStats.medicalInterceptions || 0],
+      [],
+      ['Languages'],
+      ['EN', dashStats.languages?.en || 0],
+      ['ES', dashStats.languages?.es || 0],
+      ['MI', dashStats.languages?.mi || 0],
+      [],
+      ['7 Moments'],
+      ...[1,2,3,4,5,6,7].map(n => ['Moment '+n, dashStats.moments?.[n] || 0]),
+      [],
+      ['Topics'],
+      ...Object.entries(t).map(([k,v]) => [k, v])
+    ];
+    dl('nova-' + new Date().toISOString().split('T')[0] + '.csv', 'text/csv', rows.map(r => r.join(',')).join('\n'));
+  });
+
+  document.getElementById('jsonBtn').addEventListener('click', () => {
+    if (!dashStats) return alert('No data');
+    dl('nova-' + new Date().toISOString().split('T')[0] + '.json', 'application/json', JSON.stringify(dashStats, null, 2));
+  });
+
+  // ── Logout ─────────────────────────────────────────────────
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.removeItem('nova_dash_pwd');
+    location.reload();
+  });
+
+  // ── Sidebar mobile ─────────────────────────────────────────
+  function sidebarToggle(open) {
+    const sb = document.getElementById('sidebar');
+    const bd = document.getElementById('sbBack');
+    if (open) { sb.classList.add('open'); bd.classList.add('on'); document.body.style.overflow = 'hidden'; }
+    else { sb.classList.remove('open'); bd.classList.remove('on'); document.body.style.overflow = ''; }
+  }
+
+  document.getElementById('menuBtn').addEventListener('click', () => sidebarToggle(true));
+  document.getElementById('sbClose').addEventListener('click', () => sidebarToggle(false));
+  document.getElementById('sbBack').addEventListener('click', () => sidebarToggle(false));
+
+  document.querySelectorAll('.sb-link[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
       e.preventDefault();
-      var target=document.querySelector(link.getAttribute('href'));
-      if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
-      document.querySelectorAll('.sb-link').forEach(function(l){l.classList.remove('active');});
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('active'));
       link.classList.add('active');
-      if(window.innerWidth<=960) toggleSidebar(false);
+      if (window.innerWidth <= 960) sidebarToggle(false);
     });
   });
-  
-  applyLang();
-  
-  // Auto-login if saved
-  var saved = sessionStorage.getItem('novaAuth');
-  if(saved){
-    dashboardPwd = saved;
-    fetch('/stats',{headers:{'X-Dashboard-Auth':saved}})
-      .then(function(r){ return r.ok?r.json():null; })
-      .then(function(d){ if(d){ authed=true; document.getElementById('loginS').style.display='none'; document.getElementById('dash').classList.add('on'); initDash(); }})
-      .catch(function(){});
-  }
-});
+
 })();
 </script>
 </body>
