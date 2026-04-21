@@ -1,347 +1,212 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mātauranga NOVA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+  <title>Mātauranga NOVA — Portal de Apoyo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=DM+Mono&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
   <style>
     :root {
+      --accent: #0ea5e9; /* Teal por defecto */
+      --accent-rgb: 14, 165, 233;
       --bg: #080e18;
-      --bg-panel: rgba(13, 21, 37, 0.85);
-      --teal: #0ea5e9;
-      --teal-dim: rgba(14, 165, 233, 0.2);
-      --red: #ef4444;
+      --panel: rgba(13, 21, 37, 0.7);
       --text: #e8eef6;
-      --dim: #6b7c9a;
-      --radius: 16px;
+      --red: #ef4444;
+      --gold: #f59e0b;
+      --transition-speed: 1.5s;
     }
-    
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Sora', sans-serif; }
-    body { background-color: var(--bg); color: var(--text); overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
-    
-    /* 1. Canvas Background */
-    #networkCanvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
-    
-    /* 2. Main App Container */
-    #appContainer { position: relative; z-index: 10; width: 100%; max-width: 800px; height: 90vh; max-height: 900px; display: flex; flex-direction: column; background: var(--bg-panel); backdrop-filter: blur(12px); border: 1px solid var(--teal-dim); border-radius: var(--radius); box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px var(--teal-dim); overflow: hidden; margin: 20px; }
-    
-    /* 3. Header */
-    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--teal-dim); background: rgba(8, 14, 24, 0.6); }
-    .brand { display: flex; flex-direction: column; }
-    .brand-title { font-weight: 700; font-size: 18px; color: var(--teal); letter-spacing: 1px; }
-    .brand-subtitle { font-size: 11px; color: var(--dim); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 2px; }
-    .btn-exit { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s; }
-    .btn-exit:hover { background: var(--red); color: #fff; }
+    body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 
-    /* 4. Chat Area */
-    #chatArea { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
-    #chatArea::-webkit-scrollbar { width: 6px; }
-    #chatArea::-webkit-scrollbar-thumb { background: var(--teal-dim); border-radius: 6px; }
-
-    .msg { max-width: 85%; animation: slideIn 0.3s ease forwards; opacity: 0; line-height: 1.6; font-size: 14px; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .msg.bot { align-self: flex-start; }
-    .msg.user { align-self: flex-end; }
-    .bubble { padding: 14px 18px; border-radius: 12px; }
-    .msg.bot .bubble { background: rgba(14, 165, 233, 0.08); border: 1px solid var(--teal-dim); border-top-left-radius: 2px; color: var(--text); }
-    .msg.user .bubble { background: var(--teal); color: #fff; border-top-right-radius: 2px; }
-    .msg.crisis .bubble { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-left: 4px solid var(--red); }
+    /* Fondo de Red Neuronal */
+    #canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
     
-    .bubble p { margin-bottom: 8px; }
-    .bubble p:last-child { margin-bottom: 0; }
-    .bubble ul { margin-left: 20px; margin-bottom: 8px; }
-    .bubble strong { color: #fff; }
-
-    /* 5. Input Area */
-    #inputContainer { padding: 0 24px 24px 24px; display: flex; flex-direction: column; gap: 12px; }
-    .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-    .btn-quick { background: rgba(14, 165, 233, 0.05); border: 1px solid var(--teal-dim); color: var(--teal); padding: 8px 14px; border-radius: 20px; font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: 'DM Mono', monospace; }
-    .btn-quick:hover { background: rgba(14, 165, 233, 0.15); border-color: var(--teal); }
-    
-    .input-row { display: flex; gap: 12px; }
-    #chatInput { flex: 1; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--dim); border-radius: 12px; padding: 14px 16px; color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; resize: none; height: 52px; }
-    #chatInput:focus { border-color: var(--teal); }
-    #btnSend { background: var(--teal); border: none; width: 52px; height: 52px; border-radius: 12px; color: #fff; font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s; }
-    #btnSend:hover { background: #0284c7; }
-    #btnSend:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* 6. Consent Overlay */
-    #consentOverlay { position: absolute; inset: 0; background: var(--bg); z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; }
-    .shield-icon { font-size: 48px; margin-bottom: 16px; }
-    .consent-title { font-size: 24px; font-weight: 700; color: var(--teal); margin-bottom: 16px; }
-    .consent-text { font-size: 14px; color: var(--dim); max-width: 500px; line-height: 1.8; margin-bottom: 32px; background: rgba(255,255,255,0.03); padding: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
-    .consent-text strong { color: var(--text); }
-    .btn-agree { background: var(--teal); color: #fff; border: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; width: 100%; max-width: 500px; transition: background 0.2s; }
-    .btn-agree:hover { background: #0284c7; }
-
-    @media (max-width: 600px) {
-      #appContainer { height: 100vh; margin: 0; border-radius: 0; border: none; }
-      header { padding: 12px 16px; }
-      #chatArea { padding: 16px; }
-      #inputContainer { padding: 0 16px 16px 16px; }
+    /* Contenedor Principal con Glass Liquid Effect */
+    #app {
+      position: relative; z-index: 10; width: 95%; max-width: 900px; height: 85vh;
+      background: var(--panel);
+      backdrop-filter: blur(25px) saturate(180%);
+      -webkit-backdrop-filter: blur(25px) saturate(180%);
+      border: 1px solid rgba(var(--accent-rgb), 0.2);
+      border-radius: 24px;
+      display: flex; flex-direction: column;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+      transition: border-color var(--transition-speed);
     }
+
+    /* Header */
+    header { padding: 20px 30px; border-bottom: 1px solid rgba(var(--accent-rgb), 0.1); display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-weight: 700; font-size: 20px; color: var(--accent); letter-spacing: 1px; transition: color var(--transition-speed); }
+    .exit-btn { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 13px; cursor: pointer; }
+
+    /* Chat Area */
+    #chat { flex: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; gap: 20px; }
+    .msg { max-width: 80%; line-height: 1.7; font-size: 15px; animation: fadeInUp 0.4s ease; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .msg.bot { align-self: flex-start; background: rgba(255,255,255,0.05); padding: 15px 20px; border-radius: 4px 18px 18px 18px; border: 1px solid rgba(var(--accent-rgb), 0.1); }
+    .msg.user { align-self: flex-end; background: var(--accent); color: #fff; padding: 15px 20px; border-radius: 18px 4px 18px 18px; transition: background var(--transition-speed); }
+
+    /* Input */
+    footer { padding: 25px 30px; background: rgba(0,0,0,0.2); }
+    .input-wrap { display: flex; gap: 15px; align-items: flex-end; }
+    textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(var(--accent-rgb), 0.3); border-radius: 15px; padding: 15px; color: var(--text); resize: none; outline: none; height: 55px; font-size: 15px; transition: border-color 0.3s; }
+    textarea:focus { border-color: var(--accent); }
+    #send { background: var(--accent); border: none; width: 55px; height: 55px; border-radius: 15px; cursor: pointer; font-size: 24px; transition: background var(--transition-speed); }
+
+    /* Consent Overlay */
+    #shield { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+    .shield-box { max-width: 500px; }
+    .btn-start { background: var(--accent); color: #fff; border: none; padding: 18px 40px; border-radius: 12px; font-weight: 700; margin-top: 30px; cursor: pointer; width: 100%; transition: background var(--transition-speed); }
   </style>
 </head>
 <body>
 
-  <canvas id="networkCanvas"></canvas>
+  <canvas id="canvas"></canvas>
 
-  <div id="appContainer">
-    
-    <div id="consentOverlay">
-      <div class="shield-icon">🔒</div>
-      <h1 class="consent-title">Private by Design</h1>
-      <div class="consent-text">
-        This space is for you. When you close this window or click Quick Exit, <strong>everything is deleted immediately</strong>.<br><br>
-        Nothing is stored on our servers long-term. We operate under the <strong>NZ Privacy Act 2020</strong> and strict Zero Data Retention policies.<br><br>
-        <em>Only anonymous counts (like "a session occurred") are kept to help the Burnett Foundation improve services.</em>
+  <div id="app">
+    <div id="shield">
+      <div class="shield-box">
+        <h1 style="color: var(--accent); margin-bottom: 20px;">Privacidad Absoluta</h1>
+        <p style="color: #6b7c9a; line-height: 1.8;">Este chat es <strong>privado por diseño</strong>. Nada se guarda en nuestros servidores a largo plazo. Al cerrar esta ventana, tu conversación desaparece para siempre.</p>
+        <button class="btn-start" onclick="startApp()">Entiendo — Empezar Sesión</button>
       </div>
-      <button class="btn-agree" id="btnAgree">I understand — Start Session</button>
     </div>
 
     <header>
-      <div class="brand">
-        <div class="brand-title">Mātauranga NOVA</div>
-        <div class="brand-subtitle">● Secure Connection</div>
-      </div>
-      <button class="btn-exit" id="btnExit">✕ Quick Exit</button>
+      <div class="logo">MĀTAURANGA NOVA</div>
+      <button class="exit-btn" onclick="quickExit()">✕ Salida Rápida</button>
     </header>
 
-    <div id="chatArea"></div>
+    <div id="chat"></div>
 
-    <div id="inputContainer">
-      <div class="quick-actions">
-        <button class="btn-quick">I just got a positive result</button>
-        <button class="btn-quick">Tell me about PrEP</button>
-        <button class="btn-quick">What does U=U mean?</button>
-        <button class="btn-quick">I'm feeling really alone</button>
+    <footer>
+      <div class="input-wrap">
+        <textarea id="msgInp" placeholder="Escribe aquí de forma segura..." rows="1"></textarea>
+        <button id="send" onclick="sendMsg()">↗</button>
       </div>
-      <div class="input-row">
-        <textarea id="chatInput" placeholder="Type a message..." rows="1"></textarea>
-        <button id="btnSend">↗</button>
-      </div>
-    </div>
+    </footer>
   </div>
 
   <script>
-    // ==========================================
-    // 1. NEURAL NETWORK CANVAS LOGIC
-    // ==========================================
-    const canvas = document.getElementById('networkCanvas');
+    // --- LÓGICA DE LA RED NEURONAL VIVA ---
+    const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    let mouse = { x: -1000, y: -1000 };
-    let typingSpeedMult = 1;
-    let aiPulse = 0;
+    let nodes = [];
+    let currentColor = { r: 14, g: 165, b: 233 }; // Teal
+    let targetColor = { r: 14, g: 165, b: 233 };
+    let flowSpeed = 1;
 
-    function resize() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      initParticles();
-    }
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize);
+    resize();
 
-    class Particle {
+    class Node {
       constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.baseVx = (Math.random() - 0.5) * 0.5;
-        this.baseVy = (Math.random() - 0.5) * 0.5;
-        this.vx = this.baseVx;
-        this.vy = this.baseVy;
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
       }
       update() {
-        // Fluid motion
-        this.x += this.vx * typingSpeedMult;
-        this.y += this.vy * typingSpeedMult;
-
-        // Bounce edges
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
-
-        // Mouse Repulsion
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 150) {
-          this.x -= (dx / dist) * 2;
-          this.y -= (dy / dist) * 2;
-        }
-
-        // Return to base velocity
-        this.vx += (this.baseVx - this.vx) * 0.05;
-        this.vy += (this.baseVy - this.vy) * 0.05;
-      }
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(14, 165, 233, ${0.5 + aiPulse})`;
-        ctx.fill();
+        this.x += this.vx * flowSpeed;
+        this.y += this.vy * flowSpeed;
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
       }
     }
 
-    function initParticles() {
-      particles = [];
-      const num = (width * height) / 12000; // Density
-      for (let i = 0; i < num; i++) particles.push(new Particle());
-    }
+    for (let i = 0; i < 100; i++) nodes.push(new Node());
 
     function animate() {
-      ctx.clearRect(0, 0, width, height);
+      // Interpolar colores suavemente
+      currentColor.r += (targetColor.r - currentColor.r) * 0.02;
+      currentColor.g += (targetColor.g - currentColor.g) * 0.02;
+      currentColor.b += (targetColor.b - currentColor.b) * 0.02;
+      const col = `rgb(${currentColor.r},${currentColor.g},${currentColor.b})`;
       
-      // Update typing speed & pulse decay
-      if (typingSpeedMult > 1) typingSpeedMult -= 0.05;
-      if (aiPulse > 0) aiPulse -= 0.02;
+      // Actualizar CSS para sincronizar UI
+      document.documentElement.style.setProperty('--accent', col);
+      document.documentElement.style.setProperty('--accent-rgb', `${Math.round(currentColor.r)},${Math.round(currentColor.g)},${Math.round(currentColor.b)}`);
 
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      nodes.forEach((n, i) => {
+        n.update();
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(n.x, n.y, 2, 0, Math.PI*2); ctx.fill();
         
-        // Draw connections
-        for (let j = i + 1; j < particles.length; j++) {
-          let dx = particles[i].x - particles[j].x;
-          let dy = particles[i].y - particles[j].y;
-          let dist = Math.sqrt(dx*dx + dy*dy);
-          
-          if (dist < 120) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            let op = (1 - dist/120) * (0.2 + aiPulse);
-            ctx.strokeStyle = `rgba(14, 165, 233, ${op})`;
-            ctx.stroke();
+        for (let j = i + 1; j < nodes.length; j++) {
+          const d = Math.hypot(n.x - nodes[j].x, n.y - nodes[j].y);
+          if (d < 150) {
+            ctx.strokeStyle = col;
+            ctx.globalAlpha = 1 - d/150;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
+            ctx.globalAlpha = 1;
           }
         }
-      }
+      });
       requestAnimationFrame(animate);
     }
-
-    document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-    document.getElementById('chatInput').addEventListener('input', () => { typingSpeedMult = 3; });
-    
-    resize();
     animate();
 
-    // ==========================================
-    // 2. CHAT APP LOGIC
-    // ==========================================
-    let sessionId = null;
-    let sessionTimer = null;
-    const chatArea = document.getElementById('chatArea');
-    const input = document.getElementById('chatInput');
-    const btnSend = document.getElementById('btnSend');
+    // --- INTERACCIÓN Y CONTEXTO ---
+    function setSentiment(type) {
+      if (type === 'warm') targetColor = { r: 16, g: 185, b: 129 }; // Verde/Esmeralda
+      else if (type === 'alert') targetColor = { r: 239, g: 68, b: 68 }; // Rojo
+      else targetColor = { r: 14, g: 165, b: 233 }; // Teal
+      flowSpeed = 3; setTimeout(() => flowSpeed = 1, 2000); // Pulso de velocidad
+    }
 
-    // Consent Flow
-    document.getElementById('btnAgree').addEventListener('click', async () => {
-      document.getElementById('consentOverlay').style.display = 'none';
-      appendMsg('bot', 'Kia ora — I\'m NOVA 🌿\n\nI\'m here to support you with HIV questions, PrEP info, mental health, rights — whatever\'s on your mind. Warm, no judgment, totally private.\n\n*What brings you here today?*');
-      
-      try {
-        const res = await fetch('/session-start', { method: 'POST' });
-        const data = await res.json();
-        sessionId = data.sessionId;
-        resetTimer();
-      } catch (e) { console.warn('Could not connect to backend'); }
-    });
-
-    // Quick Exit
-    document.getElementById('btnExit').addEventListener('click', () => {
-      if(sessionId) fetch('/session-end', { method: 'POST', body: JSON.stringify({sessionId}), headers: {'Content-Type': 'application/json'} });
-      document.body.innerHTML = '<div style="color:#ef4444; text-align:center; margin-top:20vh; font-size:24px;">Session cleared securely. You can close this tab.</div>';
-    });
-
-    // Handle Input
-    input.addEventListener('keypress', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-    });
-    document.querySelectorAll('.btn-quick').forEach(b => {
-      b.addEventListener('click', () => { input.value = b.innerText; sendMessage(); });
-    });
-    btnSend.addEventListener('click', sendMessage);
-
-    async function sendMessage() {
-      const text = input.value.trim();
+    // --- CHAT LOGIC (SSE) ---
+    async function sendMsg() {
+      const inp = document.getElementById('msgInp');
+      const text = inp.value.trim();
       if (!text) return;
       
-      input.value = '';
-      btnSend.disabled = true;
-      resetTimer();
-      
       appendMsg('user', text);
-      const botBubble = appendMsg('bot', '...', false); // Placeholder
+      inp.value = '';
+      flowSpeed = 5; // Reacción al tipeo
 
-      try {
-        const res = await fetch('/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, sessionId })
-        });
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
 
-        // Non-streaming intercept (Crisis)
-        if (res.headers.get('content-type')?.includes('application/json')) {
-          const d = await res.json();
-          botBubble.innerHTML = marked.parse(d.reply);
-          if (d.crisis) botBubble.parentElement.classList.add('crisis');
-          btnSend.disabled = false;
-          aiPulse = 1; // Flash network
-          return;
-        }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let botMsg = appendMsg('bot', '');
 
-        // Streaming (SSE)
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let streamedText = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const lines = decoder.decode(value, {stream: true}).split('\n');
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const raw = line.slice(6).trim();
-            if (raw === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(raw);
-              if (parsed.type === 'delta') {
-                streamedText += parsed.text;
-                botBubble.innerHTML = marked.parse(streamedText);
-                chatArea.scrollTop = chatArea.scrollHeight;
-                aiPulse = 0.5; // Network reaction to data
-              } else if (parsed.type === 'replace') {
-                streamedText = parsed.text;
-                botBubble.innerHTML = marked.parse(streamedText);
-              }
-            } catch (e) {}
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const lines = decoder.decode(value).split('\n');
+        lines.forEach(line => {
+          if (!line.startsWith('data: ')) return;
+          const data = JSON.parse(line.slice(6));
+          if (data.type === 'metadata') setSentiment(data.sentiment);
+          if (data.type === 'delta') {
+            botMsg.innerHTML = marked.parse(data.text);
+            document.getElementById('chat').scrollTop = 99999;
           }
-        }
-      } catch (err) {
-        botBubble.innerHTML = '<em>Connection error. For urgent support: <strong>Lifeline 0800 543 354</strong></em>';
+        });
       }
-      btnSend.disabled = false;
-      input.focus();
     }
 
-    function appendMsg(role, text, parse = true) {
-      const wrap = document.createElement('div');
-      wrap.className = `msg ${role}`;
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.innerHTML = parse ? marked.parse(text) : text;
-      wrap.appendChild(bubble);
-      chatArea.appendChild(wrap);
-      chatArea.scrollTop = chatArea.scrollHeight;
-      return bubble;
+    function appendMsg(role, text) {
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.innerHTML = marked.parse(text);
+      document.getElementById('chat').appendChild(div);
+      return div;
     }
 
-    function resetTimer() {
-      clearTimeout(sessionTimer);
-      // Auto close after 5 minutes of inactivity (300000 ms)
-      sessionTimer = setTimeout(() => document.getElementById('btnExit').click(), 300000);
-    }
+    function startApp() { document.getElementById('shield').style.display = 'none'; }
+    function quickExit() { window.location.href = 'https://google.com'; }
   </script>
 </body>
 </html>
+
