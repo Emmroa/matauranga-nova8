@@ -73,22 +73,22 @@ Operating under Safe-by-Default ethical framework (provisional draft v0.9-beta).
 }
 
 // ============================================================
-// LAYER 4 — HELMET
+// LAYER 4 — HELMET (Configuración Corregida)
 // ============================================================
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      // Agregamos cdn.tailwindcss.com para que tu diseño no se rompa
+      // Estilos: Fuentes de Google y Tailwind
       styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.tailwindcss.com'],
       fontSrc:    ["'self'", 'https://fonts.gstatic.com'],
-      // Agregamos cdn.tailwindcss.com aquí también y permitimos scripts locales
+      // Scripts: Permitimos scripts locales, Tailwind y librerías externas
       scriptSrc:  ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'https://cdn.tailwindcss.com'],
-      // ¡CRÍTICO!: Permitimos que la página hable con tu propio servidor de Render
+      // Conexión: Crucial para que el chat hable con el backend de Render
       connectSrc: ["'self'", "https://matauranga-nova.onrender.com"],
       imgSrc:     ["'self'", 'data:', "https:"],
-      // CAMBIO CLAVE: Cambiamos 'none' por 'self' para que el widget pueda aparecer
-      connectSrc: ["'self'", "https://matauranga-nova.onrender.com"],
+      // VENTANAS (Frames): Esto es lo que hace que el WIDGET aparezca
+      frameSrc:   ["'self'", "https://matauranga-nova.onrender.com"],
       objectSrc:  ["'none'"],
       upgradeInsecureRequests: [],
     },
@@ -96,7 +96,6 @@ app.use(helmet({
   hsts:           { maxAge: 31536000, includeSubDomains: true, preload: true },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
-
 
 // ============================================================
 // CORS
