@@ -102,6 +102,7 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10kb' }));
+app.use(express.static(path.join(__dirname, '.')));
 
 // ============================================================
 // LAYER 2 — RATE LIMITING + ANTI-DDOS
