@@ -79,18 +79,24 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      // Agregamos cdn.tailwindcss.com para que tu diseño no se rompa
+      styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.tailwindcss.com'],
       fontSrc:    ["'self'", 'https://fonts.gstatic.com'],
-      scriptSrc:  ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
-      connectSrc: ["'self'"],
-      imgSrc:     ["'self'", 'data:'],
-      frameSrc:   ["'none'"],
+      // Agregamos cdn.tailwindcss.com aquí también y permitimos scripts locales
+      scriptSrc:  ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'https://cdn.tailwindcss.com'],
+      // ¡CRÍTICO!: Permitimos que la página hable con tu propio servidor de Render
+      connectSrc: ["'self'", "https://matauranga-nova.onrender.com"],
+      imgSrc:     ["'self'", 'data:', "https:"],
+      // CAMBIO CLAVE: Cambiamos 'none' por 'self' para que el widget pueda aparecer
+      frameSrc:   ["'self'", "https://matauranga-nova.onrender.com"],
       objectSrc:  ["'none'"],
+      upgradeInsecureRequests: [],
     },
   },
   hsts:           { maxAge: 31536000, includeSubDomains: true, preload: true },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
+
 
 // ============================================================
 // CORS
