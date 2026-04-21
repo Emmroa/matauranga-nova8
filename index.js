@@ -88,7 +88,7 @@ app.use(helmet({
       connectSrc: ["'self'", "https://matauranga-nova.onrender.com"],
       imgSrc:     ["'self'", 'data:', "https:"],
       // CAMBIO CLAVE: Cambiamos 'none' por 'self' para que el widget pueda aparecer
-      frameSrc:   ["'self'", "https://matauranga-nova.onrender.com"],
+      connectSrc: ["'self'", "https://matauranga-nova.onrender.com"],
       objectSrc:  ["'none'"],
       upgradeInsecureRequests: [],
     },
