@@ -1,300 +1,505 @@
-<!DOCTYPE html>
-<html lang="en">
+       <!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mātauranga NOVA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=DM+Mono&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="preconnect">
   <style>
     :root {
-      --bg: #080e18;
-      --text: #ffffff;
-      --text-dim: #94a3b8;
-      /* Glassmorphism Variables */
-      --glass-bg: rgba(13, 21, 37, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      /* Semantic Colors */
-      --teal-hex: #0ea5e9;
-      --red-hex: #ef4444;
+      --accent: #0ea5e9;
+      --bg-primary: #080e18;
+      --bg-secondary: rgba(13, 21, 37, 0.85);
+      --glass-bg: rgba(13, 21, 37, 0.7);
+      --border: rgba(255, 255, 255, 0.1);
+      --border-hover: rgba(255, 255, 255, 0.2);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.8);
+      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Sora', sans-serif; }
-    body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    /* HTML5 Dynamic Canvas */
-    #bgCanvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      overflow: hidden;
+      height: 100vh;
+      line-height: 1.6;
+    }
 
-    /* Main Application Window (Glass Liquid) */
-    #appWindow {
-      position: relative; z-index: 10; width: 92%; max-width: 850px; height: 88vh;
+    #canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    #app {
+      position: relative;
+      z-index: 10;
+      width: min(90%, 1200px);
+      height: clamp(85vh, 90vh, 95vh);
+      margin: clamp(2rem, 5vh, 4rem) auto;
       background: var(--glass-bg);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
-      display: flex; flex-direction: column; overflow: hidden;
+      backdrop-filter: blur(25px) saturate(180%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Header */
-    header { padding: 18px 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); }
-    .brand-title { font-weight: 700; font-size: 18px; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    .brand-subtitle { font-size: 10px; color: var(--text-dim); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 2px; }
-    .btn-exit { background: rgba(239, 68, 68, 0.2); color: var(--red-hex); border: 1px solid rgba(239, 68, 68, 0.4); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 11px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
-    .btn-exit:hover { background: var(--red-hex); color: #fff; }
+    header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
 
-    /* Chat Log */
-    #chatLog { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
-    #chatLog::-webkit-scrollbar { width: 6px; }
-    #chatLog::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 6px; }
+    #title {
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      transition: all 0.3s ease;
+    }
 
-    .msg { max-width: 85%; animation: slideUp 0.3s ease forwards; opacity: 0; line-height: 1.6; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .msg.bot { align-self: flex-start; }
-    .msg.user { align-self: flex-end; }
-    
-    .bubble { padding: 16px 20px; border-radius: 14px; }
-    .msg.bot .bubble { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-top-left-radius: 4px; }
-    .msg.user .bubble { background: rgba(14, 165, 233, 0.4); border: 1px solid rgba(14, 165, 233, 0.6); border-top-right-radius: 4px; }
-    .msg.crisis .bubble { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); border-left: 4px solid var(--red-hex); }
+    .exit-btn {
+      color: #ef4444;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
 
-    .bubble p { margin-bottom: 10px; }
-    .bubble p:last-child { margin-bottom: 0; }
-    .bubble strong { color: #fff; font-weight: 700; }
+    .exit-btn:hover {
+      background: rgba(239, 68, 68, 0.1);
+      transform: translateY(-1px);
+    }
 
-    /* Input Area */
-    #inputArea { padding: 20px 24px; background: rgba(0,0,0,0.3); border-top: 1px solid var(--glass-border); display: flex; gap: 12px; }
-    #chatInput { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 14px 16px; color: #fff; font-size: 14px; outline: none; resize: none; height: 50px; transition: border-color 0.2s; }
-    #chatInput:focus { border-color: var(--teal-hex); background: rgba(255,255,255,0.1); }
-    #btnSend { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 50px; height: 50px; border-radius: 12px; font-size: 18px; cursor: pointer; transition: background 0.2s; }
-    #btnSend:hover { background: var(--teal-hex); border-color: var(--teal-hex); }
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent) transparent;
+    }
 
-    /* Consent Shield */
-    #shield { position: absolute; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
-    .btn-start { background: var(--teal-hex); color: #fff; border: none; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 14px; margin-top: 30px; cursor: pointer; transition: transform 0.2s; }
-    .btn-start:hover { transform: scale(1.05); }
+    #chat::-webkit-scrollbar {
+      width: 6px;
+    }
 
+    #chat::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #chat::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 3px;
+    }
+
+    .message {
+      padding: 1rem 1.5rem;
+      border-radius: 20px;
+      max-width: 85%;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      animation: fadeInUp 0.3s ease-out;
+      word-wrap: break-word;
+      hyphens: auto;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--accent), #0284c7);
+      color: white;
+      font-weight: 500;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .input-container {
+      padding: 1.5rem 2rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+
+    #input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      padding: 0.875rem 1.25rem;
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    #input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    #input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    #send-btn {
+      background: linear-gradient(135deg, var(--accent), #0284c7);
+      border: none;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      min-width: 80px;
+    }
+
+    #send-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);
+    }
+
+    #send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #send-btn.sending {
+      background: linear-gradient(135deg, #64748b, #475569);
+    }
+
+    @media (max-width: 768px) {
+      #app {
+        margin: 1rem;
+        height: 95vh;
+        border-radius: 16px;
+      }
+      
+      header, .input-container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+      }
+      
+      #chat {
+        padding: 1.5rem;
+      }
+      
+      .message {
+        max-width: 95%;
+      }
+    }
+
+    /* Mejoras para accesibilidad */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
-
-  <canvas id="bgCanvas"></canvas>
-
-  <div id="appWindow">
-    
-    <div id="shield">
-      <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
-      <h1 style="color: var(--teal-hex); margin-bottom: 16px;">Private by Design</h1>
-      <p style="color: var(--text-dim); max-width: 450px; line-height: 1.8;">Everything is deleted when you close this window. Protected under the NZ Privacy Act 2020.</p>
-      <button class="btn-start" onclick="initSession()">I understand — Start</button>
-    </div>
-
-    <header>
-      <div>
-        <div class="brand-title" id="brandText">MĀTAURANGA NOVA</div>
-        <div class="brand-subtitle">● Secured Session</div>
-      </div>
-      <button class="btn-exit" onclick="destroySession()">✕ Quick Exit</button>
+  <canvas id="canvas" aria-hidden="true"></canvas>
+  
+  <main id="app" role="main">
+    <header role="banner">
+      <h1 id="title" aria-label="Mātauranga NOVA">MĀTAURANGA NOVA</h1>
+      <button class="exit-btn" onclick="app.reset()" aria-label="Salir y recargar página" title="Salida rápida">
+        ✕ SALIDA RÁPIDA
+      </button>
     </header>
-
-    <div id="chatLog"></div>
-
-    <div id="inputArea">
-      <textarea id="chatInput" placeholder="Type here privately..." rows="1"></textarea>
-      <button id="btnSend" onclick="handleSend()">↗</button>
-    </div>
-
-  </div>
+    
+    <section id="chat" role="log" aria-live="polite">
+      <!-- Mensajes se agregan dinámicamente -->
+    </section>
+    
+    <footer class="input-container" role="form">
+      <input 
+        type="text" 
+        id="input" 
+        placeholder="Escribe aquí de forma segura..." 
+        autocomplete="off"
+        aria-label="Mensaje a enviar"
+      >
+      <button id="send-btn" onclick="app.sendMessage()" aria-label="Enviar mensaje">
+        ENVIAR
+      </button>
+    </footer>
+  </main>
 
   <script>
-    // ==========================================
-    // 1. NEURAL NETWORK CONTEXTUAL CANVAS
-    // ==========================================
-    const canvas = document.getElementById('bgCanvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    let mouse = { x: -1000, y: -1000 };
-    
-    // Color Interpolation State
-    const COLORS = {
-      neutral: { r: 14, g: 165, b: 233 },   // Teal
-      warm: { r: 16, g: 185, b: 129 },      // Emerald Green
-      alert: { r: 239, g: 68, b: 68 }       // Red
-    };
-    
-    let currentColor = { ...COLORS.neutral };
-    let targetColor = { ...COLORS.neutral };
-    let activityPulse = 1; // Speed multiplier
-
-    function resizeCanvas() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    class Particle {
+    class MataurangaApp {
       constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.6;
-        this.vy = (Math.random() - 0.5) * 0.6;
+        this.canvas = document.getElementById('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.chat = document.getElementById('chat');
+        this.input = document.getElementById('input');
+        this.sendBtn = document.getElementById('send-btn');
+        this.title = document.getElementById('title');
+        
+        this.COLORS = {
+          neutral: [14, 165, 233],
+          warm: [16, 185, 129],
+          alert: [239, 68, 68]
+        };
+        
+        this.currentRGB = [...this.COLORS.neutral];
+        this.targetRGB = [...this.COLORS.neutral];
+        this.animationId = null;
+        this.isSending = false;
+        
+        this.init();
       }
-      update() {
-        this.x += this.vx * activityPulse;
-        this.y += this.vy * activityPulse;
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
 
-        // Mouse Repulsion
-        const dx = mouse.x - this.x;
-        const dy = mouse.y - this.y;
-        if (Math.hypot(dx, dy) < 150) {
-          this.x -= dx * 0.02;
-          this.y -= dy * 0.02;
-        }
+      init() {
+        this.setupCanvas();
+        this.setupEventListeners();
+        this.startAnimation();
+        this.chat.scrollTop = this.chat.scrollHeight;
       }
-    }
 
-    for (let i = 0; i < 90; i++) particles.push(new Particle());
+      setupCanvas() {
+        const resizeCanvas = () => {
+          this.canvas.width = window.innerWidth;
+          this.canvas.height = window.innerHeight;
+        };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas, { passive: true });
+      }
 
-    function drawNetwork() {
-      // Smooth color transition logic
-      currentColor.r += (targetColor.r - currentColor.r) * 0.03;
-      currentColor.g += (targetColor.g - currentColor.g) * 0.03;
-      currentColor.b += (targetColor.b - currentColor.b) * 0.03;
-      
-      const rgbString = `${Math.round(currentColor.r)}, ${Math.round(currentColor.g)}, ${Math.round(currentColor.b)}`;
-      document.getElementById('brandText').style.color = `rgb(${rgbString})`;
-
-      ctx.clearRect(0, 0, width, height);
-
-      particles.forEach((p, i) => {
-        p.update();
-        ctx.fillStyle = `rgb(${rgbString})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        for (let j = i + 1; j < particles.length; j++) {
-          const d = Math.hypot(p.x - particles[j].x, p.y - particles[j].y);
-          if (d < 130) {
-            ctx.strokeStyle = `rgba(${rgbString}, ${1 - d/130})`;
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
+      setupEventListeners() {
+        this.input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.sendMessage();
           }
-        }
-      });
-
-      if (activityPulse > 1) activityPulse -= 0.02;
-      requestAnimationFrame(drawNetwork);
-    }
-    drawNetwork();
-
-    document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-    document.getElementById('chatInput').addEventListener('input', () => { activityPulse = 2.5; }); // Spike on typing
-
-    // ==========================================
-    // 2. CHAT & SENTIMENT STREAMING LOGIC
-    // ==========================================
-    let sessionId = null;
-    const chatLog = document.getElementById('chatLog');
-    const input = document.getElementById('chatInput');
-
-    async function initSession() {
-      document.getElementById('shield').style.display = 'none';
-      try {
-        const res = await fetch('/session-start', { method: 'POST' });
-        const data = await res.json();
-        sessionId = data.sessionId;
-      } catch (e) { console.error('API Error'); }
-    }
-
-    input.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
-
-    async function handleSend() {
-      const text = input.value.trim();
-      if (!text) return;
-      
-      input.value = '';
-      appendBubble('user', text);
-      activityPulse = 4; // Network reacts to sent message
-      
-      const botBubble = appendBubble('bot', '...');
-
-      try {
-        const res = await fetch('/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, sessionId })
         });
 
-        // Non-streaming JSON (Crisis intercept)
-        if (res.headers.get('content-type')?.includes('application/json')) {
-          const d = await res.json();
-          botBubble.innerHTML = marked.parse(d.reply);
-          if (d.sentiment) targetColor = COLORS[d.sentiment] || COLORS.neutral;
-          if (d.crisis) botBubble.parentElement.classList.add('crisis');
-          return;
+        // Soporte para arrastrar archivos
+        this.input.addEventListener('paste', this.handlePaste.bind(this));
+      }
+
+      startAnimation() {
+        const animate = () => {
+          this.updateBackground();
+          this.renderNeuralNetwork();
+          this.animationId = requestAnimationFrame(animate);
+        };
+        animate();
+      }
+
+      updateBackground() {
+        const lerp = (a, b, t) => a + (b - a) * t;
+        
+        for (let i = 0; i < 3; i++) {
+          this.currentRGB[i] = lerp(this.currentRGB[i], this.targetRGB[i], 0.025);
         }
+        
+        const color = `rgb(${Math.round(this.currentRGB[0])},${Math.round(this.currentRGB[1])},${Math.round(this.currentRGB[2])})`;
+        document.documentElement.style.setProperty('--accent', color);
+        this.title.style.background = `linear-gradient(135deg, ${color}, ${this.adjustColor(this.currentRGB, 30)})`;
+      }
 
-        // Server-Sent Events Parsing
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let streamedData = '';
+      renderNeuralNetwork() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        const accentColor = `rgb(${this.currentRGB[0]},${this.currentRGB[1]},${this.currentRGB[2]})`;
+        this.ctx.fillStyle = accentColor;
+        this.ctx.globalAlpha = 0.4;
+        this.ctx.shadowBlur = 20;
+        this.ctx.shadowColor = accentColor;
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        // Nodos de la red neuronal optimizados
+        const nodeCount = 60;
+        for (let i = 0; i < nodeCount; i++) {
+          const x = (i / nodeCount) * this.canvas.width;
+          const y = Math.sin(Date.now() * 0.001 + i * 0.1) * 50 + this.canvas.height / 2;
+          const size = 2 + Math.sin(Date.now() * 0.002 + i) * 1;
           
-          const chunks = decoder.decode(value).split('\n');
-          for (const chunk of chunks) {
-            if (!chunk.startsWith('data: ')) continue;
-            const raw = chunk.slice(6).trim();
-            if (raw === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(raw);
-              // Listen to the backend's sentiment tag and change Canvas color
-              if (parsed.type === 'metadata' && parsed.sentiment) {
-                targetColor = COLORS[parsed.sentiment] || COLORS.neutral;
-                activityPulse = 3;
-              }
-              if (parsed.type === 'delta') {
-                streamedData += parsed.text;
-                botBubble.innerHTML = marked.parse(streamedData);
-                chatLog.scrollTop = chatLog.scrollHeight;
-              }
-            } catch (e) {}
-          }
+          this.ctx.beginPath();
+          this.ctx.arc(x, y, size, 0, Math.PI * 2);
+          this.ctx.fill();
         }
-      } catch (err) {
-        botBubble.innerHTML = '<em>Connection error.</em>';
+        
+        this.ctx.shadowBlur = 0;
+        this.ctx.globalAlpha = 1;
+      }
+
+      adjustColor(rgb, amount) {
+        return `rgb(${rgb.map(c => Math.min(255, Math.max(0, c + amount))).join(',')})`;
+      }
+
+      async sendMessage() {
+        if (this.isSending || !this.input.value.trim()) return;
+        
+        const message = this.input.value.trim();
+        this.input.value = '';
+        this.addMessage(message, 'user');
+        
+        this.isSending = true;
+        this.sendBtn.disabled = true;
+        this.sendBtn.classList.add('sending');
+        this.sendBtn.textContent = 'ENVIANDO…';
+
+        try {
+          const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+          });
+
+          if (!response.ok) throw new Error('Error en la respuesta del servidor');
+
+          await this.streamResponse(response);
+        } catch (error) {
+          console.error('Error:', error);
+          this.addMessage('Lo siento, ocurrió un error. Intenta de nuevo.', 'bot');
+        } finally {
+          this.isSending = false;
+          this.sendBtn.disabled = false;
+          this.sendBtn.classList.remove('sending');
+          this.sendBtn.textContent = 'ENVIAR';
+        }
+      }
+
+      async streamResponse(response) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        const botDiv = this.addMessage('', 'bot');
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.type === 'metadata') {
+                    this.targetRGB = this.COLORS[data.sentiment] || this.COLORS.neutral;
+                  } else if (data.type === 'delta' && data.text) {
+                    botDiv.innerHTML = marked.parse(data.text);
+                  }
+                } catch (e) {
+                  console.warn('Error parsing SSE data:', e);
+                }
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
+      }
+
+      addMessage(text, sender) {
+        const div = document.createElement('div');
+        div.className = `message ${sender}`;
+        div.innerHTML = marked.parse(text);
+        div.setAttribute('role', sender === 'user' ? 'user' : 'assistant');
+        this.chat.appendChild(div);
+        this.scrollToBottom();
+        return div;
+      }
+
+      scrollToBottom() {
+        this.chat.scrollTo({
+          top: this.chat.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+
+      reset() {
+        if (confirm('¿Estás seguro de que quieres salir? Se recargará la página.')) {
+          window.location.reload();
+        }
+      }
+
+      handlePaste(e) {
+        // Manejo futuro para archivos pegados
+        const items = Array.from(e.clipboardData.items);
+        const imageItem = items.find(item => item.type.startsWith('image/'));
+        if (imageItem) {
+          e.preventDefault();
+          // Implementar procesamiento de imágenes
+        }
+      }
+
+      destroy() {
+        if (this.animationId) {
+          cancelAnimationFrame(this.animationId);
+        }
       }
     }
 
-    function appendBubble(role, text) {
-      const wrap = document.createElement('div');
-      wrap.className = `msg ${role}`;
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.innerHTML = text ? marked.parse(text) : '';
-      wrap.appendChild(bubble);
-      chatLog.appendChild(wrap);
-      chatLog.scrollTop = chatLog.scrollHeight;
-      return bubble;
+    // Inicialización cuando el DOM esté listo
+    let app;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        app = new MataurangaApp();
+        window.app = app; // Exponer globalmente para botones
+      });
+    } else {
+      app = new MataurangaApp();
+      window.app = app;
     }
 
-    function destroySession() {
-      if(sessionId) fetch('/session-end', { method: 'POST', body: JSON.stringify({sessionId}), headers: {'Content-Type': 'application/json'} });
-      window.location.href = 'https://burnettfoundation.org.nz'; // Hard exit
-    }
+    // Cleanup en unload
+    window.addEventListener('beforeunload', () => {
+      if (app) app.destroy();
+    });
   </script>
 </body>
 </html>
-
