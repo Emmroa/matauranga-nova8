@@ -1,6 +1,0 @@
-.env
-.env.bak
-.dashboard-password.txt
-stats.json.enc
-node_modules/
-NOVA_SYSTEM_PROMPT.txt
