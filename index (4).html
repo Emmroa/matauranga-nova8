@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA — Mātauranga · Burnett Foundation Aotearoa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#010d03;
+  --bg1:#021307;
+  --bg2:#031a09;
+  --bg3:#04200c;
+  --g1:#0d9960;
+  --g2:#10b872;
+  --g3:#16d480;
+  --gold:#c8941a;
+  --gold2:#dfa82a;
+  --gold3:#f0bc38;
+  --text:#dff0e1;
+  --muted:rgba(223,240,225,0.48);
+  --dim:rgba(223,240,225,0.24);
+  --ff:'Cormorant Garamond',Georgia,serif;
+  --fb:'Outfit',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg0);color:var(--text);font-family:var(--fb);font-weight:300;overflow-x:hidden;min-height:100vh}
+#cv{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+.depth{position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:
+    radial-gradient(ellipse 75% 55% at 12% 12%,rgba(13,153,96,.08) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 50% at 88% 85%,rgba(200,148,26,.055) 0%,transparent 55%),
+    radial-gradient(ellipse 120% 100% at 50% 50%,transparent 30%,rgba(1,13,3,.92) 100%)
+}
+#pg{position:relative;z-index:10;max-width:1200px;margin:0 auto;padding:0 32px}
+
+/* Glass */
+.gl{
+  background:linear-gradient(158deg,rgba(2,16,7,.66) 0%,rgba(1,12,5,.56) 100%);
+  backdrop-filter:blur(52px) saturate(180%) brightness(1.06);
+  -webkit-backdrop-filter:blur(52px) saturate(180%) brightness(1.06);
+  border:1px solid rgba(13,153,96,.18);
+  box-shadow:inset 0 1.5px 0 rgba(13,153,96,.14),inset 0 -1px 0 rgba(200,148,26,.07),0 28px 72px rgba(0,0,0,.6),0 0 0 .5px rgba(13,153,96,.08)
+}
+.gl-hero{
+  background:linear-gradient(155deg,rgba(3,22,9,.72) 0%,rgba(2,16,7,.62) 100%);
+  backdrop-filter:blur(64px) saturate(210%) brightness(1.1);
+  -webkit-backdrop-filter:blur(64px) saturate(210%) brightness(1.1);
+  border:1px solid rgba(200,148,26,.22);
+  box-shadow:inset 0 2px 0 rgba(223,168,42,.2),inset 0 -1px 0 rgba(13,153,96,.1),0 40px 100px rgba(0,0,0,.68),0 0 0 .5px rgba(200,148,26,.1),0 0 80px rgba(200,148,26,.04)
+}
+
+/* Anims */
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.14);opacity:.2}}
+@keyframes float{0%,100%{transform:translateY(0)}40%{transform:translateY(-10px)}70%{transform:translateY(-5px)}}
+@keyframes fadein{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes pulse-ring{0%,100%{transform:scale(.95);opacity:.65}50%{transform:scale(1.06);opacity:.22}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 24px rgba(200,148,26,.35),0 0 48px rgba(13,153,96,.18)}50%{box-shadow:0 0 36px rgba(200,148,26,.55),0 0 64px rgba(13,153,96,.28)}}
+
+.fi1{animation:fadein .8s .08s ease both}
+.fi2{animation:fadein .8s .22s ease both}
+.fi3{animation:fadein .8s .38s ease both}
+.fi4{animation:fadein .8s .54s ease both}
+.hover-lift{transition:transform .28s,box-shadow .28s}
+.hover-lift:hover{transform:translateY(-3px)}
+
+/* Nav */
+nav{display:flex;align-items:center;justify-content:space-between;padding:28px 0 0}
+.n-logo{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--text)}
+.n-mark{
+  width:42px;height:42px;border-radius:13px;flex-shrink:0;
+  background:linear-gradient(135deg,#0d9960,#078046 55%,#c8941a);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--ff);font-size:22px;font-weight:400;color:var(--bg0);
+  position:relative;animation:glow-pulse 4s ease-in-out infinite;
+}
+.n-mark::after{content:'';position:absolute;inset:-6px;border-radius:18px;border:1px solid rgba(200,148,26,.3);animation:pulse-ring 3.2s ease-in-out infinite}
+.n-name{font-family:var(--ff);font-size:18px;font-weight:300;letter-spacing:.02em}
+.n-name em{color:rgba(200,148,26,.9);font-style:normal}
+.n-links{display:flex;align-items:center;gap:8px}
+.n-link{padding:7px 16px;border-radius:10px;font-size:13px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .2s;font-weight:400}
+.n-link:hover,.n-link.act{color:rgba(200,148,26,.85);border-color:rgba(200,148,26,.22);background:rgba(200,148,26,.06)}
+select.lang{background:rgba(2,16,7,.7);border:1px solid rgba(13,153,96,.2);color:rgba(223,240,225,.7);border-radius:8px;padding:6px 10px;font-size:12px;outline:none;cursor:pointer;font-family:var(--fb)}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr 460px;gap:52px;align-items:center;min-height:88vh;padding:0 0 40px}
+.h-left{display:flex;flex-direction:column;justify-content:center}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:26px}
+.ey-line{width:26px;height:1px;background:rgba(200,148,26,.6)}
+.ey-text{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:rgba(200,148,26,.65);font-weight:400}
+h1{font-family:var(--ff);font-size:clamp(50px,6.2vw,88px);font-weight:300;line-height:1.06;letter-spacing:-.01em;margin-bottom:6px}
+.l1{display:block;color:var(--text)}
+.l2{
+  display:block;
+  background:linear-gradient(135deg,#0d9960 0%,#18dc88 38%,#c8941a 68%,#f0bc38 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 4.5s linear infinite
+}
+.l3{display:block;font-style:italic;font-weight:300;font-size:clamp(34px,4.2vw,60px);color:rgba(223,240,225,.72)}
+.h-sub{font-size:15px;line-height:1.7;font-weight:300;color:var(--muted);max-width:440px;margin:22px 0 38px}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn-p{
+  padding:15px 30px;border-radius:13px;font-size:15px;font-weight:500;
+  text-decoration:none;color:var(--bg0);display:inline-block;
+  background:linear-gradient(135deg,#0d9960,#078046 50%,#c8941a);
+  box-shadow:0 0 36px rgba(13,153,96,.3),0 4px 20px rgba(0,0,0,.45);
+  transition:all .3s;font-family:var(--fb);cursor:pointer;border:none;letter-spacing:.01em
+}
+.btn-p:hover{box-shadow:0 0 52px rgba(200,148,26,.42),0 4px 24px rgba(0,0,0,.5);transform:translateY(-2px)}
+.btn-g{
+  padding:15px 24px;border-radius:13px;font-size:14px;font-weight:400;
+  text-decoration:none;display:inline-block;cursor:pointer;
+  background:transparent;border:1px solid rgba(200,148,26,.22);
+  color:rgba(223,240,225,.58);transition:all .2s;font-family:var(--fb)
+}
+.btn-g:hover{color:var(--text);border-color:rgba(200,148,26,.45);background:rgba(200,148,26,.05)}
+
+/* Hero card */
+.h-right{animation:float 7s ease-in-out infinite}
+.hcard{padding:38px 34px;border-radius:26px;position:relative;overflow:hidden}
+.hc-glow-t{position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(200,148,26,.14) 0%,transparent 65%);pointer-events:none}
+.hc-glow-b{position:absolute;bottom:-40px;left:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(13,153,96,.12) 0%,transparent 65%);pointer-events:none}
+.pulse-wrap{position:relative;width:62px;height:62px;margin-bottom:30px}
+.p-ring{position:absolute;border-radius:50%;border:1px solid;animation:breathe var(--d) ease-in-out var(--dl) infinite}
+.p-core{
+  width:62px;height:62px;border-radius:17px;position:relative;z-index:1;
+  background:linear-gradient(135deg,#0d9960,#078046 55%,#c8941a);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--ff);font-size:27px;font-weight:400;color:var(--bg0);
+  box-shadow:0 0 28px rgba(200,148,26,.4),0 0 56px rgba(13,153,96,.2)
+}
+.notice{display:flex;gap:13px;align-items:flex-start;padding:13px 15px;border-radius:13px;margin-bottom:10px;position:relative;z-index:1}
+.n-icon{font-size:15px;margin-top:1px;flex-shrink:0}
+.n-ttl{font-size:13px;font-weight:600;margin-bottom:3px}
+.n-body{font-size:12px;color:var(--muted);line-height:1.5}
+.nv-g{background:rgba(13,153,96,.08);border:1px solid rgba(13,153,96,.2)}.nv-g .n-ttl{color:rgba(30,220,130,.9)}
+.nv-a{background:rgba(200,148,26,.07);border:1px solid rgba(200,148,26,.2)}.nv-a .n-ttl{color:rgba(240,188,56,.9)}
+.nv-r{background:rgba(220,60,60,.07);border:1px solid rgba(220,60,60,.18)}.nv-r .n-ttl{color:rgba(248,110,110,.9)}
+.hc-cta{
+  display:block;text-align:center;padding:14px;border-radius:13px;margin-top:22px;
+  position:relative;z-index:1;text-decoration:none;font-weight:500;font-size:14px;
+  background:linear-gradient(135deg,rgba(13,153,96,.9),rgba(200,148,26,.85));
+  color:var(--bg0);box-shadow:0 0 28px rgba(13,153,96,.24);transition:all .25s;letter-spacing:.01em;font-family:var(--fb)
+}
+.hc-cta:hover{box-shadow:0 0 40px rgba(200,148,26,.38);transform:translateY(-1px)}
+.hc-leg{text-align:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:14px;position:relative;z-index:1;font-family:'Outfit',monospace}
+
+/* Divider */
+.div{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(13,153,96,.15) 30%,rgba(200,148,26,.14) 70%,transparent);margin:72px 0}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:72px}
+.st{padding:24px 20px;border-radius:17px;text-align:center;background:rgba(2,14,6,.65);border:1px solid rgba(13,153,96,.12);transition:border-color .25s}
+.st:hover{border-color:rgba(200,148,26,.2)}
+.st-n{font-family:var(--ff);font-size:44px;font-weight:300;line-height:1.1;margin-bottom:6px;background:linear-gradient(135deg,#0d9960,#c8941a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.st-l{font-size:12px;color:var(--muted);line-height:1.45}
+.st-l small{display:block;color:var(--dim);font-size:11px;margin-top:3px}
+
+/* Bento */
+.sl{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(200,148,26,.6);text-align:center;margin-bottom:14px}
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:88px}
+.bc{padding:26px 24px;border-radius:19px;transition:transform .28s}
+.bc:hover{transform:translateY(-3px)}
+.bc.w2{grid-column:span 2}
+.bc-icon{font-size:22px;margin-bottom:14px}
+.bc-t{font-family:var(--ff);font-size:21px;font-weight:400;color:var(--text);margin-bottom:9px}
+.bc-b{font-size:13.5px;color:var(--muted);line-height:1.65;font-weight:300}
+.bc-badge{display:inline-block;margin-top:15px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.05em}
+.c-g{background:linear-gradient(145deg,rgba(3,18,8,.68),rgba(2,14,6,.58));border:1px solid rgba(13,153,96,.18);box-shadow:inset 0 1px 0 rgba(30,220,130,.12),0 14px 44px rgba(0,0,0,.52)}
+.c-a{background:linear-gradient(145deg,rgba(10,20,6,.68),rgba(7,16,5,.58));border:1px solid rgba(200,148,26,.26);box-shadow:inset 0 1px 0 rgba(240,188,56,.18),0 14px 44px rgba(0,0,0,.52),0 0 28px rgba(200,148,26,.04)}
+.c-r{background:linear-gradient(145deg,rgba(12,4,4,.68),rgba(9,3,3,.58));border:1px solid rgba(220,60,60,.18);box-shadow:inset 0 1px 0 rgba(248,110,110,.1),0 14px 44px rgba(0,0,0,.52)}
+
+/* Ecosystem */
+.eco{margin-bottom:96px}
+.eco-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.ec{padding:22px 20px;border-radius:17px;cursor:pointer;transition:all .25s;background:rgba(2,12,5,.62);border:1px solid rgba(200,148,26,.1);box-shadow:0 8px 22px rgba(0,0,0,.4)}
+.ec:hover{background:rgba(3,18,8,.72);border-color:rgba(200,148,26,.22);box-shadow:0 12px 34px rgba(0,0,0,.52),0 0 20px rgba(200,148,26,.04)}
+.ec-h{display:flex;align-items:center;gap:11px;margin-bottom:2px}
+.ec-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:rgba(200,148,26,.08);border:1px solid rgba(200,148,26,.15);color:rgba(200,148,26,.8);font-family:var(--ff)}
+.ec-t{font-size:14px;font-weight:500;color:var(--text)}
+.ec-chev{margin-left:auto;font-size:10px;color:rgba(200,148,26,.5);transition:transform .22s;flex-shrink:0}
+.ec.open .ec-chev{transform:rotate(180deg)}
+.ec-items{display:none;flex-direction:column;gap:8px;margin-top:12px}
+.ec.open .ec-items{display:flex}
+.ec-item{border-radius:9px;padding:10px 12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05)}
+.ec-it{font-size:11px;font-weight:600;color:rgba(200,148,26,.72);margin-bottom:4px;letter-spacing:.03em}
+.ec-ib{font-size:11px;color:rgba(223,240,225,.46);line-height:1.55}
+
+/* Footer */
+footer{border-top:1px solid rgba(13,153,96,.1);padding:40px 0 48px;text-align:center}
+.ft1{font-family:var(--ff);font-size:14px;color:rgba(223,240,225,.3);margin-bottom:10px;letter-spacing:.05em}
+.ft2{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(223,240,225,.18)}
+
+/* Responsive */
+@media(max-width:880px){.hero{grid-template-columns:1fr;gap:44px;min-height:auto;padding:44px 0 36px}.h-right{order:-1}.bento{grid-template-columns:1fr 1fr}.bc.w2{grid-column:span 2}.eco-grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:580px){#pg{padding:0 18px}.bento{grid-template-columns:1fr}.bc.w2{grid-column:span 1}.eco-grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.cta-row{flex-direction:column;align-items:stretch;text-align:center}}
+</style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+<div class="depth"></div>
+
+<div id="pg">
+
+<nav class="fi1">
+  <a href="/" class="n-logo">
+    <div class="n-mark">N</div>
+    <span class="n-name">Mātauranga <em>NOVA</em></span>
+  </a>
+  <div class="n-links">
+    <a href="#eco" class="n-link">Architecture</a>
+    <a href="/dashboard" class="n-link act">Dashboard</a>
+    <select class="lang" onchange="void 0">
+      <option value="en">EN</option>
+      <option value="es">ES</option>
+      <option value="mi">MI</option>
+    </select>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="h-left">
+    <div class="eyebrow fi1">
+      <div class="ey-line"></div>
+      <span class="ey-text">Burnett Foundation Aotearoa &middot; Innovation Challenge 2026</span>
+    </div>
+    <h1 class="fi2">
+      <span class="l1">A private</span>
+      <span class="l2">companion</span>
+      <span class="l3">for HIV in Aotearoa</span>
+    </h1>
+    <p class="h-sub fi3">Science-led &middot; Culturally safe &middot; Sovereign NZ AI. NOVA listens without judgment, informs without fear, and never stores your words.</p>
+    <div class="cta-row fi4">
+      <a href="/chat" class="btn-p">Start talking &rarr;</a>
+      <a href="#eco" class="btn-g">How it works</a>
+    </div>
+  </div>
+
+  <div class="h-right fi2">
+    <div class="hcard gl-hero">
+      <div class="hc-glow-t"></div>
+      <div class="hc-glow-b"></div>
+      <div class="pulse-wrap">
+        <div class="p-ring" style="--d:2.4s;--dl:0s;inset:-8px;border-color:rgba(200,148,26,.28)"></div>
+        <div class="p-ring" style="--d:3.0s;--dl:.4s;inset:-16px;border-color:rgba(200,148,26,.16)"></div>
+        <div class="p-ring" style="--d:3.8s;--dl:.8s;inset:-24px;border-color:rgba(200,148,26,.08)"></div>
+        <div class="p-core">N</div>
+      </div>
+      <div class="notice nv-g">
+        <span class="n-icon">&#128737;</span>
+        <div><div class="n-ttl">Zero Data Retention</div><div class="n-body">Nothing you type is stored or seen by anyone. Anonymous counters only.</div></div>
+      </div>
+      <div class="notice nv-a">
+        <span class="n-icon">&#9830;</span>
+        <div><div class="n-ttl">AI companion &mdash; not a professional</div><div class="n-body">Does not replace a doctor, nurse, or therapist.</div></div>
+      </div>
+      <div class="notice nv-r">
+        <span class="n-icon">&#9899;</span>
+        <div><div class="n-ttl">Crisis support</div><div class="n-body">111 &middot; Lifeline 0800 543 354 &middot; text or call 1737</div></div>
+      </div>
+      <a href="/chat" class="hc-cta">Start a private conversation</a>
+      <p class="hc-leg">NZ Privacy Act 2020 &middot; IPP 3A &middot; HIPC 2020 &middot; Te Mana Raraunga</p>
+    </div>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<div class="stats fi3">
+  <div class="st hover-lift"><div class="st-n">95</div><div class="st-l">HIV diagnoses NZ 2024<small>historic low &middot; Health NZ 2025</small></div></div>
+  <div class="st hover-lift"><div class="st-n">2,312</div><div class="st-l">People on ART in NZ<small>95% viral suppression</small></div></div>
+  <div class="st hover-lift"><div class="st-n">2030</div><div class="st-l">NZ target: zero transmissions<small>National HIV Action Plan</small></div></div>
+  <div class="st hover-lift"><div class="st-n">35</div><div class="st-l">Topics &times; 4 zones<small>140 epidemiological indicators</small></div></div>
+</div>
+
+<div class="sl fi3">Why NOVA</div>
+<div class="bento fi3">
+  <div class="bc c-g w2 hover-lift">
+    <div class="bc-icon" style="color:rgba(30,220,130,.9)">&#128737;</div>
+    <div class="bc-t">Zero Data Retention</div>
+    <div class="bc-b">Your words never touch a database. NOVA stores only anonymous counters &mdash; region, topic, language &mdash; never content. Compliant with NZ Privacy Act 2020, HIPC 2020, and new IPP 3A (in force May 2026). Every message is scrubbed of NHI, IRD, phone, email and address before the AI sees it.</div>
+    <span class="bc-badge" style="background:rgba(13,153,96,.1);border:1px solid rgba(13,153,96,.22);color:rgba(30,220,130,.8)">NZ Privacy Act 2020 &middot; HIPC &middot; Te Mana Raraunga</span>
+  </div>
+  <div class="bc c-a hover-lift">
+    <div class="bc-icon" style="color:rgba(240,188,56,.9)">&#10022;</div>
+    <div class="bc-t">Culturally safe</div>
+    <div class="bc-b">Built on Te Whare Tapa Whā. Responds in English, te reo Māori, and Spanish. Designed for Takatāpui, Pacific, Māori, migrant, and rural communities.</div>
+  </div>
+  <div class="bc c-g hover-lift">
+    <div class="bc-icon" style="color:rgba(30,220,130,.78)">&#9830;</div>
+    <div class="bc-t">Sovereign NZ AI</div>
+    <div class="bc-b">All processing in Aotearoa on Catalyst Cloud. Data never leaves NZ. phi3:mini &rarr; Mistral 7B dual architecture.</div>
+  </div>
+  <div class="bc c-g hover-lift" style="border-color:rgba(13,153,96,.14)">
+    <div class="bc-icon" style="color:rgba(30,220,130,.72)">&#9676;</div>
+    <div class="bc-t">Languages</div>
+    <div class="bc-b" style="padding-top:4px">
+      <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;color:rgba(223,240,225,.65)">English &middot; Warm NZ casual</div>
+      <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;color:rgba(200,148,26,.82)">Te Reo Māori &middot; Tēnā koe</div>
+      <div style="padding:7px 0;font-size:13px;color:rgba(223,240,225,.65)">Español &middot; Internacional</div>
+    </div>
+  </div>
+  <div class="bc c-r hover-lift">
+    <div class="bc-icon" style="color:rgba(248,110,110,.9)">&#9899;</div>
+    <div class="bc-t">If you need help now</div>
+    <div class="bc-b" style="padding-top:4px">
+      <div style="font-size:13px;color:rgba(248,110,110,.88);padding:5px 0">111 &mdash; emergency</div>
+      <div style="font-size:13px;color:var(--muted);padding:5px 0">Lifeline 0800 543 354</div>
+      <div style="font-size:13px;color:var(--muted);padding:5px 0">Text or call 1737 (24/7)</div>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<div id="eco" class="eco fi4">
+  <div class="sl">Architecture &middot; Security &middot; Vision</div>
+  <h2 style="font-family:var(--ff);font-size:clamp(28px,3.5vw,44px);font-weight:300;text-align:center;color:var(--text);margin-bottom:44px">The NOVA ecosystem</h2>
+  <div class="eco-grid">
+    <div class="ec" onclick="this.classList.toggle('open')">
+      <div class="ec-h"><div class="ec-ico">&#9830;</div><div class="ec-t">Security layers L1&ndash;L4</div><span class="ec-chev">&#9660;</span></div>
+      <div class="ec-items">
+        <div class="ec-item"><div class="ec-it">L1 &mdash; PII scrubbing</div><div class="ec-ib">NHI, IRD, phone, email, address stripped before the AI sees any message.</div></div>
+        <div class="ec-item"><div class="ec-it">L2 &mdash; Session rate limiting</div><div class="ec-ib">Circuit breaker (opossum) cuts AI at 10s timeout. Prebuilt crisis message returned.</div></div>
+        <div class="ec-item"><div class="ec-it">L3 &mdash; Zero data retention</div><div class="ec-ib">Message text NEVER reaches SQLite. Only region, topic, language, hour, crisis flag.</div></div>
+        <div class="ec-item"><div class="ec-it">L4 &mdash; Helmet CSP + HSTS</div><div class="ec-ib">Strict CSP, HSTS, SSH tunnel only. Cookie: HttpOnly, SameSite=lax, 8h TTL.</div></div>
+      </div>
+    </div>
+    <div class="ec" onclick="this.classList.toggle('open')">
+      <div class="ec-h"><div class="ec-ico">&#9729;</div><div class="ec-t">Catalyst Cloud NZ</div><span class="ec-chev">&#9660;</span></div>
+      <div class="ec-items">
+        <div class="ec-item"><div class="ec-it">Data sovereignty</div><div class="ec-ib">100% NZ infrastructure. HIPC 2020 + Te Mana Raraunga require data stays in Aotearoa.</div></div>
+        <div class="ec-item"><div class="ec-it">Infrastructure</div><div class="ec-ib">c1.c4r8: 4 vCPU / 8GB RAM &middot; Intel Xeon &middot; NVMe &middot; 10Gbps &middot; ~$198 NZD/month.</div></div>
+        <div class="ec-item"><div class="ec-it">Why not AWS / GCP / Azure</div><div class="ec-ib">Overseas servers create HIPC + Māori Data Sovereignty conflicts. Catalyst guarantees NZ residency.</div></div>
+      </div>
+    </div>
+    <div class="ec" onclick="this.classList.toggle('open')">
+      <div class="ec-h"><div class="ec-ico">&#8767;</div><div class="ec-t">AI engine: phi3 &rarr; Mistral</div><span class="ec-chev">&#9660;</span></div>
+      <div class="ec-items">
+        <div class="ec-item"><div class="ec-it">phi3:mini &mdash; current</div><div class="ec-ib">2.3 GB &middot; 4096 token context &middot; CPU-only &middot; 8&ndash;15s response. Ideal for demo.</div></div>
+        <div class="ec-item"><div class="ec-it">Mistral 7B &mdash; phase 2</div><div class="ec-ib">Apache 2.0 license &middot; self-hosted &middot; 8192 context &middot; 3&ndash;5s on c1.c8r16.</div></div>
+        <div class="ec-item"><div class="ec-it">Dual AI architecture</div><div class="ec-ib">Mistral for conversation (empathy) + phi3 for analytics dashboard (speed). Two AIs, two roles.</div></div>
+      </div>
+    </div>
+    <div class="ec" onclick="this.classList.toggle('open')">
+      <div class="ec-h"><div class="ec-ico">&#10022;</div><div class="ec-t">Constitution &amp; values</div><span class="ec-chev">&#9660;</span></div>
+      <div class="ec-items">
+        <div class="ec-item"><div class="ec-it">Whakapapa</div><div class="ec-ib">Bruce Burnett (1984) &rarr; NZAF &rarr; Burnett Foundation. Emanuel Figueroa built NOVA for the gap he found.</div></div>
+        <div class="ec-item"><div class="ec-it">Wairua &mdash; 3 truths</div><div class="ec-ib">AROHA (love) &middot; TIKA ME PONO (truth with kindness) &middot; KAITIAKITANGA (guardian of dignity).</div></div>
+        <div class="ec-item"><div class="ec-it">Human rights</div><div class="ec-ib">Human Rights Act 1993 &middot; Privacy Act 2020 &middot; HDCA 2015 &middot; Employment NZ &middot; HRC 0800 496 877.</div></div>
+      </div>
+    </div>
+    <div class="ec" onclick="this.classList.toggle('open')">
+      <div class="ec-h"><div class="ec-ico">&#9676;</div><div class="ec-t">Tag system &amp; dashboard</div><span class="ec-chev">&#9660;</span></div>
+      <div class="ec-items">
+        <div class="ec-item"><div class="ec-it">How tags work</div><div class="ec-ib">Hidden HTML comments in each response. Extracted before rendering. User never sees them.</div></div>
+        <div class="ec-item"><div class="ec-it">35 topics &times; 4 zones</div><div class="ec-ib">140 indicators &middot; Social Epidemic Index &middot; R-social &middot; Seasonal risk calendar.</div></div>
+        <div class="ec-item"><div class="ec-it">Privacy guarantee</div><div class="ec-ib">Small-cell suppression n&lt;6. Never cross-tabulate region + language + topic.</div></div>
+      </div>
+    </div>
+    <div class="ec" onclick="this.classList.toggle('open')">
+      <div class="ec-h"><div class="ec-ico">&#8599;</div><div class="ec-t">Roadmap 2026&ndash;2027</div><span class="ec-chev">&#9660;</span></div>
+      <div class="ec-items">
+        <div class="ec-item"><div class="ec-it">Phase 1 &mdash; Demo</div><div class="ec-ib">phi3:mini &middot; 5-tab epi dashboard &middot; Privacy Shield &middot; Burnett Innovation Challenge.</div></div>
+        <div class="ec-item"><div class="ec-it">Phase 2 &mdash; Q3 2026</div><div class="ec-ib">Mistral 7B &middot; dual AI &middot; NZ epi fine-tuning &middot; 30-day outbreak prediction.</div></div>
+        <div class="ec-item"><div class="ec-it">Phase 4 &mdash; 2027</div><div class="ec-ib">API for sexual health clinics &middot; Healthpoint NZ integration &middot; direct appointments.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<footer>
+  <p class="ft1">Built by Emanuel Figueroa &middot; Burnett Foundation Aotearoa Innovation Challenge 2026</p>
+  <p class="ft2">NZ Privacy Act 2020 &middot; HIPC 2020 &middot; Te Mana Raraunga &middot; Māori Data Sovereignty &middot; Catalyst Cloud Aotearoa</p>
+</footer>
+
+</div>
+
+<script>
+// ─── Plexus 3D Engine ─────────────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+  let W,H,cx,cy,t=0;
+  const mouse={x:-9999,y:-9999},pulses=[];
+
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;cx=W/2;cy=H/2}
+  resize();
+  window.addEventListener('resize',resize);
+
+  // Nodes with full 3D coords
+  const N=window.innerWidth<600?55:100,DEPTH=700;
+  const nodes=Array.from({length:N},(_, i)=>({
+    x:(Math.random()-.5)*W*1.8,
+    y:(Math.random()-.5)*H*1.8,
+    z:Math.random()*DEPTH,
+    vx:(Math.random()-.5)*.28,
+    vy:(Math.random()-.5)*.28,
+    vz:(Math.random()-.5)*.12,
+    gold:i<N*.18,         // 18% gold synapses
+    bright:i<N*.06,       // 6% extra bright key nodes
+    pulse:0,
+    r:Math.random()*1.6+.7
+  }));
+
+  // Polygon triangle list (updated periodically)
+  let tris=[];
+  function buildTris(){
+    tris=[];
+    const proj=nodes.map(n=>project(n));
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const dx=proj[i].sx-proj[j].sx,dy=proj[i].sy-proj[j].sy;
+        if(Math.sqrt(dx*dx+dy*dy)<90){
+          for(let k=j+1;k<nodes.length;k++){
+            const dx2=proj[i].sx-proj[k].sx,dy2=proj[i].sy-proj[k].sy;
+            const dx3=proj[j].sx-proj[k].sx,dy3=proj[j].sy-proj[k].sy;
+            if(Math.sqrt(dx2*dx2+dy2*dy2)<90&&Math.sqrt(dx3*dx3+dy3*dy3)<90){
+              tris.push([i,j,k]);
+              if(tris.length>80)return;
+            }
+          }
+        }
+      }
+    }
+  }
+  buildTris();
+  setInterval(buildTris,2200);
+
+  function project(n){
+    const fov=380,mParX=(mouse.x-cx)*.012,mParY=(mouse.y-cy)*.012;
+    const sc=fov/(fov+n.z);
+    return{sx:cx+(n.x+mParX)*sc,sy:cy+(n.y+mParY)*sc,sc,z:n.z};
+  }
+
+  window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY},{passive:true});
+  window.addEventListener('keydown',()=>{
+    pulses.push({x:mouse.x<0?cx:mouse.x,y:mouse.y<0?cy:mouse.y,r:0,op:.42,gold:true});
+    nodes.forEach(n=>{const d=Math.hypot(n.x+cx-mouse.x,n.y+cy-mouse.y);if(d<220)n.pulse=1});
+  });
+
+  const LINK=140;
+
+  function frame(){
+    t+=.006;
+    ctx.clearRect(0,0,W,H);
+
+    // Ambient breathing glows
+    [[.15,.2,13,153,96,.07,320],[.8,.75,200,148,26,.055,260]].forEach(([ax,ay,r,g,b,a,rad])=>{
+      const gx=W*ax+Math.sin(t*.28)*45,gy=H*ay+Math.cos(t*.22)*35;
+      const gr=ctx.createRadialGradient(gx,gy,0,gx,gy,rad);
+      gr.addColorStop(0,`rgba(${r},${g},${b},${a})`);gr.addColorStop(1,'transparent');
+      ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+    });
+
+    // Project all nodes
+    const proj=nodes.map(n=>project(n));
+
+    // Sort by depth (back to front)
+    const order=[...Array(N).keys()].sort((a,b)=>nodes[b].z-nodes[a].z);
+
+    // Draw polygon triangles (very subtle)
+    for(const [i,j,k] of tris){
+      const pi=proj[i],pj=proj[j],pk=proj[k];
+      const isGold=nodes[i].gold||nodes[j].gold||nodes[k].gold;
+      const avgSc=(pi.sc+pj.sc+pk.sc)/3;
+      ctx.beginPath();
+      ctx.moveTo(pi.sx,pi.sy);ctx.lineTo(pj.sx,pj.sy);ctx.lineTo(pk.sx,pk.sy);ctx.closePath();
+      ctx.fillStyle=isGold?`rgba(200,148,26,${avgSc*.04})`:`rgba(13,153,96,${avgSc*.035})`;
+      ctx.fill();
+    }
+
+    // Draw connection lines
+    for(let i=0;i<N;i++){
+      for(let j=i+1;j<N;j++){
+        const pi=proj[i],pj=proj[j];
+        const dx=pi.sx-pj.sx,dy=pi.sy-pj.sy,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<LINK){
+          const t2=(1-d/LINK);
+          const pulse=Math.max(nodes[i].pulse,nodes[j].pulse)*.35;
+          const isGold=nodes[i].gold||nodes[j].gold;
+          const depthFade=(pi.sc+pj.sc)/2;
+          const alpha=(t2*.14+pulse)*depthFade;
+          ctx.beginPath();ctx.moveTo(pi.sx,pi.sy);ctx.lineTo(pj.sx,pj.sy);
+          ctx.strokeStyle=isGold?`rgba(200,148,26,${alpha})`:`rgba(13,153,96,${alpha*.9})`;
+          ctx.lineWidth=isGold?.85:.65;ctx.stroke();
+        }
+      }
+    }
+
+    // Draw pulses
+    for(let i=pulses.length-1;i>=0;i--){
+      const p=pulses[i];p.r+=4;p.op-=.007;
+      if(p.op<=0){pulses.splice(i,1);continue}
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(200,148,26,${p.op})`;ctx.lineWidth=1.2;ctx.stroke();
+    }
+
+    // Draw nodes (back to front)
+    for(const idx of order){
+      const n=nodes[idx],p=proj[idx];
+      // Physics
+      const dx=p.sx-mouse.x,dy=p.sy-mouse.y,d2=dx*dx+dy*dy;
+      if(d2<8100&&d2>0){const d=Math.sqrt(d2),f=((90-d)/90)*.24;n.vx+=(dx/d)*f;n.vy+=(dy/d)*f}
+      if(n.gold&&d2<32400&&d2>900){const d=Math.sqrt(d2),f=.007*(1-d/180);n.vx-=(dx/d)*f;n.vy-=(dy/d)*f}
+      n.vx*=.97;n.vy*=.97;n.vz*=.985;
+      const spd=Math.sqrt(n.vx*n.vx+n.vy*n.vy);
+      if(spd>1.5){n.vx=(n.vx/spd)*1.5;n.vy=(n.vy/spd)*1.5}
+      n.pulse=Math.max(0,n.pulse-.018);
+      n.x+=n.vx;n.y+=n.vy;n.z+=n.vz;
+      if(n.z<0)n.z=0;if(n.z>DEPTH)n.z=DEPTH;
+      if(n.x<-W)n.x=-W;if(n.x>W)n.x=W;
+      if(n.y<-H)n.y=-H;if(n.y>H)n.y=H;
+
+      // Draw
+      const glow=n.pulse*.5+Math.sin(t*1.8+n.x*.01)*(n.gold?.1:.05);
+      const op=(.3+n.pulse*.45+glow)*p.sc;
+      const rad=(n.r+n.pulse*2)*(n.bright?1.6:1)*p.sc;
+
+      if(n.gold||n.bright){
+        const g=ctx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,rad*(n.bright?5:3.5));
+        g.addColorStop(0,`rgba(240,188,56,${Math.min(op,1)})`);
+        g.addColorStop(.4,`rgba(200,148,26,${op*.35})`);
+        g.addColorStop(1,'transparent');
+        ctx.fillStyle=g;
+        ctx.beginPath();ctx.arc(p.sx,p.sy,rad*(n.bright?5:3.5),0,Math.PI*2);ctx.fill();
+      }
+      ctx.beginPath();ctx.arc(p.sx,p.sy,Math.max(.5,rad),0,Math.PI*2);
+      ctx.fillStyle=n.gold||n.bright?`rgba(240,188,56,${Math.min(op,1)})`:`rgba(13,180,100,${Math.min(op*.85,.7)})`;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>
