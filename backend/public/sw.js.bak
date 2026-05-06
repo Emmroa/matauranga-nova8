@@ -1,0 +1,186 @@
+// ============================================================
+// MĀTAURANGA NOVA — Service Worker v9.1
+// Burnett Foundation Innovation Challenge 2026
+// ============================================================
+// PRIVACY: This SW does NOT cache any chat messages or user data.
+// Only static UI assets (HTML, CSS, fonts, icons) are cached.
+// All /api/* requests are NEVER cached — always network-first.
+// Zero Data Retention guarantee maintained.
+// ============================================================
+
+'use strict';
+
+const CACHE_NAME    = 'nova-v9-2';
+const OFFLINE_URL   = '/offline.html';
+
+// Assets to pre-cache (app shell only — NO user data)
+const SHELL_ASSETS = [
+  '/',
+  '/index.html',
+  '/dashboard.html',
+  '/manifest.json',
+  '/offline.html',
+];
+
+// ── INSTALL: pre-cache the app shell ────────────────────────
+self.addEventListener('install', (event) => {
+  console.log('[SW] Installing NOVA Service Worker…');
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Cache shell assets; skip any that fail (e.g. missing icons)
+      const results = await Promise.allSettled(
+        SHELL_ASSETS.map(url => cache.add(url).catch(e => {
+          console.warn(`[SW] Could not cache ${url}:`, e.message);
+        }))
+      );
+      console.log('[SW] Shell cached. Results:', results.filter(r => r.status === 'rejected').length, 'failed.');
+    })
+  );
+  // Activate immediately without waiting for old SW to become idle
+  self.skipWaiting();
+});
+
+// ── ACTIVATE: clean up old caches ───────────────────────────
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating…');
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => {
+            console.log('[SW] Deleting old cache:', key);
+            return caches.delete(key);
+          })
+      )
+    )
+  );
+  // Take control of all pages immediately
+  self.clients.claim();
+});
+
+// ── FETCH: routing strategy ──────────────────────────────────
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // NEVER cache or intercept:
+  //   - API calls (/api/*, /chat, /stats, /session-*)
+  //   - POST requests
+  //   - Chrome extension requests
+  //   - Cross-origin requests other than fonts/CDN
+  if (
+    event.request.method !== 'GET' ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/chat') ||
+    url.pathname.startsWith('/stats') ||
+    url.pathname.startsWith('/session') ||
+    url.pathname.startsWith('/health') ||
+    event.request.url.includes('chrome-extension')
+  ) {
+    // Pure network — no SW interference
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Google Fonts — stale-while-revalidate
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    event.respondWith(staleWhileRevalidate(event.request, 'nova-fonts-v1'));
+    return;
+  }
+
+  // CDN scripts (Tailwind, Chart.js) — cache-first
+  if (url.hostname === 'cdn.jsdelivr.net' || url.hostname === 'cdnjs.cloudflare.com') {
+    event.respondWith(cacheFirst(event.request));
+    return;
+  }
+
+  // App shell — network-first with cache fallback
+  event.respondWith(networkFirstWithFallback(event.request));
+});
+
+// ── STRATEGIES ───────────────────────────────────────────────
+
+async function networkFirstWithFallback(request) {
+  try {
+    const networkResponse = await fetch(request);
+    // Update cache with fresh response
+    if (networkResponse.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch {
+    // Network failed — try cache
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    // Final fallback for navigation requests
+    if (request.mode === 'navigate') {
+      return caches.match(OFFLINE_URL) || new Response(
+        `<!DOCTYPE html><html><body style="background:#030a0f;color:#00ff88;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;">
+          <div>
+            <p style="font-size:32px;margin-bottom:16px;">🌿</p>
+            <p style="font-size:18px;font-weight:700;margin-bottom:8px;">NOVA</p>
+            <p style="color:#3d6655;font-size:13px;">Kāore he hono aho — Offline<br>Reconnect to continue · Hono anō</p>
+            <p style="margin-top:24px;font-size:11px;color:#3d6655;">Crisis support (always available):<br><strong style="color:#ff4466;">1737</strong> · <strong style="color:#ff4466;">0800 543 354</strong> · <strong style="color:#ff4466;">111</strong></p>
+          </div>
+        </body></html>`,
+        { headers: { 'Content-Type': 'text/html' } }
+      );
+    }
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const network = await fetch(request);
+    if (network.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, network.clone());
+    }
+    return network;
+  } catch {
+    return new Response('Resource unavailable offline', { status: 503 });
+  }
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cache  = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  // Revalidate in background
+  const fetchPromise = fetch(request).then(response => {
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  }).catch(() => {});
+  return cached || fetchPromise;
+}
+
+// ── BACKGROUND SYNC (future: queue offline messages) ─────────
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'nova-sync') {
+    console.log('[SW] Background sync triggered — NOVA');
+    // Placeholder for future offline message queue
+  }
+});
+
+// ── PUSH NOTIFICATIONS (optional future feature) ─────────────
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  const data = event.data.json();
+  self.registration.showNotification(data.title || 'NOVA', {
+    body:    data.body    || 'He kōrero hou · New message',
+    icon:    '/icons/icon-192.png',
+    badge:   '/icons/icon-72.png',
+    vibrate: [100, 50, 100],
+    data:    { url: '/' },
+  });
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data?.url || '/'));
+});
+
+console.log('[SW] Mātauranga NOVA Service Worker loaded · v9.1');

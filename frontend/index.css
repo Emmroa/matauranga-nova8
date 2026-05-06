@@ -1,0 +1,340 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOVA — Frontend Styles
+   Tailwind CSS v4 + Aurora Borealis HD + Solarpunk glassmorphism
+   WCAG 2.2 AA compliant · prefers-reduced-motion aware
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* ─── Custom theme tokens (Tailwind v4 @theme) ───────────────────────────── */
+@theme {
+  --color-nova-bg-0:        oklch(15% 0.020 155);   /* #030e07 */
+  --color-nova-bg-1:        oklch(20% 0.030 160);   /* #07180f */
+  --color-nova-bg-2:        oklch(26% 0.040 165);   /* #0f2418 */
+  --color-nova-teal-400:    oklch(78% 0.14 195);    /* #2dd4a7 */
+  --color-nova-teal-500:    oklch(70% 0.15 200);    /* #0ea5e9 */
+  --color-nova-gold-500:    oklch(75% 0.13 78);     /* #c9973a */
+  --color-nova-gold-400:    oklch(82% 0.12 80);     /* #f59e0b */
+  --color-nova-green-500:   oklch(65% 0.16 155);    /* #10b981 */
+  --color-nova-parchment:   oklch(95% 0.03 85);     /* #f0ead4 */
+  --color-nova-text:        oklch(96% 0.02 95);
+  --color-nova-muted:       oklch(72% 0.03 95);
+  --color-nova-crisis:      oklch(65% 0.24 20);     /* red for crisis states */
+
+  --font-sora:    'Sora', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-dm-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-nova: 1.25rem;
+  --shadow-nova: 0 18px 50px -16px rgb(0 0 0 / 0.55), 0 2px 10px -2px rgb(0 0 0 / 0.35);
+}
+
+/* ─── Base layer ─────────────────────────────────────────────────────────── */
+@layer base {
+  html { color-scheme: dark; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+
+  html, body, #root {
+    min-height: 100dvh;
+    background: var(--color-nova-bg-0);
+    color: var(--color-nova-text);
+    font-family: var(--font-sora);
+    font-feature-settings: "ss01", "cv11";
+    overflow-x: hidden;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse 60% 80% at 50% 0%, color-mix(in oklab, var(--color-nova-bg-2) 50%, transparent) 0%, transparent 70%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, color-mix(in oklab, var(--color-nova-bg-1) 60%, transparent) 0%, transparent 75%),
+      var(--color-nova-bg-0);
+    background-attachment: fixed;
+  }
+
+  ::selection { background: color-mix(in oklab, var(--color-nova-teal-400) 40%, transparent); color: var(--color-nova-text); }
+
+  :focus-visible {
+    outline: 2px solid var(--color-nova-teal-400);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: 0.55; }
+  a { color: var(--color-nova-teal-400); text-underline-offset: 3px; }
+
+  h1, h2, h3, h4 { font-weight: 600; letter-spacing: -0.01em; }
+  code, pre, .mono { font-family: var(--font-dm-mono); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AURORA BOREALIS HD  —  organic, continuous, animated
+   Layered radial + conic gradients under heavy blur.
+   GPU-accelerated, no JS, no canvas, no WebGL.
+   Respects prefers-reduced-motion.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.aurora::before,
+.aurora::after,
+.aurora__band {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background-repeat: no-repeat;
+  will-change: transform, opacity;
+  mix-blend-mode: screen;
+}
+
+/* Band 1 — teal + green, broad base glow */
+.aurora::before {
+  background-image:
+    radial-gradient(ellipse 50% 40% at 20% 30%, color-mix(in oklab, var(--color-nova-teal-500) 55%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 75% 25%, color-mix(in oklab, var(--color-nova-teal-400) 50%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 50% 85%, color-mix(in oklab, var(--color-nova-green-500) 40%, transparent) 0%, transparent 65%);
+  filter: blur(90px) saturate(140%);
+  opacity: 0.80;
+  animation: aurora-drift-a 42s cubic-bezier(.45,.05,.55,.95) infinite alternate;
+}
+
+/* Band 2 — gold highlights, slower shimmer */
+.aurora::after {
+  background-image:
+    radial-gradient(ellipse 40% 30% at 30% 70%, color-mix(in oklab, var(--color-nova-gold-500) 45%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 25% at 80% 60%, color-mix(in oklab, var(--color-nova-gold-400) 30%, transparent) 0%, transparent 60%),
+    conic-gradient(from 180deg at 50% 50%,
+      transparent 0deg,
+      color-mix(in oklab, var(--color-nova-teal-400) 15%, transparent) 80deg,
+      transparent 160deg,
+      color-mix(in oklab, var(--color-nova-gold-500) 12%, transparent) 260deg,
+      transparent 340deg);
+  filter: blur(110px) saturate(130%);
+  opacity: 0.65;
+  animation: aurora-drift-b 58s linear infinite;
+}
+
+/* Band 3 — optional extra layer for HD depth */
+.aurora__band {
+  background-image:
+    radial-gradient(ellipse 35% 25% at 10% 50%, color-mix(in oklab, var(--color-nova-teal-500) 35%, transparent) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 20% at 90% 80%, color-mix(in oklab, var(--color-nova-green-500) 30%, transparent) 0%, transparent 55%);
+  filter: blur(130px) saturate(150%);
+  opacity: 0.55;
+  animation: aurora-drift-c 72s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift-a {
+  0%   { transform: translate(-8%, -4%) scale(1.00) rotate(0deg); }
+  50%  { transform: translate(6%, 2%)   scale(1.12) rotate(20deg); }
+  100% { transform: translate(-4%, 5%)  scale(1.05) rotate(-10deg); }
+}
+@keyframes aurora-drift-b {
+  from { transform: rotate(0deg) translate(0%, 0%) scale(1); }
+  to   { transform: rotate(360deg) translate(0%, 0%) scale(1.08); }
+}
+@keyframes aurora-drift-c {
+  0%   { transform: translate(5%, -3%) scale(1); }
+  100% { transform: translate(-6%, 4%) scale(1.14); }
+}
+
+/* Star field (subtle) */
+.aurora__stars {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 15% 20%,  rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 40% 40%,  rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 65% 15%,  rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 80% 60%,  rgba(255,255,255,0.35), transparent),
+    radial-gradient(1px 1px at 25% 75%,  rgba(255,255,255,0.45), transparent),
+    radial-gradient(1.5px 1.5px at 50% 55%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 90% 85%,  rgba(255,255,255,0.4), transparent);
+  opacity: 0.35;
+  mix-blend-mode: screen;
+}
+
+/* Accessibility — respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .aurora::before, .aurora::after, .aurora__band { animation: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES  —  glassmorphism, cards, buttons
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .nova-glass {
+    background: color-mix(in oklab, var(--color-nova-bg-1) 55%, transparent);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid color-mix(in oklab, var(--color-nova-teal-400) 14%, transparent);
+    border-radius: var(--radius-nova);
+    box-shadow: var(--shadow-nova);
+  }
+  .nova-glass-strong {
+    background: color-mix(in oklab, var(--color-nova-bg-1) 72%, transparent);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid color-mix(in oklab, var(--color-nova-teal-400) 18%, transparent);
+    border-radius: var(--radius-nova);
+    box-shadow: var(--shadow-nova);
+  }
+  .nova-card {
+    background: color-mix(in oklab, var(--color-nova-bg-1) 55%, transparent);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid color-mix(in oklab, var(--color-nova-teal-400) 14%, transparent);
+    border-radius: var(--radius-nova);
+    box-shadow: var(--shadow-nova);
+    padding: 1rem 1.25rem;
+  }
+  .nova-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.625rem 1.1rem; border-radius: 999px;
+    font-weight: 500; font-size: 0.925rem;
+    transition: transform 120ms ease, box-shadow 180ms ease, background 180ms ease;
+    border: 1px solid transparent;
+  }
+  .nova-btn-primary {
+    background: linear-gradient(135deg,
+      color-mix(in oklab, var(--color-nova-teal-500) 85%, white) 0%,
+      color-mix(in oklab, var(--color-nova-green-500) 70%, white) 100%);
+    color: var(--color-nova-bg-0);
+    border-color: color-mix(in oklab, var(--color-nova-teal-400) 60%, transparent);
+    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-nova-teal-500) 55%, transparent);
+  }
+  .nova-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 32px -10px color-mix(in oklab, var(--color-nova-teal-500) 65%, transparent); }
+  .nova-btn-ghost {
+    background: color-mix(in oklab, var(--color-nova-bg-2) 45%, transparent);
+    color: var(--color-nova-text);
+    border-color: color-mix(in oklab, var(--color-nova-teal-400) 20%, transparent);
+  }
+  .nova-btn-ghost:hover { background: color-mix(in oklab, var(--color-nova-bg-2) 75%, transparent); }
+  .nova-btn-danger {
+    background: color-mix(in oklab, var(--color-nova-crisis) 85%, transparent);
+    color: white; border-color: transparent;
+  }
+
+  .nova-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.25rem 0.7rem; border-radius: 999px;
+    font-size: 0.78rem; font-weight: 500;
+    background: color-mix(in oklab, var(--color-nova-bg-2) 60%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-nova-teal-400) 18%, transparent);
+  }
+  .nova-chip-crisis {
+    background: color-mix(in oklab, var(--color-nova-crisis) 25%, transparent);
+    border-color: color-mix(in oklab, var(--color-nova-crisis) 50%, transparent);
+    color: color-mix(in oklab, var(--color-nova-crisis) 30%, white);
+  }
+  .nova-chip-gold {
+    background: color-mix(in oklab, var(--color-nova-gold-500) 20%, transparent);
+    border-color: color-mix(in oklab, var(--color-nova-gold-500) 50%, transparent);
+  }
+
+  .nova-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    background: color-mix(in oklab, var(--color-nova-bg-0) 70%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-nova-teal-400) 22%, transparent);
+    color: var(--color-nova-text);
+    font-family: var(--font-sora);
+    font-size: 0.95rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .nova-input:focus {
+    outline: none;
+    border-color: color-mix(in oklab, var(--color-nova-teal-400) 60%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-nova-teal-400) 20%, transparent);
+  }
+  .nova-textarea { resize: none; min-height: 3rem; max-height: 10rem; }
+
+  /* Chat bubble */
+  .nova-bubble-user {
+    background: linear-gradient(135deg,
+      color-mix(in oklab, var(--color-nova-teal-500) 35%, transparent) 0%,
+      color-mix(in oklab, var(--color-nova-green-500) 25%, transparent) 100%);
+    border: 1px solid color-mix(in oklab, var(--color-nova-teal-400) 25%, transparent);
+    border-radius: 18px 18px 6px 18px;
+  }
+  .nova-bubble-ai {
+    background: color-mix(in oklab, var(--color-nova-bg-2) 70%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-nova-gold-500) 14%, transparent);
+    border-radius: 18px 18px 18px 6px;
+  }
+
+  /* Heatmap cells — dashboard */
+  .nova-heat-cell {
+    aspect-ratio: 1/1;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-family: var(--font-dm-mono);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+    cursor: default;
+  }
+  .nova-heat-cell:hover { transform: scale(1.08); z-index: 2; box-shadow: 0 4px 16px -2px rgb(0 0 0 / 0.5); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS  —  entry, pulse, typing indicator
+   ═══════════════════════════════════════════════════════════════════════════ */
+@keyframes nova-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes nova-pulse-ring {
+  0%   { box-shadow: 0 0 0 0   color-mix(in oklab, var(--color-nova-teal-400) 55%, transparent); }
+  70%  { box-shadow: 0 0 0 14px color-mix(in oklab, var(--color-nova-teal-400) 0%,  transparent); }
+  100% { box-shadow: 0 0 0 0   color-mix(in oklab, var(--color-nova-teal-400) 0%,  transparent); }
+}
+@keyframes nova-typing {
+  0%,80%,100% { opacity: 0.25; transform: translateY(0); }
+  40%         { opacity: 1;    transform: translateY(-3px); }
+}
+
+.nova-fade-up { animation: nova-fade-up 280ms ease-out both; }
+.nova-pulse   { animation: nova-pulse-ring 1600ms ease-out infinite; }
+
+.nova-typing-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--color-nova-teal-400);
+  animation: nova-typing 1.3s ease-in-out infinite;
+}
+.nova-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.nova-typing-dot:nth-child(3) { animation-delay: 0.30s; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBARS
+   ═══════════════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--color-nova-teal-400) 25%, transparent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--color-nova-teal-400) 45%, transparent);
+  background-clip: padding-box;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .nova-glass, .nova-glass-strong {
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+  }
+}
+
+/* Print: hide aurora and interactive bits */
+@media print {
+  .aurora, .nova-btn, .nova-chip { display: none !important; }
+}

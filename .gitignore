@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+frontend/.vite/
+
+# Databases & data
+*.db
+*.db-shm
+*.db-wal
+backend/data/
+
+# Logs
+*.log
+
+# Archives
+*.zip
+
+# Environment
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.claude/
+
+# Lock files (keep package-lock for reproducibility)

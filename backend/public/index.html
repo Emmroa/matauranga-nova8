@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVA | Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0f172a] text-white flex items-center justify-center min-h-screen p-4 font-sans">
+    <div class="w-full max-w-xl bg-slate-800/50 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+            <div>
+                <h1 class="text-xl font-bold text-emerald-400 leading-none text-emerald-400">🌿 NOVA</h1>
+                <p class="text-[9px] uppercase tracking-widest text-slate-400 mt-1">Sovereign AI Aotearoa</p>
+            </div>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full font-bold animate-pulse">LIVE</span>
+        </div>
+        
+        <div id="chat-box" class="h-96 overflow-y-auto p-6 space-y-4 text-sm leading-relaxed">
+            <div class="bg-emerald-500/10 p-4 rounded-2xl rounded-tl-none border border-emerald-500/20">
+                ¡Kia ora! Soy NOVA. ¡Qué bueno verte por aquí! ¿Cómo va tu día?
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-white/10 flex gap-2 bg-white/5">
+            <input type="text" id="user-input" class="flex-1 bg-slate-900 border border-white/10 rounded-xl px-5 py-3 focus:outline-none focus:border-emerald-500/50 text-sm" placeholder="Di algo...">
+            <button onclick="sendMessage()" class="bg-emerald-500 text-slate-950 font-bold px-6 py-3 rounded-xl hover:bg-emerald-400 transition-all transform active:scale-95">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const chat = document.getElementById('chat-box');
+        const input = document.getElementById('user-input');
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+            
+            chat.innerHTML += `<div class="flex justify-end"><div class="bg-slate-700 p-4 rounded-2xl rounded-tr-none shadow-md">${text}</div></div>`;
+            const loadId = 'load-' + Date.now();
+            chat.innerHTML += `<div id="${loadId}" class="text-[10px] text-slate-500 ml-2 animate-pulse font-bold tracking-widest">NOVA está escribiendo...</div>`;
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await res.json();
+                document.getElementById(loadId).remove();
+                chat.innerHTML += `<div class="bg-emerald-500/10 p-4 rounded-2xl rounded-tl-none border border-emerald-500/20">${data.response}</div>`;
+            } catch (e) { document.getElementById(loadId).innerText = "Error de conexión."; }
+            chat.scrollTop = chat.scrollHeight;
+        }
+        input.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
+    </script>
+</body>
+</html>
+
