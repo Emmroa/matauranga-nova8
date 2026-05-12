@@ -333,16 +333,18 @@ export default function Landing({ lang, setLang, consent, onConsent, onDecline }
                     <span style={{ fontSize: 14, fontWeight: 500, flex: 1, textAlign: 'left', fontFamily: "'Outfit', sans-serif" }}>{sec.label}</span>
                     <span style={{ fontSize: 10, color: 'rgba(200,148,26,.5)', transform: isOpen?'rotate(180deg)':'rotate(0)', transition: 'transform .22s', display: 'inline-block' }}>▼</span>
                   </button>
-                  {isOpen && (
-                    <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {sec.items.map(([title, body]) => (
-                        <div key={title} style={{ borderRadius: 9, padding: '10px 12px', background: 'rgba(255,255,255,.025)', border: '1px solid rgba(255,255,255,.05)' }}>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(200,148,26,.72)', marginBottom: 4, letterSpacing: '.03em' }}>{title}</div>
-                          <div style={{ fontSize: 11, color: 'rgba(223,240,225,.46)', lineHeight: 1.55 }}>{body}</div>
-                        </div>
-                      ))}
+                  <div style={{ maxHeight: isOpen ? '600px' : '0', overflow: 'hidden', transition: 'max-height 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
+                    <div>
+                      <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {sec.items.map(([title, body]) => (
+                          <div key={title} style={{ borderRadius: 9, padding: '10px 12px', background: 'rgba(255,255,255,.025)', border: '1px solid rgba(255,255,255,.05)' }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(200,148,26,.72)', marginBottom: 4, letterSpacing: '.03em' }}>{title}</div>
+                            <div style={{ fontSize: 11, color: 'rgba(223,240,225,.46)', lineHeight: 1.55 }}>{body}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
