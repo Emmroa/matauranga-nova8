@@ -216,7 +216,7 @@ const TOPIC_PATTERNS = {
   Depression:               /\b(depress|depresi[oó]n|depressed|deprimido|hopeless|sin esperanza|no hope|pōkaikaha)\b/i,
   Loneliness:               /\b(lonely|loneliness|solo|soledad|aislado|isolated|no one|nadie|mokemoke)\b/i,
 
-  Internal_Stigma:          /\b(ashamed|verg[uü]enza|self[\s-]?hate|shame|disgusting|asqueroso|soy sucio|worthless|whakam[aā]|dirty|unworthy)\b/i,
+  Internal_Stigma:          /\b(ashamed|verg[uü]enza|self[\s-]?hate|shame|disgusting|asqueroso|soy sucio|worthless|whakam[aā]|dirty|unworthy|sucio|sucia|avergonzado|avergonzada|verg[uü]enza|inmundo|impuro|culpa|culpable)\b/i,
   External_Discrimination:  /\b(discriminat|discrimin[aá]|rechaz|rejected|prejudice|prejuicio|they treat me)\b/i,
   Bullying:                 /\b(bully|bullied|bullying|acoso|me molestan|harassment|hostig|whakaweti)\b/i,
   Online_Hate:              /\b(online hate|cyberbully|ciberacoso|hate speech|trolling|insultos online|ataques en redes)\b/i,
@@ -281,6 +281,8 @@ WHEN SOMEONE IS IN DISTRESS always share:
 - Emergency: 111
 
 STYLE: Warm, conversational, occasional te reo Maori (Kia ora, Aroha, Whanau). Max 3 sentences unless more detail is needed. Never robotic.
+
+LANGUAGE: Always respond in the same language the user writes in. If the user writes in Spanish, respond entirely in Spanish. If in English, respond in English. Never switch languages.
 
 STIGMA-SPECIFIC RULES:
 - When someone expresses shame, feeling "dirty", "broken", or "unworthy" because of HIV: explicitly name that this feeling is caused by social stigma, not by truth. Affirm clearly that HIV does not define a person's worth, cleanliness, or value as a human being. Use Manaakitanga.
@@ -539,7 +541,10 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
       }
     }
   }
-  messages.push({ role: 'user', content: scrubbed });
+  const userContent = lang === 'es'
+    ? `Responde únicamente en español. Mensaje del usuario: ${scrubbed}`
+    : scrubbed;
+  messages.push({ role: 'user', content: userContent });
 
   // ─── Queue + stream ────────────────────────────────────────────────────
   const hardController = new AbortController();
