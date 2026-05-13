@@ -18,13 +18,140 @@ const KEYFRAMES = `
   @keyframes nova-notice-in  { from{opacity:0;transform:translateY(-6px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
   @keyframes nova-pulse-ring { 0%,100%{transform:scale(.94);opacity:.6} 50%{transform:scale(1.07);opacity:.2} }
   @keyframes nova-cursor     { 0%,100%{opacity:.15} 50%{opacity:.85} }
-  @keyframes td              { 0%,60%,100%{transform:translateY(0);opacity:.3} 30%{transform:translateY(-5px);opacity:1} }
-  .msg-user { animation: nova-from-right .3s cubic-bezier(.34,1.56,.64,1) both }
-  .msg-ai   { animation: nova-from-left  .3s cubic-bezier(.34,1.56,.64,1) both }
-  .td1 { animation: td 1.35s 0s    ease-in-out infinite }
-  .td2 { animation: td 1.35s .18s  ease-in-out infinite }
-  .td3 { animation: td 1.35s .36s  ease-in-out infinite }
+  @keyframes nova-star-pulse { 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(1.18);opacity:1} }
+  @keyframes nova-bubble-in  { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .msg-user { animation: nova-from-right .26s cubic-bezier(.34,1.56,.64,1) both }
+  .msg-ai   { animation: nova-from-left  .26s cubic-bezier(.34,1.56,.64,1) both }
 `;
+
+// ─── Mini neural canvas — 40×40, matches background NeuralCanvas aesthetic ─
+function MiniNeuralCanvas() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = 40, H = 40;
+
+    // 7 nodes: input(2) → hidden(3) → output(2)
+    const nodes = [
+      { x: 7,  y: 14, gold: false },
+      { x: 7,  y: 26, gold: false },
+      { x: 20, y: 7,  gold: true  },
+      { x: 20, y: 20, gold: false },
+      { x: 20, y: 33, gold: true  },
+      { x: 33, y: 14, gold: false },
+      { x: 33, y: 26, gold: true  },
+    ];
+    const edges = [
+      [0,2],[0,3],[0,4],
+      [1,2],[1,3],[1,4],
+      [2,5],[2,6],
+      [3,5],[3,6],
+      [4,5],[4,6],
+    ];
+    // One particle per edge, staggered start positions
+    const particles = edges.map(([from, to], i) => ({
+      from, to,
+      t: (i / edges.length),
+      speed: 0.006 + Math.random() * 0.005,
+    }));
+
+    let raf, time = 0;
+    const frame = () => {
+      raf = requestAnimationFrame(frame);
+      time += 0.022;
+      ctx.clearRect(0, 0, W, H);
+
+      // Edges
+      for (const [fi, ti] of edges) {
+        const a = nodes[fi], b = nodes[ti];
+        const isGold = a.gold || b.gold;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = isGold
+          ? 'rgba(200,148,26,0.2)'
+          : 'rgba(13,153,96,0.2)';
+        ctx.lineWidth = 0.75;
+        ctx.stroke();
+      }
+
+      // Flowing particles along edges
+      for (const p of particles) {
+        p.t += p.speed;
+        if (p.t > 1) p.t -= 1;
+        const a = nodes[p.from], b = nodes[p.to];
+        const px = a.x + (b.x - a.x) * p.t;
+        const py = a.y + (b.y - a.y) * p.t;
+        const isGold = nodes[p.from].gold || nodes[p.to].gold;
+        const rgb = isGold ? '200,148,26' : '13,153,96';
+        const g = ctx.createRadialGradient(px, py, 0, px, py, 3);
+        g.addColorStop(0, `rgba(${rgb},0.95)`);
+        g.addColorStop(1, `rgba(${rgb},0)`);
+        ctx.beginPath();
+        ctx.arc(px, py, 3, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+
+      // Nodes — pulse in phase with time
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        const pulse = 0.55 + 0.45 * Math.sin(time + i * 0.9);
+        const rgb = n.gold ? '200,148,26' : '13,153,96';
+        const r = 2.0;
+        // Glow halo
+        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r * 3.5);
+        g.addColorStop(0, `rgba(${rgb},${0.3 * pulse})`);
+        g.addColorStop(1, `rgba(${rgb},0)`);
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, r * 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+        // Core dot
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${rgb},${0.65 + 0.35 * pulse})`;
+        ctx.fill();
+      }
+    };
+
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return <canvas ref={ref} width={40} height={40} style={{ display: 'block', flexShrink: 0 }} />;
+}
+
+// ─── Thinking indicator — neural canvas + italic label, no bubble ───────────
+function ThinkingIndicator() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0', animation: 'nova-from-left .26s cubic-bezier(.34,1.56,.64,1) both' }}>
+      <MiniNeuralCanvas />
+      <span style={{ color: 'rgba(13,153,96,.58)', fontStyle: 'italic', fontSize: 13, fontFamily: "'Outfit', sans-serif", letterSpacing: '.01em' }}>
+        Nova is thinking…
+      </span>
+    </div>
+  );
+}
+
+// ─── Nova chat avatar — static star, response state ────────────────────────
+function NovaAvatar() {
+  return (
+    <div style={{
+      width: 30, height: 30, borderRadius: 10, flexShrink: 0,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'linear-gradient(135deg,#0a3d20,#051a0e)',
+      border: '1px solid rgba(13,153,96,.32)',
+      boxShadow: '0 2px 12px rgba(0,0,0,.45), 0 0 10px rgba(200,148,26,.15)',
+    }}>
+      <svg width={13} height={13} viewBox="0 0 24 24" fill="#c8941a" style={{ display: 'block' }}>
+        <path d="M12 2L9.09 9.09 2 12l7.09 2.91L12 22l2.91-7.09L22 12l-7.09-2.91L12 2z"/>
+      </svg>
+    </div>
+  );
+}
 
 // ─── Opening greeting ──────────────────────────────────────────────────────
 function getWelcomeMsg(lang) {
@@ -103,6 +230,70 @@ function ChatConsentModal({ lang, setLang, onConsent, onDecline }) {
   );
 }
 
+// ─── Disclaimer gate (sessionStorage — once per session) ──────────────────
+const DISCLAIMER_KEY = 'nova_disclaimer_v1';
+
+function DisclaimerGate({ onAccept }) {
+  return (
+    <div role="dialog" aria-modal="true" aria-label="Safety disclaimer"
+      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(1,13,3,.97)' }}>
+      <div style={{
+        width: '100%', maxWidth: 480,
+        background: 'linear-gradient(155deg,rgba(6,24,11,.95),rgba(4,18,8,.92))',
+        backdropFilter: 'blur(64px) saturate(210%)',
+        WebkitBackdropFilter: 'blur(64px) saturate(210%)',
+        border: '1px solid rgba(200,148,26,.24)',
+        boxShadow: 'inset 0 2px 0 rgba(240,180,41,.2),0 40px 100px rgba(0,0,0,.75)',
+        borderRadius: 24, padding: '32px 28px 26px',
+        animation: 'nova-fadein .45s ease both',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+          <PulseMark size={38} />
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 300, color: '#dff0e1', letterSpacing: '.01em' }}>
+            Before you begin
+          </span>
+        </div>
+
+        <p style={{ fontSize: 14.5, color: '#dff0e1', lineHeight: 1.65, margin: '0 0 18px', fontWeight: 400 }}>
+          NOVA is an AI companion, not a medical or mental health service.
+        </p>
+
+        <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(220,60,60,.08)', border: '1px solid rgba(220,60,60,.24)', marginBottom: 18 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(248,110,110,.75)', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 10 }}>
+            If you are in crisis right now, please contact:
+          </div>
+          {[
+            { label: '111',      detail: 'Emergency' },
+            { label: '1737',     detail: 'Free call or text, 24/7' },
+            { label: 'Lifeline', detail: '0800 543 354' },
+          ].map(({ label, detail }) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(248,110,110,.9)', minWidth: 64, fontFamily: "'Outfit', monospace" }}>
+                • {label}
+              </span>
+              <span style={{ fontSize: 13, color: 'rgba(248,110,110,.6)' }}>— {detail}</span>
+            </div>
+          ))}
+        </div>
+
+        <p style={{ fontSize: 12.5, color: 'rgba(223,240,225,.45)', lineHeight: 1.6, margin: '0 0 24px' }}>
+          By continuing you understand that NOVA is an AI and may make mistakes. Nothing you type is stored or shared.
+        </p>
+
+        <button onClick={onAccept}
+          style={{
+            width: '100%', padding: '13px 0', borderRadius: 13, border: 'none',
+            fontSize: 14, fontWeight: 500, cursor: 'pointer', letterSpacing: '.01em',
+            background: 'linear-gradient(135deg,rgba(13,153,96,.9),rgba(200,148,26,.85))',
+            color: '#010d03', fontFamily: "'Outfit', sans-serif",
+          }}>
+          I understand — Start chat
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Style constants ────────────────────────────────────────────────────────
 const glassHeader = {
   background: 'linear-gradient(180deg,rgba(2,18,8,.88) 0%,rgba(1,13,5,.7) 100%)',
@@ -120,23 +311,27 @@ const glassInput = {
   transition: 'border-color .22s, box-shadow .22s',
 };
 const bubbleAI = {
-  background: 'linear-gradient(145deg,rgba(3,18,8,.82),rgba(2,14,6,.72))',
+  background: 'linear-gradient(160deg,rgba(5,24,12,.92),rgba(3,16,8,.88))',
   border: '1px solid rgba(13,153,96,.18)',
-  borderLeft: '2px solid rgba(13,153,96,.38)',
-  boxShadow: 'inset 0 1px 0 rgba(13,153,96,.1),0 6px 20px rgba(0,0,0,.42)',
+  borderLeft: '2px solid rgba(13,153,96,.5)',
+  boxShadow: '0 4px 20px rgba(0,0,0,.45)',
   borderRadius: '4px 18px 18px 18px',
+  animation: 'nova-bubble-in .22s ease both',
 };
 const bubbleUser = {
-  background: 'linear-gradient(145deg,rgba(5,26,13,.86),rgba(3,20,9,.76))',
+  background: 'linear-gradient(160deg,rgba(8,34,17,.92),rgba(5,26,12,.88))',
   border: '1px solid rgba(200,148,26,.22)',
-  boxShadow: 'inset 0 1px 0 rgba(200,148,26,.12),0 6px 20px rgba(0,0,0,.42)',
-  borderRadius: '18px 4px 18px 18px',
+  boxShadow: '0 4px 20px rgba(0,0,0,.45)',
+  borderRadius: '18px 18px 18px 4px',
 };
 
 // ─── Chat ──────────────────────────────────────────────────────────────────
 export default function Chat({ lang, setLang, consent, onConsent, onDecline }) {
   const t = UI[lang] || UI.en;
   const navigate = useNavigate();
+  const [disclaimerDone, setDisclaimerDone] = useState(() => {
+    try { return !!sessionStorage.getItem(DISCLAIMER_KEY); } catch { return false; }
+  });
   const [messages, setMessages]     = useState(() => [getWelcomeMsg(lang)]);
   const [input, setInput]           = useState('');
   const [sending, setSending]       = useState(false);
@@ -144,6 +339,11 @@ export default function Chat({ lang, setLang, consent, onConsent, onDecline }) {
   const abortRef = useRef(null);
   const msgsRef  = useRef(null);
   const taRef    = useRef(null);
+
+  const acceptDisclaimer = useCallback(() => {
+    try { sessionStorage.setItem(DISCLAIMER_KEY, '1'); } catch { /* noop */ }
+    setDisclaimerDone(true);
+  }, []);
 
   const scrollBottom = useCallback(() => {
     msgsRef.current?.scrollTo({ top: msgsRef.current.scrollHeight, behavior: 'smooth' });
@@ -294,6 +494,17 @@ export default function Chat({ lang, setLang, consent, onConsent, onDecline }) {
   // Notice shows until user sends their first message
   const showNotice = noticeOpen && !messages.some(m => m.role === 'user');
 
+  if (!disclaimerDone) {
+    return (
+      <div style={{ height: '100vh', background: '#010d03', position: 'relative', overflow: 'hidden' }}>
+        <style>{KEYFRAMES}</style>
+        <NeuralCanvas />
+        <DepthLayer />
+        <DisclaimerGate onAccept={acceptDisclaimer} />
+      </div>
+    );
+  }
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#010d03', fontFamily: "'Outfit', system-ui, sans-serif", color: '#dff0e1', position: 'relative', overflow: 'hidden' }}>
       <style>{KEYFRAMES}</style>
@@ -373,84 +584,77 @@ export default function Chat({ lang, setLang, consent, onConsent, onDecline }) {
         ref={msgsRef}
         style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, scrollbarWidth: 'thin', scrollbarColor: 'rgba(13,153,96,.2) transparent' }}
       >
-        <div style={{ maxWidth: 750, margin: '0 auto', padding: '20px 16px 12px' }}>
+        <div style={{ maxWidth: 750, margin: '0 auto', padding: '28px 16px 16px' }}>
 
           {/* Message bubbles */}
-          {messages.map((msg) => (
-            <div key={msg.id}
-              className={msg.role === 'user' ? 'msg-user' : 'msg-ai'}
-              style={{ display: 'flex', gap: 9, marginBottom: 16, alignItems: 'flex-end', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row' }}>
+          {messages.map((msg) => {
+            const isThinking = msg.role === 'assistant' && msg.streaming && !msg.text;
+            return (
+              <div key={msg.id}
+                className={msg.role === 'user' ? 'msg-user' : 'msg-ai'}
+                style={{ display: 'flex', gap: 11, marginBottom: 24,
+                         alignItems: 'flex-start',
+                         justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
 
-              {/* Avatar */}
-              <div style={{
-                width: 28, height: 28, borderRadius: 9, flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: "'Cormorant Garamond', serif", fontSize: msg.role === 'assistant' ? 14 : 11, fontWeight: 400,
-                ...(msg.role === 'assistant'
-                  ? { background: 'linear-gradient(135deg,#0d9960,#078046 55%,#c8941a)', color: '#010d03', boxShadow: '0 0 14px rgba(200,148,26,.28)' }
-                  : { background: 'rgba(13,153,96,.14)', border: '1px solid rgba(13,153,96,.22)', color: 'rgba(30,220,130,.75)' }),
-              }}>
-                {msg.role === 'assistant' ? 'N' : '↑'}
-              </div>
+                {/* Thinking state — neural canvas floating, no bubble wrapper */}
+                {isThinking ? (
+                  <ThinkingIndicator />
+                ) : (
+                  <>
+                    {/* Nova avatar — left side only, response state */}
+                    {msg.role === 'assistant' && <NovaAvatar />}
 
-              <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {/* Bubble */}
-                <div style={{
-                  padding: '12px 15px', fontSize: 14, lineHeight: 1.68, color: '#dff0e1',
-                  ...(msg.role === 'assistant' ? bubbleAI : bubbleUser),
-                  ...(msg.error ? { borderColor: 'rgba(220,60,60,.28)', borderLeftColor: 'rgba(220,60,60,.45)' } : {}),
-                }}>
-                  {msg.streaming ? (
-                    <>
-                      {msg.text}
-                      <span style={{ display: 'inline-block', width: 2, height: 13, background: 'rgba(13,153,96,.8)', borderRadius: 1, verticalAlign: 'text-bottom', marginLeft: 2, animation: 'nova-cursor 1s ease-in-out infinite' }} />
-                    </>
-                  ) : (
-                    <>
-                      {msg.text.split('\n').map((line, li, arr) => (
-                        <span key={li}>{line}{li < arr.length - 1 && <br />}</span>
-                      ))}
-                      {msg.crisisText && (
-                        <div style={{ marginTop: 11, padding: '9px 12px', borderRadius: 11, background: 'rgba(220,60,60,.07)', border: '1px solid rgba(220,60,60,.18)', fontSize: 12, color: 'rgba(248,110,110,.85)', lineHeight: 1.55 }}>
-                          <strong style={{ display: 'block', marginBottom: 3, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(248,110,110,.65)' }}>If you need immediate help</strong>
-                          {msg.crisisText}
+                    <div style={{ maxWidth: '76%', display: 'flex', flexDirection: 'column',
+                                  gap: 5, alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                      {/* Bubble */}
+                      <div style={{
+                        padding: '13px 16px', fontSize: 14, lineHeight: 1.72, color: '#dff0e1',
+                        ...(msg.role === 'assistant' ? bubbleAI : bubbleUser),
+                        ...(msg.error ? { borderColor: 'rgba(220,60,60,.28)', borderLeftColor: 'rgba(220,60,60,.45)' } : {}),
+                      }}>
+                        {msg.streaming ? (
+                          <>
+                            {msg.text}
+                            <span style={{ display: 'inline-block', width: 2, height: 13, background: 'rgba(13,153,96,.8)', borderRadius: 1, verticalAlign: 'text-bottom', marginLeft: 2, animation: 'nova-cursor 1s ease-in-out infinite' }} />
+                          </>
+                        ) : (
+                          <>
+                            {msg.text.split('\n').map((line, li, arr) => (
+                              <span key={li}>{line}{li < arr.length - 1 && <br />}</span>
+                            ))}
+                            {msg.crisisText && (
+                              <div style={{ marginTop: 11, padding: '9px 12px', borderRadius: 11, background: 'rgba(220,60,60,.07)', border: '1px solid rgba(220,60,60,.18)', fontSize: 12, color: 'rgba(248,110,110,.85)', lineHeight: 1.55 }}>
+                                <strong style={{ display: 'block', marginBottom: 3, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(248,110,110,.65)' }}>If you need immediate help</strong>
+                                {msg.crisisText}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Feedback */}
+                      {msg.role === 'assistant' && !msg.streaming && msg.text && !msg.error && msg.id !== 'welcome' && (
+                        <div
+                          style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: msg.feedback !== undefined ? 1 : 0, transition: 'opacity .22s' }}
+                          onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                          onMouseLeave={e => { if (msg.feedback === undefined) e.currentTarget.style.opacity = 0; }}>
+                          {msg.feedback !== undefined ? (
+                            <span style={{ fontSize: 11, color: 'rgba(223,240,225,.3)', fontStyle: 'italic' }}>{t.thanks}</span>
+                          ) : (
+                            <>
+                              <FbBtn icon="👍" green onClick={() => sendFeedback(msg.id, 1)} />
+                              <FbBtn icon="👎"      onClick={() => sendFeedback(msg.id, -1)} />
+                            </>
+                          )}
                         </div>
                       )}
-                    </>
-                  )}
-                </div>
-
-                {/* Feedback */}
-                {msg.role === 'assistant' && !msg.streaming && msg.text && !msg.error && msg.id !== 'welcome' && (
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: msg.feedback !== undefined ? 1 : 0, transition: 'opacity .22s' }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = 1}
-                    onMouseLeave={e => { if (msg.feedback === undefined) e.currentTarget.style.opacity = 0; }}>
-                    {msg.feedback !== undefined ? (
-                      <span style={{ fontSize: 11, color: 'rgba(223,240,225,.3)', fontStyle: 'italic' }}>{t.thanks}</span>
-                    ) : (
-                      <>
-                        <FbBtn icon="👍" green onClick={() => sendFeedback(msg.id, 1)} />
-                        <FbBtn icon="👎"      onClick={() => sendFeedback(msg.id, -1)} />
-                      </>
-                    )}
-                  </div>
+                    </div>
+                  </>
                 )}
               </div>
-            </div>
-          ))}
+            );
+          })}
 
-          {/* Thinking dots — while waiting for first token */}
-          {sending && !messages.find(m => m.streaming && m.role === 'assistant' && m.text) && (
-            <div className="msg-ai" style={{ display: 'flex', gap: 9, alignItems: 'flex-end', marginBottom: 16 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontSize: 14, fontWeight: 400, background: 'linear-gradient(135deg,#0d9960,#078046 55%,#c8941a)', color: '#010d03', boxShadow: '0 0 14px rgba(200,148,26,.28)' }}>N</div>
-              <div style={{ ...bubbleAI, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <div className="td1" style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(13,153,96,.85)' }} />
-                <div className="td2" style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(13,153,96,.85)' }} />
-                <div className="td3" style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(13,153,96,.85)' }} />
-              </div>
-            </div>
-          )}
 
           {/* Bottom padding so last message clears input bar */}
           <div style={{ height: 16 }} />

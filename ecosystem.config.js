@@ -9,8 +9,7 @@ module.exports = {
         PORT: 10000,
         OLLAMA_MODEL: 'phi3:mini',
         ALLOWED_ORIGINS: 'http://150.242.42.161,http://localhost',
-        ADMIN_USERNAME: 'burnett',
-        ADMIN_PASSWORD: 'BurnettNova2026!'
+        ADMIN_USERNAME: 'burnett'
       }
     }
   ]

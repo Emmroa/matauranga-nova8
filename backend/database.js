@@ -256,6 +256,41 @@ const stmts = {
     LIMIT 10
   `),
 
+  topicsDeduped: db.prepare(`
+    SELECT t.code, t.label_en, t.category, t.is_crisis, t.display_order,
+      t.description,
+      COUNT(DISTINCT e.session_uuid) AS session_count
+    FROM topics t
+    LEFT JOIN events e ON e.topic_code = t.code
+    GROUP BY t.code
+    ORDER BY t.category, t.display_order
+  `),
+
+  deltas: db.prepare(`
+    SELECT
+      COUNT(DISTINCT CASE WHEN timestamp_hour >= strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-7 days'))
+            THEN session_uuid END) AS sessions_7d,
+      COUNT(DISTINCT CASE WHEN timestamp_hour >= strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-14 days'))
+            AND timestamp_hour < strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-7 days'))
+            THEN session_uuid END) AS sessions_prev7,
+      SUM(CASE WHEN crisis_flag=1 AND timestamp_hour >= strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-7 days'))
+          THEN 1 ELSE 0 END) AS crises_7d,
+      SUM(CASE WHEN crisis_flag=1 AND timestamp_hour >= strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-14 days'))
+          AND timestamp_hour < strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-7 days'))
+          THEN 1 ELSE 0 END) AS crises_prev7,
+      COUNT(CASE WHEN timestamp_hour >= strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-7 days'))
+            THEN 1 END) AS events_7d,
+      COUNT(CASE WHEN timestamp_hour >= strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-14 days'))
+            AND timestamp_hour < strftime('%Y-%m-%dT%H:00:00Z',datetime('now','-7 days'))
+            THEN 1 END) AS events_prev7
+    FROM events
+  `),
+
+  peakHour: db.prepare(`
+    SELECT substr(timestamp_hour,12,2) AS hr, COUNT(*) AS n
+    FROM events GROUP BY hr ORDER BY n DESC LIMIT 1
+  `),
+
   topicsList: db.prepare(`
     SELECT code, category, label_en, label_mi, description, is_crisis, display_order
     FROM topics ORDER BY display_order
@@ -357,6 +392,9 @@ export function getDashboardSummary() {
     languages:         stmts.languageBreakdown.all(),
     categories:        stmts.categoryBreakdown.all(),
     top_topics:        stmts.topTopics.all(),
+    topics_deduped:    stmts.topicsDeduped.all(),
+    deltas:            stmts.deltas.get()    || {},
+    peak_hour:         stmts.peakHour.get()  || null,
     feedback:          stmts.feedbackSummary.get() || { up_count: 0, down_count: 0 },
     timeseries:        stmts.timeseriesLast7Days.all()
   };

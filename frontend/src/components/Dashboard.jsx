@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Chart from 'chart.js/auto';
+import { Shield, TrendingUp, Activity, Clock } from 'lucide-react';
 
 // ─── Design tokens ────────────────────────────────────────────────────────
 const C = {
@@ -30,7 +31,8 @@ const C = {
 
 const KF = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Outfit:wght@300;400;500;600&display=swap');
-  @keyframes db-fadein { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes db-fadein   { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes row-slidein { from{opacity:0;transform:translateX(-6px)}  to{opacity:1;transform:translateX(0)} }
   .db-fade { animation: db-fadein .35s ease both }
   body { margin: 0; }
 `;
@@ -57,6 +59,60 @@ function useChart(ref, factory) {
     return () => { try { chart?.destroy(); } catch {} };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+}
+
+// ─── Counter animation hook ────────────────────────────────────────────────
+function useCounter(target, duration = 700) {
+  const [val, setVal] = useState(0);
+  const frameRef = useRef(null);
+  useEffect(() => {
+    if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    if (target === 0) { setVal(0); return; }
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setVal(Math.round(target * eased));
+      if (p < 1) frameRef.current = requestAnimationFrame(tick);
+    };
+    frameRef.current = requestAnimationFrame(tick);
+    return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
+  }, [target, duration]);
+  return val;
+}
+
+// ─── Inline sparkline ─────────────────────────────────────────────────────
+function Sparkline({ values = [], color = 'rgba(30,220,130,.75)', width = 60, height = 20 }) {
+  if (!values.length) return null;
+  const n = values.length;
+  const max = Math.max(...values, 1);
+  const min = Math.min(...values);
+  const range = max - min || 1;
+  const px = (i) => (i / Math.max(n - 1, 1)) * (width - 4) + 2;
+  const py = (v) => height - 2 - ((v - min) / range) * (height - 4);
+  const pts = values.map((v, i) => `${px(i)},${py(v)}`).join(' ');
+  const area = `${px(0)},${height - 2} ${pts} ${px(n - 1)},${height - 2}`;
+  return (
+    <svg width={width} height={height} style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
+      <polygon points={area} fill={color} fillOpacity={0.13} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// ─── Delta badge ───────────────────────────────────────────────────────────
+function DeltaBadge({ current, previous }) {
+  if (current === 0 && previous === 0) return null;
+  if (previous === 0) return (
+    <span style={{ fontSize: 9, color: 'rgba(30,220,130,.7)', fontWeight: 600, letterSpacing: '.06em' }}>NEW</span>
+  );
+  const pct = Math.round(((current - previous) / previous) * 100);
+  const up = pct >= 0;
+  return (
+    <span style={{ fontSize: 9, color: up ? 'rgba(30,220,130,.8)' : 'rgba(248,110,110,.8)', fontWeight: 600, letterSpacing: '.02em' }}>
+      {up ? '▲' : '▼'} {Math.abs(pct)}% vs prior 7d
+    </span>
+  );
 }
 
 // ─── Login panel ──────────────────────────────────────────────────────────
@@ -115,13 +171,52 @@ function LoginPanel({ onLogin }) {
   );
 }
 
-// ─── Shared sub-components ─────────────────────────────────────────────────
-function KpiCard({ value, label, note, color = 'rgba(30,220,130,.9)', warn }) {
+// ─── Auto-insight card ────────────────────────────────────────────────────
+const INSIGHT_ICONS  = { crisis: Shield, topic: TrendingUp, engagement: Activity, peak: Clock };
+const INSIGHT_COLORS = {
+  green: { bg: 'rgba(16,185,129,.07)',  border: 'rgba(16,185,129,.22)', badge: 'rgba(30,220,130,.85)',  icon: 'rgba(16,185,129,.9)'  },
+  amber: { bg: 'rgba(200,148,26,.07)',  border: 'rgba(200,148,26,.25)', badge: 'rgba(240,188,56,.9)',   icon: 'rgba(200,148,26,.9)'  },
+  red:   { bg: 'rgba(248,110,110,.07)', border: 'rgba(248,110,110,.28)', badge: 'rgba(248,110,110,.9)', icon: 'rgba(248,110,110,.9)' },
+};
+
+function InsightCard({ type, level = 'green', title, body }) {
+  const Icon   = INSIGHT_ICONS[type] || Shield;
+  const colors = INSIGHT_COLORS[level] || INSIGHT_COLORS.green;
   return (
-    <div style={{ ...C.card, padding: '16px 14px', textAlign: 'center', ...(warn ? { borderColor: `${color}44` } : {}) }}>
-      <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(22px,2.4vw,34px)', fontWeight: 300, color, lineHeight: 1.1, marginBottom: 4 }}>{value}</div>
+    <div style={{ ...C.card, padding: '15px 16px', background: colors.bg, borderColor: colors.border }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}>
+        <div style={{ flexShrink: 0, marginTop: 1 }}>
+          <Icon size={15} color={colors.icon} strokeWidth={2.2} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: '#dff0e1', lineHeight: 1.3 }}>{title}</span>
+            <span style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: colors.badge, flexShrink: 0, padding: '1px 6px', borderRadius: 5, border: `1px solid ${colors.border}` }}>
+              {level === 'green' ? 'OK' : level === 'amber' ? 'WATCH' : 'ALERT'}
+            </span>
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(223,240,225,.55)', lineHeight: 1.55 }}>{body}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Shared sub-components ─────────────────────────────────────────────────
+function KpiCard({ value, label, note, color = 'rgba(30,220,130,.9)', warn, rawValue, sparkValues, delta }) {
+  const counted   = useCounter(typeof rawValue === 'number' ? rawValue : 0, 700);
+  const displayed = typeof rawValue === 'number' ? counted.toLocaleString() : value;
+  return (
+    <div style={{ ...C.card, padding: '14px 14px 13px', textAlign: 'center', ...(warn ? { borderColor: `${color}44` } : {}) }}>
+      {sparkValues?.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+          <Sparkline values={sparkValues} color={color} width={60} height={20} />
+        </div>
+      )}
+      <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(22px,2.4vw,34px)', fontWeight: 300, color, lineHeight: 1.1, marginBottom: 4 }}>{displayed}</div>
       <div style={{ fontSize: 11, color: '#dff0e1', fontWeight: 500, lineHeight: 1.3, marginBottom: 2 }}>{label}</div>
-      {note && <div style={{ fontSize: 9.5, color: 'rgba(223,240,225,.35)', letterSpacing: '.03em' }}>{note}</div>}
+      {note && <div style={{ fontSize: 9.5, color: 'rgba(223,240,225,.35)', letterSpacing: '.03em', marginBottom: delta ? 5 : 0 }}>{note}</div>}
+      {delta && <DeltaBadge current={delta.current} previous={delta.previous} />}
     </div>
   );
 }
@@ -136,119 +231,351 @@ function SectionHeader({ title, sub }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// TAB 1 — COMMAND
+// TAB 1 — COMMAND  (live data from /api/admin/summary)
 // ═══════════════════════════════════════════════════════════════════════════
+const CAT_ORDER  = ['clinical','mental_health','stigma','identity','social','new_priority'];
+const CAT_LABELS = { clinical:'Clinical', mental_health:'Mental Health', stigma:'Stigma', identity:'Identity', social:'Social', new_priority:'Priority' };
+const CAT_COLORS = {
+  clinical:     'rgba(16,185,129,.75)',
+  mental_health:'rgba(248,110,110,.72)',
+  stigma:       'rgba(200,148,26,.78)',
+  identity:     'rgba(139,92,246,.75)',
+  social:       'rgba(59,130,246,.75)',
+  new_priority: 'rgba(240,188,56,.72)',
+};
+const CAT_HEAD = {
+  clinical:     'rgba(16,185,129,.6)',
+  mental_health:'rgba(248,110,110,.6)',
+  stigma:       'rgba(200,148,26,.6)',
+  identity:     'rgba(139,92,246,.6)',
+  social:       'rgba(59,130,246,.6)',
+  new_priority: 'rgba(240,188,56,.55)',
+};
+const LANG_LABEL = { en: 'English', mi: 'Te Reo', es: 'Español' };
+
+const CROSSHAIR = {
+  id: 'nova-crosshair',
+  afterEvent(chart, { event: e }) {
+    chart._cx = (e.type === 'mouseout') ? null : e.x;
+  },
+  afterDatasetsDraw(chart) {
+    if (chart._cx == null) return;
+    const { ctx, chartArea: a } = chart;
+    if (!a || chart._cx < a.left || chart._cx > a.right) return;
+    ctx.save();
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = 'rgba(223,240,225,.18)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(chart._cx, a.top);
+    ctx.lineTo(chart._cx, a.bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
 function TabCommand() {
-  const hivRef  = useRef(null);
-  const stiRef  = useRef(null);
-  const rsocRef = useRef(null);
+  const [data, setData]           = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [lastAt, setLastAt]       = useState(null);
+  const [age, setAge]             = useState(0);
+  const [collapsedCats, setCollapsedCats] = useState(new Set());
+  const [period, setPeriod]       = useState('7d');
+  const [tip, setTip]             = useState({ text: '', x: 0, y: 0 });
+  const chartRef  = useRef(null);
+  const chartInst = useRef(null);
 
-  useChart(hivRef, (el) => new Chart(el, {
-    type: 'line',
-    data: {
-      labels: ['2019','2020','2021','2022','2023','2024'],
-      datasets: [{
-        label: 'HIV diagnoses (NZ)',
-        data: [163, 134, 43, 78, 108, 95],
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16,185,129,.18)',
-        fill: true, tension: 0.38,
-        pointBackgroundColor: '#10b981', pointRadius: 4,
-      }],
-    },
-    options: { ...chartDefaults },
-  }));
+  const toggleCat = useCallback((cat) => setCollapsedCats(prev => {
+    const next = new Set(prev);
+    next.has(cat) ? next.delete(cat) : next.add(cat);
+    return next;
+  }), []);
+  const showTip = useCallback((e, text) => { if (text) setTip({ text, x: e.clientX, y: e.clientY }); }, []);
+  const moveTip = useCallback((e)        => setTip(t => ({ ...t, x: e.clientX, y: e.clientY })), []);
+  const hideTip = useCallback(()         => setTip(t => ({ ...t, text: '' })), []);
 
-  useChart(stiRef, (el) => new Chart(el, {
-    type: 'bar',
-    data: {
-      labels: ['HIV','Syphilis','Gonorrhoea','Chlamydia','Mpox'],
-      datasets: [{
-        label: '2024 cases',
-        data: [95, 1800, 5200, 7800, 28],
-        backgroundColor: ['rgba(16,185,129,.7)','rgba(200,148,26,.75)','rgba(139,92,246,.7)','rgba(59,130,246,.7)','rgba(248,110,110,.7)'],
-        borderColor:     ['rgba(16,185,129,1)', 'rgba(200,148,26,1)', 'rgba(139,92,246,1)', 'rgba(59,130,246,1)', 'rgba(248,110,110,1)'],
-        borderWidth: 1, borderRadius: 6,
-      }],
-    },
-    options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, legend: { display: false } } },
-  }));
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/summary', { credentials: 'include' });
+      if (res.status === 401) { window.location.href = '/dashboard/login'; return; }
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+      setData(data); setLastAt(Date.now()); setAge(0);
+    } catch { /* network error — keep stale data */ }
+    finally { setLoading(false); }
+  }, []);
 
-  useChart(rsocRef, (el) => new Chart(el, {
-    type: 'line',
-    data: {
-      labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  useEffect(() => { load(); const iv = setInterval(load, 60_000); return () => clearInterval(iv); }, [load]);
+
+  useEffect(() => {
+    if (!lastAt) return;
+    const tick = setInterval(() => setAge(Math.round((Date.now() - lastAt) / 1000)), 1000);
+    return () => clearInterval(tick);
+  }, [lastAt]);
+
+  // Chart — confidence bands, anomaly markers, gradient fill, crosshair, period filter
+  useEffect(() => {
+    if (!data || !chartRef.current) return;
+    const allTs = data.timeseries || [];
+    const ts    = period === '7d' ? allTs.slice(-7) : period === '14d' ? allTs.slice(-14) : allTs;
+
+    const labels     = ts.map(r => r.day.slice(5));
+    const counts     = ts.map(r => r.n);
+    const crisisData = ts.map(r => r.crises);
+
+    // μ±1.5σ confidence bands
+    const n   = counts.length;
+    const mu  = n ? counts.reduce((s, v) => s + v, 0) / n : 0;
+    const sig = n > 1 ? Math.sqrt(counts.reduce((s, v) => s + (v - mu) ** 2, 0) / n) : 0;
+    const upper = labels.map(() => parseFloat((mu + 1.5 * sig).toFixed(2)));
+    const lower = labels.map(() => parseFloat(Math.max(0, mu - 1.5 * sig).toFixed(2)));
+
+    // Anomaly detection
+    const hi = mu + 1.5 * sig, lo = Math.max(0, mu - 1.5 * sig);
+    const ptColor  = counts.map(v => (v > hi || v < lo) ? 'rgba(248,110,110,.95)' : 'rgba(16,185,129,.9)');
+    const ptRadius = counts.map(v => (v > hi || v < lo) ? 7 : 3);
+
+    // Gradient area fill under events line
+    const el   = chartRef.current;
+    const ctx2 = el.getContext('2d');
+    const h    = el.offsetHeight || 200;
+    const grad = ctx2.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(16,185,129,.18)');
+    grad.addColorStop(1, 'rgba(16,185,129,0)');
+
+    const newData = {
+      labels,
       datasets: [
-        {
-          label: 'R-social index',
-          data: [1.42,1.21,1.08,1.15,1.28,1.55,1.62,1.48,1.22,1.18,1.34,1.74],
-          borderColor: 'rgba(200,148,26,.9)', backgroundColor: 'rgba(200,148,26,.08)',
-          fill: false, tension: 0.4, pointRadius: 3, yAxisID: 'y',
-        },
-        {
-          label: 'IES composite',
-          data: [5.8,4.9,4.5,5.1,5.5,6.2,6.8,6.1,5.0,4.8,5.7,7.2],
-          borderColor: 'rgba(248,110,110,.8)', backgroundColor: 'rgba(248,110,110,.06)',
-          fill: false, tension: 0.4, pointRadius: 3, yAxisID: 'y1',
-        },
+        { label: 'μ+1.5σ', data: upper,      borderColor: 'rgba(16,185,129,.25)', backgroundColor: 'transparent', fill: false, tension: 0.35, pointRadius: 0, borderWidth: 1, borderDash: [4, 4] },
+        { label: 'μ−1.5σ', data: lower,      borderColor: 'rgba(16,185,129,.25)', backgroundColor: 'transparent', fill: false, tension: 0.35, pointRadius: 0, borderWidth: 1, borderDash: [4, 4] },
+        { label: 'Events',  data: counts,     borderColor: 'rgba(16,185,129,.88)', backgroundColor: grad, fill: 'origin', tension: 0.35, pointRadius: ptRadius, pointBackgroundColor: ptColor, pointBorderColor: 'transparent', borderWidth: 2 },
+        { label: 'Crises',  data: crisisData, borderColor: 'rgba(248,110,110,.75)', backgroundColor: 'rgba(248,110,110,.06)', fill: false, tension: 0.35, pointRadius: 3, pointBackgroundColor: 'rgba(248,110,110,.9)' },
       ],
-    },
-    options: {
-      ...chartDefaults,
-      scales: {
-        x: chartDefaults.scales.x,
-        y:  { ...chartDefaults.scales.y, position: 'left',  title: { display: true, text: 'R-social', color: 'rgba(200,148,26,.7)', font: { size: 10 } } },
-        y1: { ...chartDefaults.scales.y, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'IES', color: 'rgba(248,110,110,.7)', font: { size: 10 } } },
-      },
-    },
-  }));
+    };
 
-  const KPIs = [
-    { value: '95',    label: 'HIV diagnoses 2024',  note: 'New cases · NZ',             color: 'rgba(248,110,110,.9)' },
-    { value: '60',    label: 'Locally acquired',    note: '63% of 2024 diagnoses',       color: 'rgba(248,150,110,.85)' },
-    { value: '2,312', label: 'People on ART',       note: 'Health NZ · NZAF 2024',       color: 'rgba(30,220,130,.9)' },
-    { value: '91%',   label: 'Know their status',   note: 'UNAIDS 95-95-95 progress',    color: 'rgba(30,220,130,.82)' },
-    { value: '1,800', label: 'Syphilis ↑',          note: 'NZSHS 2024 · rising',         color: 'rgba(200,148,26,.9)', warn: true },
-    { value: '5,200', label: 'Gonorrhoea ↑',        note: 'NZSHS 2024 · rising',         color: 'rgba(200,148,26,.82)', warn: true },
-    { value: '7,800', label: 'Chlamydia →',         note: 'NZSHS 2024 · stable',         color: 'rgba(59,130,246,.85)' },
-    { value: '2030',  label: 'Zero target',          note: 'Te Tiriti commitment',        color: 'rgba(200,148,26,.9)' },
-  ];
+    const legendFilter = item => !['μ+1.5σ', 'μ−1.5σ'].includes(item.text);
+    const tipFilter    = item => !['μ+1.5σ', 'μ−1.5σ'].includes(item.dataset.label);
+
+    if (chartInst.current) {
+      chartInst.current.data = newData;
+      chartInst.current.update('none');
+    } else {
+      chartInst.current = new Chart(el, {
+        type: 'line',
+        data: newData,
+        options: {
+          ...chartDefaults,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            ...chartDefaults.plugins,
+            legend:  { ...chartDefaults.plugins.legend,  labels:  { ...chartDefaults.plugins.legend.labels,  filter: legendFilter } },
+            tooltip: { ...chartDefaults.plugins.tooltip, mode: 'index', intersect: false, filter: tipFilter },
+          },
+        },
+        plugins: [CROSSHAIR],
+      });
+    }
+  }, [data, period]);
+
+  useEffect(() => () => { try { chartInst.current?.destroy(); } catch {} }, []);
+
+  if (loading) return (
+    <div style={{ color: 'rgba(223,240,225,.32)', fontSize: 13, padding: '60px 0', textAlign: 'center', fontFamily: "'Outfit',sans-serif" }}>
+      Loading analytics…
+    </div>
+  );
+  if (!data) return (
+    <div style={{ color: 'rgba(248,110,110,.6)', fontSize: 13, padding: '60px 0', textAlign: 'center' }}>
+      Could not load data — check server status tab.
+    </div>
+  );
+
+  const sessions   = data.totals?.sessions  ?? 0;
+  const messages   = data.totals?.messages  ?? 0;
+  const crises     = data.totals?.crises    ?? 0;
+  const denom      = sessions || 1;
+  const topLang    = [...(data.languages || [])].sort((a, b) => b.n - a.n)[0];
+  const deduped    = data.topics_deduped || [];
+  const maxN       = Math.max(...deduped.map(t => t.session_count), 1);
+  const grouped    = Object.fromEntries(CAT_ORDER.map(c => [c, []]));
+  for (const t of deduped) { if (grouped[t.category]) grouped[t.category].push(t); }
+  const d          = data.deltas || {};
+  const spark7d    = (data.timeseries || []).slice(-7).map(r => r.n);
+  const sparkCrisis = (data.timeseries || []).slice(-7).map(r => r.crises);
 
   return (
     <div className="db-fade">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 16 }}>
-        {KPIs.slice(0, 4).map(k => <KpiCard key={k.label} {...k} />)}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 24 }}>
-        {KPIs.slice(4).map(k => <KpiCard key={k.label} {...k} />)}
+
+      {/* Tooltip */}
+      {tip.text && (
+        <div style={{
+          position: 'fixed', left: tip.x + 14, top: tip.y - 10, zIndex: 9999,
+          background: 'rgba(1,13,3,.97)', border: '1px solid rgba(13,153,96,.28)',
+          borderRadius: 9, padding: '8px 12px', maxWidth: 260,
+          fontSize: 11, color: 'rgba(223,240,225,.78)', lineHeight: 1.55,
+          pointerEvents: 'none', boxShadow: '0 8px 28px rgba(0,0,0,.65)',
+        }}>
+          {tip.text}
+        </div>
+      )}
+
+      {/* Freshness pill */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 7, marginBottom: 16 }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: age < 65 ? 'rgba(16,185,129,.8)' : 'rgba(200,148,26,.75)', display: 'inline-block' }} />
+        <span style={{ fontSize: 10, color: 'rgba(223,240,225,.3)', letterSpacing: '.05em' }}>
+          Updated {age}s ago · refreshes every 60s
+        </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        <div style={{ ...C.card, padding: '20px 20px 16px' }}>
-          <SectionHeader title="HIV Trend 2019–2024" sub="Annual diagnoses · New Zealand" />
-          <canvas ref={hivRef} />
+      {/* ── AUTO-INSIGHTS ──────────────────────────────────────────────────── */}
+      {(data.insights || []).length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10, marginBottom: 20 }}>
+          {data.insights.map((ins, i) => <InsightCard key={i} {...ins} />)}
         </div>
-        <div style={{ ...C.card, padding: '20px 20px 16px' }}>
-          <SectionHeader title="STI Landscape 2024" sub="New Zealand STI surveillance" />
-          <canvas ref={stiRef} />
-        </div>
+      )}
+
+      {/* ── SECTION 1 — KPI cards ─────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 26 }}>
+        <KpiCard
+          rawValue={sessions}
+          label="Total sessions"
+          note="Unique users"
+          sparkValues={spark7d}
+          delta={{ current: d.sessions_7d ?? 0, previous: d.sessions_prev7 ?? 0 }}
+        />
+        <KpiCard
+          rawValue={messages}
+          label="Events recorded"
+          note="Topic detections"
+          sparkValues={spark7d}
+          delta={{ current: d.events_7d ?? 0, previous: d.events_prev7 ?? 0 }}
+        />
+        <KpiCard
+          rawValue={crises}
+          label="Crisis activations"
+          note="Immediate referrals sent"
+          color="rgba(248,110,110,.9)"
+          warn={crises > 0}
+          sparkValues={sparkCrisis}
+          delta={{ current: d.crises_7d ?? 0, previous: d.crises_prev7 ?? 0 }}
+        />
+        <KpiCard
+          value={topLang ? (LANG_LABEL[topLang.language] ?? topLang.language) : '—'}
+          label="Most active language"
+          note={topLang ? `${topLang.n} events` : 'No data yet'}
+          color="rgba(200,148,26,.9)"
+        />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: 16 }}>
-        <div style={{ ...C.card, padding: '20px 20px 16px' }}>
-          <SectionHeader title="Social Epidemic Index — R-social" sub="Rolling 12-month social transmission risk · dual Y-axis" />
-          <canvas ref={rsocRef} />
+      {/* ── SECTION 2 — Topic breakdown ───────────────────────────────────── */}
+      <div style={{ ...C.card, padding: '22px 24px 16px', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20 }}>
+          <SectionHeader
+            title="Topic breakdown"
+            sub={`${sessions} total session${sessions !== 1 ? 's' : ''} · each topic counted once per session`}
+          />
+          <span style={{ fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(223,240,225,.22)', flexShrink: 0, marginLeft: 12 }}>
+            SESSIONS · %
+          </span>
         </div>
-        <div style={{ ...C.cardGold, padding: '20px 18px' }}>
-          <SectionHeader title="Crisis activations" sub="NOVA sessions flagged" />
-          <div style={{ fontSize: 12, color: 'rgba(248,110,110,.65)', lineHeight: 1.65, marginTop: 8, padding: '12px 14px', borderRadius: 11, background: 'rgba(248,110,110,.05)', border: '1px solid rgba(248,110,110,.14)' }}>
-            ◉ Live data feed pending. Deploy to production to activate crisis signal tracking.
-          </div>
-          <div style={{ marginTop: 12, fontSize: 11, color: 'rgba(223,240,225,.35)', lineHeight: 1.6 }}>
-            Each activation = detected crisis phrase. User shown 111, Lifeline 0800 543 354, 1737 immediately.
-          </div>
-        </div>
+
+        {CAT_ORDER.map(cat => {
+          const topics = grouped[cat] || [];
+          if (!topics.length) return null;
+          const isOpen = !collapsedCats.has(cat);
+          return (
+            <div key={cat} style={{ marginBottom: 18 }}>
+              {/* Category header — clickable toggle */}
+              <button onClick={() => toggleCat(cat)} style={{
+                width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                padding: '4px 0', display: 'flex', alignItems: 'center', gap: 7,
+                marginBottom: isOpen ? 10 : 2,
+              }}>
+                <span style={{
+                  fontSize: 10, color: CAT_HEAD[cat], display: 'inline-block',
+                  transition: 'transform .22s', transform: isOpen ? 'none' : 'rotate(-90deg)',
+                }}>▾</span>
+                <span style={{ fontSize: 9.5, letterSpacing: '.18em', textTransform: 'uppercase', color: CAT_HEAD[cat], fontWeight: 600 }}>
+                  {CAT_LABELS[cat]}
+                </span>
+                <span style={{ fontSize: 9, color: 'rgba(223,240,225,.2)', marginLeft: 2 }}>
+                  {topics.length} topic{topics.length !== 1 ? 's' : ''}
+                </span>
+              </button>
+
+              {/* Collapsible body */}
+              <div style={{
+                maxHeight: isOpen ? `${topics.length * 30}px` : '0px',
+                overflow: 'hidden',
+                transition: 'max-height 0.28s cubic-bezier(0.4,0,0.2,1)',
+              }}>
+                {topics.map((t, idx) => {
+                  const n   = t.session_count || 0;
+                  const pct = n / denom * 100;
+                  const bar = n / maxN * 100;
+                  return (
+                    <div key={t.code}
+                      onMouseEnter={e => showTip(e, t.description)}
+                      onMouseMove={moveTip}
+                      onMouseLeave={hideTip}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7,
+                        animation: 'row-slidein 0.3s ease both',
+                        animationDelay: `${idx * 35}ms`,
+                        cursor: t.description ? 'help' : 'default',
+                      }}
+                    >
+                      <div style={{ width: 172, flexShrink: 0, fontSize: 11, color: 'rgba(223,240,225,.62)', textAlign: 'right', lineHeight: 1.25 }}>
+                        {t.label_en}
+                      </div>
+                      <div style={{ flex: 1, height: 10, borderRadius: 99, background: 'rgba(255,255,255,.04)', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{
+                          position: 'absolute', left: 0, top: 0, height: '100%',
+                          width: `${bar}%`, minWidth: n > 0 ? 3 : 0,
+                          background: CAT_COLORS[cat], borderRadius: 99,
+                          transition: 'width .5s ease',
+                        }} />
+                      </div>
+                      <div style={{ width: 74, flexShrink: 0, fontSize: 10, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: n > 0 ? 'rgba(223,240,225,.5)' : 'rgba(223,240,225,.17)' }}>
+                        {n > 0 ? `${n} · ${pct.toFixed(1)}%` : '—'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {/* ── SECTION 3 — Activity chart ────────────────────────────────────── */}
+      <div style={{ ...C.card, padding: '20px 20px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+          <SectionHeader
+            title={period === '7d' ? 'Activity — last 7 days' : period === '14d' ? 'Activity — last 14 days' : 'Activity — all time'}
+            sub="Events/day · dashed = μ±1.5σ · red markers = anomalies"
+          />
+          <div style={{ display: 'flex', gap: 5, flexShrink: 0, marginTop: 2 }}>
+            {[['7d','7D'],['14d','14D'],['all','All']].map(([val, lbl]) => (
+              <button key={val} onClick={() => setPeriod(val)} style={{
+                padding: '3px 10px', borderRadius: 6, fontSize: 10.5, fontWeight: 500,
+                border: `1px solid ${period === val ? 'rgba(16,185,129,.45)' : 'rgba(255,255,255,.08)'}`,
+                background: period === val ? 'rgba(16,185,129,.1)' : 'transparent',
+                color: period === val ? 'rgba(30,220,130,.9)' : 'rgba(223,240,225,.38)',
+                cursor: 'pointer', fontFamily: "'Outfit',sans-serif", transition: 'all .18s',
+              }}>{lbl}</button>
+            ))}
+          </div>
+        </div>
+        {(data.timeseries || []).length === 0 ? (
+          <div style={{ padding: '32px 0', textAlign: 'center', fontSize: 12, color: 'rgba(223,240,225,.22)' }}>
+            No activity recorded yet
+          </div>
+        ) : (
+          <canvas ref={chartRef} />
+        )}
+      </div>
+
     </div>
   );
 }

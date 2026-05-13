@@ -1,28 +1,43 @@
 # Dependencies
 node_modules/
+npm-debug.log
 
 # Build outputs
 dist/
+build/
 frontend/.vite/
 
-# Databases & data
+# Databases & data — contain bcrypt hashes and PII
 *.db
-*.db-shm
+*.db-journal
 *.db-wal
+*.db-shm
 backend/data/
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.env.bak
+secrets/
+
+# Backups with timestamps
+*.bak
+*.bak.*
+*.backup
+
+# Cookies and temp files
+*cookies*.txt
 
 # Logs
 *.log
+logs/
+pm2.log
 
 # Archives
 *.zip
 
-# Environment
-.env
-.env.*
-
 # OS / editor
 .DS_Store
+Thumbs.db
 .claude/
-
-# Lock files (keep package-lock for reproducibility)
