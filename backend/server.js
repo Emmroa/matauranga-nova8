@@ -33,7 +33,7 @@ import cookieParser from 'cookie-parser';
 import { randomUUID, createHmac, timingSafeEqual } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 import * as store from './database.js';
 
@@ -183,21 +183,30 @@ const adminChatLimiter = rateLimit({
 // LAYER 1 — PII SCRUBBING (NZ-specific patterns)
 // Runs BEFORE any prompt leaves Node and goes to Ollama.
 // ═══════════════════════════════════════════════════════════════════════════
+
+// In-memory PII counters (process lifetime — resets on restart, never persisted)
+const piiCounters = { total: 0, email: 0, phone: 0, nhi: 0, ird: 0, card: 0, address: 0 };
+
 function scrubPII(text) {
   if (typeof text !== 'string') return '';
+  const tally = (re, key) => {
+    const m = text.match(re);
+    if (m) { piiCounters[key] += m.length; piiCounters.total += m.length; }
+  };
+  tally(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, 'email');
+  tally(/\b(?:\+?64[\s.-]?|0)\d[\d\s.-]{6,12}\b/g, 'phone');
+  tally(/\b[A-Z]{3}\d{4}\b/g, 'nhi');
+  tally(/\b[A-Z]{3}\d{2}[A-Z]\d\b/g, 'nhi');
+  tally(/\b\d{2,3}[-\s]?\d{3}[-\s]?\d{3}\b/g, 'ird');
+  tally(/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g, 'card');
+  tally(/\b\d{1,4}\s+[A-Z][a-z]+\s+(Street|Road|Avenue|Lane|Drive|Place|Crescent|Way|Terrace|St|Rd|Ave|Ln|Dr|Pl|Cr|Tce)\b/gi, 'address');
   return text
-    // Emails
     .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]')
-    // NZ phone numbers: +64, 0xx, mobile 02x
     .replace(/\b(?:\+?64[\s.-]?|0)\d[\d\s.-]{6,12}\b/g, '[PHONE]')
-    // NHI: 3 letters + 4 digits (new post-2023 format is 3L + 2 digits + 1 letter + 1 digit, cover both)
     .replace(/\b[A-Z]{3}\d{4}\b/g, '[NHI]')
     .replace(/\b[A-Z]{3}\d{2}[A-Z]\d\b/g, '[NHI]')
-    // IRD: 8–9 digits with optional dashes
     .replace(/\b\d{2,3}[-\s]?\d{3}[-\s]?\d{3}\b/g, '[IRD]')
-    // Credit card (16 digits grouped)
     .replace(/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g, '[CARD]')
-    // NZ street addresses (approximate)
     .replace(/\b\d{1,4}\s+[A-Z][a-z]+\s+(Street|Road|Avenue|Lane|Drive|Place|Crescent|Way|Terrace|St|Rd|Ave|Ln|Dr|Pl|Cr|Tce)\b/gi, '[ADDRESS]');
 }
 
@@ -852,7 +861,8 @@ function generateInsights(summary) {
 app.get('/api/admin/summary', requireAdmin, (_req, res) => {
   try {
     const summary = store.getDashboardSummary();
-    summary.insights = generateInsights(summary);
+    summary.insights   = generateInsights(summary);
+    summary.piiEvents  = { ...piiCounters };
     res.json(summary);
   }
   catch (e) {
@@ -929,6 +939,112 @@ app.post('/api/admin/analyst', requireAdmin, adminChatLimiter, async (req, res) 
     });
   } catch (e) {
     controller.abort(); // cancel in-flight Ollama fetch
+    sse('fallback', { text: pickFallback('error', lang), reason: String(e?.message).slice(0, 120) });
+  } finally {
+    clearTimeout(timer);
+    try { res.end(); } catch { /* noop */ }
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROUTES — ADMIN ACTIONS (Social Stress Indicator status tracking)
+// ═══════════════════════════════════════════════════════════════════════════
+const ACTIONS_FILE = path.join(__dirname, 'data', 'actions.json');
+const ALLOWED_ACTION_KEYS = new Set([
+  'Internal_Stigma', 'External_Discrimination', 'Bullying', 'Online_Hate',
+  'Workplace_Discrimination', 'Medical_Discrimination', 'WINZ', 'Housing_Council',
+  'Legal_Rights', 'Immigration', 'Loneliness', 'Anxiety', 'Depression',
+]);
+const ALLOWED_STATUSES = new Set(['Pending', 'In Progress', 'Completed']);
+
+function loadActions() {
+  try { return JSON.parse(readFileSync(ACTIONS_FILE, 'utf8')); }
+  catch { return {}; }
+}
+function saveActions(data) {
+  writeFileSync(ACTIONS_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+app.get('/api/admin/actions', requireAdmin, (_req, res) => {
+  res.json(loadActions());
+});
+
+app.post('/api/admin/actions', requireAdmin, (req, res) => {
+  const { key, status } = req.body || {};
+  if (!ALLOWED_ACTION_KEYS.has(key))    return res.status(400).json({ error: 'invalid key' });
+  if (!ALLOWED_STATUSES.has(status))    return res.status(400).json({ error: 'invalid status' });
+  const actions = loadActions();
+  actions[key] = { status, updatedAt: new Date().toISOString() };
+  try {
+    saveActions(actions);
+    res.json({ ok: true });
+  } catch (e) {
+    safeLog.error('actions save error', { err: String(e?.message).slice(0, 80) });
+    res.status(500).json({ error: 'Could not save action' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROUTES — ADMIN ASSISTANT (AI analyst with caller-supplied sanitized context)
+// ═══════════════════════════════════════════════════════════════════════════
+const ADMIN_ASSISTANT_PROMPT = `You are NOVA Assistant, a strategic intelligence tool for Mātauranga NOVA — an HIV support platform in Aotearoa New Zealand (Burnett Foundation).
+
+You receive a JSON snapshot of ANONYMOUS aggregate analytics (sessions, topics, languages, crisis activations, PII events blocked). You never see individual user messages — they do not exist in storage.
+
+Your job:
+- Provide concise, actionable insights (3–5 sentences).
+- Cite numbers directly from the context; do not invent figures.
+- Focus on public health implications and potential institutional actions.
+- When discussing crisis activations, note that each user was surfaced Lifeline 0800 543 354 / 1737 / 111 at the moment of detection.
+- All data is Zero Data Retention compliant under NZ Privacy Act 2020 / HIPC 2020.
+
+Respond in the language of the question (English, Spanish, or te reo Māori).`;
+
+app.post('/api/admin/assistant', requireAdmin, adminChatLimiter, async (req, res) => {
+  const { question, context } = req.body || {};
+  if (!question || typeof question !== 'string') return res.status(400).json({ error: 'question required' });
+  if (question.length > 500) return res.status(400).json({ error: 'question too long (max 500)' });
+
+  // Sanitize caller-supplied context — only pass allowed aggregate fields, never user text
+  const safeContext = {
+    topics:            Array.isArray(context?.topics)
+                         ? context.topics.slice(0, 50).map(t => ({ code: t.code, n: t.n, category: t.category }))
+                         : [],
+    languages:         context?.languages && typeof context.languages === 'object' ? context.languages : {},
+    crisisActivations: typeof context?.crisisActivations === 'number' ? context.crisisActivations : 0,
+    piiEvents:         context?.piiEvents && typeof context.piiEvents === 'object' ? context.piiEvents : {},
+  };
+
+  const lang = detectLanguage(question);
+  const messages = [
+    { role: 'system', content: ADMIN_ASSISTANT_PROMPT },
+    { role: 'user',   content: `CONTEXT:\n${JSON.stringify(safeContext)}\n\nQUESTION: ${question.slice(0, 500)}` },
+  ];
+
+  res.set({
+    'Content-Type':      'text/event-stream; charset=utf-8',
+    'Cache-Control':     'no-cache, no-transform',
+    'Connection':        'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders();
+  const sse = (event, data) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort('hard-timeout'), STREAM_HARD_TIMEOUT_MS);
+  let gotToken = false;
+
+  try {
+    await ollamaQueue.add(async () => {
+      const response = await ollamaBreaker.fire({ messages, stream: true, signal: controller.signal });
+      for await (const chunk of consumeOllamaNdjson(response)) {
+        if (chunk.message?.content) { gotToken = true; sse('token', { t: chunk.message.content }); }
+        if (chunk.done) { sse('done', {}); break; }
+      }
+      if (!gotToken) sse('fallback', { text: pickFallback('error', lang) });
+    });
+  } catch (e) {
+    controller.abort();
     sse('fallback', { text: pickFallback('error', lang), reason: String(e?.message).slice(0, 120) });
   } finally {
     clearTimeout(timer);

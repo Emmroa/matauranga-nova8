@@ -1007,14 +1007,490 @@ function TabStatus() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// TAB 6 — INSTITUTIONAL ACTIONS (M1: Social Stress Tracker + M2: PII Audit)
+// ═══════════════════════════════════════════════════════════════════════════
+const ACTION_INDICATORS = [
+  { key: 'Internal_Stigma',          label: 'Internal Stigma',          priority: 'High'     },
+  { key: 'External_Discrimination',  label: 'External Discrimination',  priority: 'High'     },
+  { key: 'Bullying',                 label: 'Bullying',                 priority: 'High'     },
+  { key: 'Online_Hate',              label: 'Online Hate',              priority: 'Medium'   },
+  { key: 'Workplace_Discrimination', label: 'Workplace Discrimination', priority: 'High'     },
+  { key: 'Medical_Discrimination',   label: 'Medical Discrimination',   priority: 'Critical' },
+  { key: 'WINZ',                     label: 'WINZ / Work & Income',     priority: 'Medium'   },
+  { key: 'Housing_Council',          label: 'Housing / Council',        priority: 'Medium'   },
+  { key: 'Legal_Rights',             label: 'Legal Rights',             priority: 'Medium'   },
+  { key: 'Immigration',              label: 'Immigration / Visa',       priority: 'Medium'   },
+  { key: 'Loneliness',               label: 'Loneliness',               priority: 'High'     },
+  { key: 'Anxiety',                  label: 'Anxiety',                  priority: 'High'     },
+  { key: 'Depression',               label: 'Depression',               priority: 'High'     },
+];
+const STATUS_STYLE = {
+  'Pending':     { color: 'rgba(223,240,225,.35)', border: 'rgba(223,240,225,.15)', bg: 'rgba(223,240,225,.05)' },
+  'In Progress': { color: '#c8941a',               border: 'rgba(200,148,26,.4)',   bg: 'rgba(200,148,26,.12)'  },
+  'Completed':   { color: '#0d9960',               border: 'rgba(13,153,96,.4)',    bg: 'rgba(13,153,96,.12)'   },
+};
+const PRI_COLOR = { Critical: 'rgba(248,110,110,.85)', High: 'rgba(200,148,26,.8)', Medium: 'rgba(223,240,225,.45)' };
+const PII_TYPES = [
+  { key: 'email',   label: 'Email'   },
+  { key: 'phone',   label: 'Phone'   },
+  { key: 'nhi',     label: 'NHI'     },
+  { key: 'ird',     label: 'IRD'     },
+  { key: 'card',    label: 'Card'    },
+  { key: 'address', label: 'Address' },
+];
+
+function TabActions() {
+  const [data,    setData]    = useState(null);
+  const [acts,    setActs]    = useState({});
+  const [saving,  setSaving]  = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/admin/summary', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+      fetch('/api/admin/actions', { credentials: 'include' }).then(r => r.ok ? r.json() : {}),
+    ]).then(([summary, actions]) => {
+      setData(summary);
+      setActs(actions || {});
+    }).finally(() => setLoading(false));
+  }, []);
+
+  const setStatus = async (key, status) => {
+    setSaving(s => ({ ...s, [key]: true }));
+    try {
+      const r = await fetch('/api/admin/actions', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, status }),
+      });
+      if (r.ok) setActs(prev => ({ ...prev, [key]: { status, updatedAt: new Date().toISOString() } }));
+    } finally {
+      setSaving(s => ({ ...s, [key]: false }));
+    }
+  };
+
+  const topicMap = {};
+  (data?.topics || []).forEach(t => { topicMap[t.code] = t.n; });
+  const pii = data?.piiEvents ?? {};
+
+  if (loading) return (
+    <div style={{ color: 'rgba(223,240,225,.32)', fontSize: 13, padding: '60px 0', textAlign: 'center' }}>
+      Loading actions…
+    </div>
+  );
+
+  return (
+    <div className="db-fade" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+      {/* M2 — Live Privacy Audit */}
+      <div style={{ ...C.cardGold, padding: '20px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(200,148,26,.9)', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 4 }}>🔐 Live Privacy Audit — Layer 1</div>
+            <div style={{ fontSize: 11, color: 'rgba(223,240,225,.4)' }}>PII interceptado antes de llegar a la IA · Zero Data Retention</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 38, fontWeight: 300, color: 'rgba(200,148,26,.9)', lineHeight: 1 }}>{pii.total ?? 0}</div>
+            <div style={{ fontSize: 10, color: 'rgba(223,240,225,.35)', letterSpacing: '.08em', marginTop: 2 }}>TOTAL INTERCEPTED</div>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+          {PII_TYPES.map(({ key, label }) => (
+            <div key={key} style={{ background: 'rgba(200,148,26,.06)', border: '1px solid rgba(200,148,26,.14)', borderRadius: 8, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 11, color: 'rgba(223,240,225,.5)' }}>{label}</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(200,148,26,.85)' }}>{pii[key] ?? 0}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* M1 — Social Stress Indicators */}
+      <div style={{ ...C.card, padding: '20px 24px' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(30,220,130,.8)', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 16 }}>
+          📋 Social Stress Indicators — Institutional Response Tracker
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(13,153,96,.2)' }}>
+                {['Indicator', 'Detected', 'Priority', 'Status', 'Last Action'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '6px 12px', color: 'rgba(223,240,225,.38)', fontWeight: 500, fontSize: 10, letterSpacing: '.07em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {ACTION_INDICATORS.map(({ key, label, priority }) => {
+                const count    = topicMap[key] ?? 0;
+                const act      = acts[key] || {};
+                const status   = act.status || 'Pending';
+                const ss       = STATUS_STYLE[status];
+                const updated  = act.updatedAt
+                  ? new Date(act.updatedAt).toLocaleDateString('en-NZ', { day: '2-digit', month: 'short' })
+                  : '—';
+                return (
+                  <tr key={key} style={{ borderBottom: '1px solid rgba(13,153,96,.07)', animation: 'row-slidein .25s ease both' }}>
+                    <td style={{ padding: '9px 12px', color: '#dff0e1', fontWeight: count > 0 ? 500 : 400 }}>{label}</td>
+                    <td style={{ padding: '9px 12px', color: count > 0 ? 'rgba(30,220,130,.9)' : 'rgba(223,240,225,.28)', fontWeight: 600 }}>{count}</td>
+                    <td style={{ padding: '9px 12px', color: PRI_COLOR[priority], fontSize: 11, fontWeight: 600 }}>{priority}</td>
+                    <td style={{ padding: '9px 12px' }}>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {['Pending', 'In Progress', 'Completed'].map(s => {
+                          const active = status === s;
+                          const st = STATUS_STYLE[s];
+                          return (
+                            <button key={s} disabled={saving[key]} onClick={() => setStatus(key, s)}
+                              style={{ fontSize: 10, padding: '3px 8px', borderRadius: 5, border: `1px solid ${active ? st.border : 'rgba(223,240,225,.1)'}`, background: active ? st.bg : 'transparent', color: active ? st.color : 'rgba(223,240,225,.28)', cursor: saving[key] ? 'default' : 'pointer', fontFamily: "'Outfit',sans-serif", transition: 'all .15s', whiteSpace: 'nowrap' }}>
+                              {s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </td>
+                    <td style={{ padding: '9px 12px', color: 'rgba(223,240,225,.32)', fontSize: 11 }}>{updated}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB 7 — INTELLIGENCE (M3: Internal Chat + M4: PDF Report Generator)
+// ═══════════════════════════════════════════════════════════════════════════
+const QUICK_QUESTIONS = [
+  'Resumen ejecutivo de esta semana',
+  'Análisis de indicadores de crisis',
+  'Top 5 temas por zona',
+  'Comparar este mes vs anterior',
+  'Reporte para el directorio',
+];
+
+function TabIntelligence() {
+  const [messages,  setMessages]  = useState([]);
+  const [input,     setInput]     = useState('');
+  const [sending,   setSending]   = useState(false);
+  const [summary,   setSummary]   = useState(null);
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/admin/summary', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(setSummary);
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const ask = async (question) => {
+    if (!question.trim() || sending) return;
+    const q = question.trim();
+    setInput('');
+    setSending(true);
+    const qId = `${Date.now()}-q`;
+    const aId = `${Date.now()}-a`;
+    setMessages(m => [
+      ...m,
+      { id: qId, role: 'user',      text: q },
+      { id: aId, role: 'assistant', text: '', streaming: true },
+    ]);
+
+    const safeCtx = summary ? {
+      topics:            (summary.topics || []).slice(0, 50).map(t => ({ code: t.code, n: t.n, category: t.category })),
+      languages:         summary.languages   || {},
+      crisisActivations: summary.totals?.crises ?? 0,
+      piiEvents:         summary.piiEvents   || {},
+    } : {};
+
+    try {
+      const res = await fetch('/api/admin/assistant', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, context: safeCtx }),
+      });
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+
+      const reader = res.body.getReader();
+      const dec    = new TextDecoder();
+      let buf = '';
+      const dispatch = (frame) => {
+        if (!frame.trim()) return;
+        let evt = 'message';
+        const dataLines = [];
+        for (const raw of frame.split('\n')) {
+          const line = raw.trimEnd();
+          if (line.startsWith('event:'))      evt = line.slice(6).trim();
+          else if (line.startsWith('data:'))  dataLines.push(line.slice(5).trimStart());
+        }
+        if (!dataLines.length) return;
+        let payload;
+        try { payload = JSON.parse(dataLines.join('\n')); } catch { return; }
+        if (evt === 'token') {
+          setMessages(m => m.map(x => x.id === aId ? { ...x, text: (x.text || '') + (payload.t || '') } : x));
+        } else if (evt === 'fallback') {
+          setMessages(m => m.map(x => x.id === aId ? { ...x, text: payload.text, streaming: false } : x));
+        } else if (evt === 'done') {
+          setMessages(m => m.map(x => x.id === aId ? { ...x, streaming: false } : x));
+        }
+      };
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const frames = buf.split(/\r?\n\r?\n/);
+        buf = frames.pop() ?? '';
+        for (const frame of frames) dispatch(frame);
+      }
+      if (buf.trim()) dispatch(buf);
+    } catch {
+      setMessages(m => m.map(x => x.id === aId
+        ? { ...x, text: 'Error al conectar con el asistente. Verificá el estado del servidor.', streaming: false, error: true }
+        : x));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const generatePDF = async (type) => {
+    const { default: jsPDF }    = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+    const doc     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const TEAL    = [13, 153, 96];
+    const GOLD    = [200, 148, 26];
+    const now     = new Date();
+    const ym      = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const dateStr = now.toLocaleDateString('en-NZ', { day: '2-digit', month: 'long', year: 'numeric' });
+    const topics  = summary?.topics  || [];
+    const totals  = summary?.totals  || {};
+    const pii     = summary?.piiEvents || {};
+    const langs   = summary?.languages || {};
+
+    // ── Cover page ──────────────────────────────────────────────────────────
+    doc.setFillColor(1, 13, 3);
+    doc.rect(0, 0, 210, 297, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(36); doc.setTextColor(...TEAL);
+    doc.text('NOVA', 20, 52);
+    doc.setFontSize(14); doc.setTextColor(223, 240, 225);
+    doc.text('Mātauranga NOVA — Analytics', 20, 64);
+    doc.setFontSize(11); doc.setTextColor(...GOLD);
+    const reportTitles = {
+      monthly:  `Monthly Report — ${ym}`,
+      crisis:   `Crisis Activations Report — ${ym}`,
+      privacy:  `Privacy & PII Audit — ${ym}`,
+      regional: `Regional Distribution — ${ym}`,
+    };
+    doc.text(reportTitles[type] || `Report — ${ym}`, 20, 76);
+    doc.setFontSize(9); doc.setTextColor(90, 110, 90);
+    doc.text(`Generated: ${dateStr}`, 20, 87);
+    doc.text('CONFIDENTIAL — Burnett Foundation Innovation Challenge 2026', 20, 93);
+
+    // ── Content pages ────────────────────────────────────────────────────────
+    if (type === 'monthly' || type === 'regional') {
+      doc.addPage();
+      doc.setFillColor(1, 13, 3); doc.rect(0, 0, 210, 297, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
+      doc.setTextColor(...TEAL); doc.text('Executive Summary', 20, 25);
+      doc.setFontSize(10);
+      [
+        [totals.sessions ?? 0, 'Total Sessions'],
+        [totals.messages  ?? 0, 'Total Messages'],
+        [totals.crises    ?? 0, 'Crisis Activations'],
+        [Object.keys(langs).length, 'Languages Active'],
+      ].forEach(([val, lbl], i) => {
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(...GOLD);
+        doc.text(String(val), 20, 40 + i * 10);
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(223, 240, 225);
+        doc.text(lbl, 38, 40 + i * 10);
+      });
+
+      const topThree = [...topics].sort((a, b) => b.n - a.n).slice(0, 3);
+      if (topThree.length) {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...TEAL);
+        doc.text('Top 3 Topics', 20, 86);
+        topThree.forEach((t, i) => {
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(223, 240, 225);
+          doc.text(`${i + 1}. ${t.label || t.code}`, 24, 95 + i * 8);
+          doc.setTextColor(...GOLD); doc.text(String(t.n), 110, 95 + i * 8);
+        });
+      }
+
+      if (topics.length) {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...TEAL);
+        doc.text('Topic Distribution', 20, 124);
+        autoTable(doc, {
+          startY: 130, margin: { left: 20, right: 20 },
+          head: [['Topic', 'Count', 'Category']],
+          body: topics.slice(0, 25).map(t => [t.label || t.code, t.n, t.category || '']),
+          styles: { fillColor: [2, 20, 8], textColor: [223, 240, 225], fontSize: 9, lineColor: [20, 60, 30], lineWidth: 0.1 },
+          headStyles: { fillColor: [8, 50, 22], textColor: [30, 220, 130], fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [3, 25, 10] },
+        });
+      }
+    }
+
+    if (type === 'crisis') {
+      doc.addPage();
+      doc.setFillColor(1, 13, 3); doc.rect(0, 0, 210, 297, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(...TEAL);
+      doc.text('Crisis Activations', 20, 25);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(223, 240, 225);
+      doc.text(`Total activations: ${totals.crises ?? 0}`, 20, 38);
+      doc.setTextColor(100, 140, 100);
+      doc.text('Each activation surfaced Lifeline 0800 543 354 / 1737 / 111 at point of detection.', 20, 46);
+      const crisisTopics = topics.filter(t => ['Suicide_Ideation', 'Self_Harm', 'Crisis_Acute'].includes(t.code));
+      if (crisisTopics.length) {
+        autoTable(doc, {
+          startY: 56, margin: { left: 20, right: 20 },
+          head: [['Crisis Indicator', 'Count']],
+          body: crisisTopics.map(t => [t.label || t.code, t.n]),
+          styles: { fillColor: [2, 20, 8], textColor: [223, 240, 225], fontSize: 10 },
+          headStyles: { fillColor: [60, 10, 10], textColor: [248, 110, 110], fontStyle: 'bold' },
+        });
+      }
+    }
+
+    if (type === 'privacy') {
+      doc.addPage();
+      doc.setFillColor(1, 13, 3); doc.rect(0, 0, 210, 297, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(...GOLD);
+      doc.text('Privacy & PII Audit — Layer 1', 20, 25);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(223, 240, 225);
+      doc.text(`Total PII events intercepted (process lifetime): ${pii.total ?? 0}`, 20, 38);
+      autoTable(doc, {
+        startY: 48, margin: { left: 20, right: 20 },
+        head: [['PII Type', 'Count']],
+        body: [
+          ['Email address',              pii.email   ?? 0],
+          ['NZ phone number',            pii.phone   ?? 0],
+          ['NHI (National Health Index)',pii.nhi     ?? 0],
+          ['IRD number',                 pii.ird     ?? 0],
+          ['Credit card number',         pii.card    ?? 0],
+          ['Street address',             pii.address ?? 0],
+        ],
+        styles: { fillColor: [2, 20, 8], textColor: [223, 240, 225], fontSize: 10 },
+        headStyles: { fillColor: [28, 18, 2], textColor: [200, 148, 26], fontStyle: 'bold' },
+      });
+      const footY = (doc.lastAutoTable?.finalY || 100) + 14;
+      doc.setFontSize(9); doc.setTextColor(80, 100, 80);
+      doc.text('All PII was intercepted before reaching the AI model. No user text is stored anywhere.', 20, footY);
+      doc.text('ZDR · NZ Privacy Act 2020 · Health Information Privacy Code 2020', 20, footY + 7);
+    }
+
+    // ── Footer on every page ─────────────────────────────────────────────────
+    const pages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8); doc.setTextColor(50, 80, 50);
+      doc.text('ZDR · NZ Privacy Act 2020 · HIPC 2020 · Mātauranga NOVA · Burnett Foundation', 20, 290);
+      doc.text(`Page ${i} / ${pages}`, 190, 290, { align: 'right' });
+    }
+    doc.save(`nova-report-${type}-${ym}.pdf`);
+  };
+
+  return (
+    <div className="db-fade" style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+
+      {/* M3 — Internal Chat */}
+      <div style={{ flex: '1 1 55%', minWidth: 280, ...C.card, padding: 0, display: 'flex', flexDirection: 'column', height: 580 }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(13,153,96,.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(30,220,130,.8)' }}>🤖 Intelligence Assistant</div>
+          <div style={{ fontSize: 10, color: 'rgba(200,148,26,.75)', background: 'rgba(200,148,26,.08)', border: '1px solid rgba(200,148,26,.2)', borderRadius: 5, padding: '2px 8px' }}>Solo datos anónimos · ZDR</div>
+        </div>
+
+        {/* Quick questions */}
+        <div style={{ padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 5, borderBottom: '1px solid rgba(13,153,96,.1)', flexShrink: 0 }}>
+          {QUICK_QUESTIONS.map(q => (
+            <button key={q} onClick={() => ask(q)} disabled={sending}
+              style={{ fontSize: 10, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(13,153,96,.22)', background: 'rgba(13,153,96,.07)', color: 'rgba(223,240,225,.65)', cursor: sending ? 'default' : 'pointer', fontFamily: "'Outfit',sans-serif", transition: 'all .15s' }}>
+              {q}
+            </button>
+          ))}
+        </div>
+
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {messages.length === 0 && (
+            <div style={{ color: 'rgba(223,240,225,.22)', fontSize: 12, textAlign: 'center', marginTop: 24 }}>
+              Hacé una pregunta sobre los datos anónimos del sistema.
+            </div>
+          )}
+          {messages.map(msg => (
+            <div key={msg.id} className="db-fade" style={{
+              alignSelf:    msg.role === 'user' ? 'flex-end' : 'flex-start',
+              maxWidth:     '86%',
+              background:   msg.role === 'user' ? 'rgba(13,153,96,.14)' : 'rgba(255,255,255,.04)',
+              border:       `1px solid ${msg.role === 'user' ? 'rgba(13,153,96,.24)' : 'rgba(255,255,255,.07)'}`,
+              borderRadius: msg.role === 'user' ? '10px 10px 3px 10px' : '10px 10px 10px 3px',
+              padding:      '8px 12px',
+              fontSize:     12,
+              color:        msg.error ? 'rgba(248,110,110,.8)' : '#dff0e1',
+              lineHeight:   1.6,
+              whiteSpace:   'pre-wrap',
+            }}>
+              {msg.text || (msg.streaming ? <span style={{ opacity: 0.35 }}>…</span> : '')}
+            </div>
+          ))}
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input */}
+        <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(13,153,96,.14)', display: 'flex', gap: 8, flexShrink: 0 }}>
+          <input value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(input); } }}
+            placeholder="Preguntá sobre los datos…" disabled={sending}
+            style={{ flex: 1, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(13,153,96,.18)', borderRadius: 8, padding: '7px 12px', color: '#dff0e1', fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: 'none' }} />
+          <button onClick={() => ask(input)} disabled={sending || !input.trim()}
+            style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: (sending || !input.trim()) ? 'rgba(13,153,96,.25)' : '#0d9960', color: '#010d03', fontSize: 13, fontWeight: 700, cursor: (sending || !input.trim()) ? 'default' : 'pointer', fontFamily: "'Outfit',sans-serif", transition: 'background .15s' }}>
+            {sending ? '…' : '↑'}
+          </button>
+        </div>
+      </div>
+
+      {/* M4 — PDF Report Generator */}
+      <div style={{ flex: '1 1 34%', minWidth: 210, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ ...C.card, padding: '18px 20px' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(30,220,130,.8)', marginBottom: 14 }}>📄 Report Generator</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              { type: 'monthly',  label: '📄 Generar Reporte Mensual', primary: true  },
+              { type: 'crisis',   label: '📊 Reporte de Crisis',        primary: false },
+              { type: 'privacy',  label: '🛡️ Reporte de Privacidad',    primary: false },
+              { type: 'regional', label: '📍 Reporte por Zona',         primary: false },
+            ].map(({ type, label, primary }) => (
+              <button key={type} onClick={() => generatePDF(type)}
+                style={{ width: '100%', padding: primary ? '10px 16px' : '8px 14px', borderRadius: 9, border: `1px solid ${primary ? 'rgba(13,153,96,.38)' : 'rgba(13,153,96,.18)'}`, background: primary ? 'rgba(13,153,96,.13)' : 'rgba(13,153,96,.05)', color: primary ? 'rgba(30,220,130,.9)' : 'rgba(223,240,225,.55)', fontSize: primary ? 13 : 12, fontWeight: primary ? 600 : 400, cursor: 'pointer', fontFamily: "'Outfit',sans-serif", textAlign: 'left', transition: 'all .15s' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ ...C.cardGold, padding: '14px 16px', fontSize: 11, color: 'rgba(223,240,225,.42)', lineHeight: 1.65 }}>
+          <div style={{ color: 'rgba(200,148,26,.75)', fontWeight: 600, marginBottom: 5 }}>ZDR Compliance</div>
+          Los reportes contienen solo datos agregados anónimos. Sin texto de usuarios, sin IDs de sesión, sin PII.
+          <br /><br />
+          NZ Privacy Act 2020 · HIPC 2020
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Shell + Root
 // ═══════════════════════════════════════════════════════════════════════════
 const TABS = [
-  { id: 'command',    label: '◉ Command'    },
-  { id: 'atlas',      label: '⬡ Atlas'      },
-  { id: 'predictive', label: '↗ Predictive' },
-  { id: 'privacy',    label: '🛡 Privacy'   },
-  { id: 'status',     label: '◎ Status'     },
+  { id: 'command',      label: '◉ Command'      },
+  { id: 'atlas',        label: '⬡ Atlas'        },
+  { id: 'predictive',   label: '↗ Predictive'   },
+  { id: 'privacy',      label: '🛡 Privacy'     },
+  { id: 'status',       label: '◎ Status'       },
+  { id: 'actions',      label: '📋 Actions'     },
+  { id: 'intelligence', label: '🤖 Intelligence' },
 ];
 
 function DashboardShell({ children, tab, setTab, onLogout }) {
@@ -1080,11 +1556,13 @@ export default function Dashboard() {
 
   return (
     <DashboardShell tab={tab} setTab={setTab} onLogout={logout}>
-      {tab === 'command'    && <TabCommand    key="command"    />}
-      {tab === 'atlas'      && <TabAtlas      key="atlas"      />}
-      {tab === 'predictive' && <TabPredictive key="predictive" />}
-      {tab === 'privacy'    && <TabPrivacy    key="privacy"    />}
-      {tab === 'status'     && <TabStatus     key="status"     />}
+      {tab === 'command'      && <TabCommand      key="command"      />}
+      {tab === 'atlas'        && <TabAtlas        key="atlas"        />}
+      {tab === 'predictive'   && <TabPredictive   key="predictive"   />}
+      {tab === 'privacy'      && <TabPrivacy      key="privacy"      />}
+      {tab === 'status'       && <TabStatus       key="status"       />}
+      {tab === 'actions'      && <TabActions      key="actions"      />}
+      {tab === 'intelligence' && <TabIntelligence key="intelligence" />}
     </DashboardShell>
   );
 }
