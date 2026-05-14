@@ -8,7 +8,8 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 10000,
         OLLAMA_MODEL: 'phi3:mini',
-        ALLOWED_ORIGINS: 'http://150.242.42.161,http://localhost',
+        OLLAMA_KEEP_ALIVE: '2h',
+        ALLOWED_ORIGINS: 'https://matauranga-nova.duckdns.org',
         ADMIN_USERNAME: 'burnett'
       }
     }

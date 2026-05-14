@@ -99,25 +99,68 @@ export function NeuralCanvas() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
+    // Device capability — throttle only truly low-end hardware
+    const isMobile = window.innerWidth < 768 || navigator.maxTouchPoints > 1;
+    const isLowEnd = (navigator.deviceMemory || 8) < 4;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    // Low-end → 30 fps cap; everything else runs at native 60+
+    const frameInterval = isLowEnd ? 1000 / 30 : 0;
+
     let W = window.innerWidth;
     let H = window.innerHeight;
     let mx = W / 2;
     let my = H / 2;
 
+    // 4K-quality resize: physical pixels = logical × dpr, draw in logical space
     const resize = () => {
-      W = canvas.width  = window.innerWidth;
-      H = canvas.height = window.innerHeight;
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width  = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
-
-    const onMouse = (e) => { mx = e.clientX; my = e.clientY; };
     window.addEventListener('resize', resize);
-    window.addEventListener('mousemove', onMouse);
+
+    // ── Mouse attraction (desktop) ──────────────────────────────────────────
+    const onMouse = (e) => { mx = e.clientX; my = e.clientY; };
+    if (!isMobile) window.addEventListener('mousemove', onMouse);
+
+    // ── Waves array (shared by typing + touch) ──────────────────────────────
+    let waves = [];
+    const addWave = (x, y, maxR = 280, speed = 5) => {
+      waves.push({ x, y, r: 0, maxR, a: 0.62, speed });
+    };
+
+    // ── Touch: tap → wave + update attraction point ─────────────────────────
+    const onTouch = (e) => {
+      const t = e.touches[0] || e.changedTouches[0];
+      mx = t.clientX;
+      my = t.clientY;
+      addWave(t.clientX, t.clientY, 320, 6);
+    };
+    if (isMobile) document.addEventListener('touchstart', onTouch, { passive: true });
+
+    // ── Typing wave: every printable keystroke fires from cursor position ────
+    const onKey = (e) => {
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        addWave(mx, my, 240, 5);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+
+    // ── Pause when tab not visible ───────────────────────────────────────────
+    let visible = !document.hidden;
+    const onVisibility = () => { visible = !document.hidden; };
+    document.addEventListener('visibilitychange', onVisibility);
 
     const FOCAL   = 900;
-    const N       = 72;
+    const N       = isLowEnd ? 32 : isMobile ? 52 : 72;
     const MAX_D   = 370;
     const MAX_DSQ = MAX_D * MAX_D;
+    const MAX_SPD = 1.8;
 
     const nodes = Array.from({ length: N }, () => ({
       x:  (Math.random() - 0.5) * 1800,
@@ -139,12 +182,44 @@ export function NeuralCanvas() {
 
     const frame = (t) => {
       raf = requestAnimationFrame(frame);
-      const dt  = Math.min(t - lastT, 40);
+      if (!visible) return;
+      const elapsed = t - lastT;
+      if (frameInterval && elapsed < frameInterval) return;
+      const dt  = Math.min(elapsed, 50);
       lastT = t;
       const spd = dt / 16;
 
       ctx.clearRect(0, 0, W, H);
 
+      // ── Wave rings: visual + node impulse ───────────────────────────────
+      for (const w of waves) {
+        w.r += w.speed * spd;
+        w.a *= Math.pow(0.964, spd);
+
+        const ringA = w.a * Math.max(0, 1 - w.r / w.maxR) * 0.38;
+        if (ringA > 0.004) {
+          ctx.beginPath();
+          ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(16,185,129,${ringA})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        const impulse = 0.32 * spd * w.a;
+        for (const n of nodes) {
+          const { px, py } = proj(n.x, n.y, n.z);
+          const dx = px - w.x, dy = py - w.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d > 0 && Math.abs(d - w.r) < 52) {
+            const f = (1 - Math.abs(d - w.r) / 52) * impulse;
+            n.vx += (dx / d) * f;
+            n.vy += (dy / d) * f;
+          }
+        }
+      }
+      waves = waves.filter(w => w.r < w.maxR && w.a > 0.008);
+
+      // ── Node physics ────────────────────────────────────────────────────
       for (const n of nodes) {
         n.x += n.vx * spd;
         n.y += n.vy * spd;
@@ -153,18 +228,27 @@ export function NeuralCanvas() {
         if (n.y < -630 || n.y > 630) n.vy *= -1;
         if (n.z < 80   || n.z > 760) n.vz *= -1;
 
+        // Mouse / touch attraction (both desktop & mobile via shared mx/my)
         const dMx = mx - W / 2 - n.x * 0.14;
         const dMy = my - H / 2 - n.y * 0.14;
-        const mDist = Math.sqrt(dMx * dMx + dMy * dMy);
-        if (mDist < 380) {
+        if (dMx * dMx + dMy * dMy < 380 * 380) {
           n.vx += dMx * 0.000028 * spd;
           n.vy += dMy * 0.000028 * spd;
         }
+
         n.vx *= 0.99985;
         n.vy *= 0.99985;
+
+        // Velocity clamp — prevents wave impulses from sending nodes runaway
+        const vSq = n.vx * n.vx + n.vy * n.vy;
+        if (vSq > MAX_SPD * MAX_SPD) {
+          const inv = MAX_SPD / Math.sqrt(vSq);
+          n.vx *= inv;
+          n.vy *= inv;
+        }
       }
 
-      // Edges
+      // ── Edges ───────────────────────────────────────────────────────────
       for (let i = 0; i < N; i++) {
         const a = nodes[i];
         const { px: ax, py: ay, s: as } = proj(a.x, a.y, a.z);
@@ -189,20 +273,22 @@ export function NeuralCanvas() {
         }
       }
 
-      // Nodes
+      // ── Nodes — skip gradients only on low-end ──────────────────────────
       for (const n of nodes) {
         const { px, py, s } = proj(n.x, n.y, n.z);
         const r   = Math.max(0.7, s * 2.9);
         const a   = Math.min(0.94, s * 2.4);
         const rgb = n.gold ? '200,148,26' : '16,185,129';
 
-        const g = ctx.createRadialGradient(px, py, 0, px, py, r * 3.8);
-        g.addColorStop(0, `rgba(${rgb},${a * 0.32})`);
-        g.addColorStop(1, `rgba(${rgb},0)`);
-        ctx.beginPath();
-        ctx.arc(px, py, r * 3.8, 0, Math.PI * 2);
-        ctx.fillStyle = g;
-        ctx.fill();
+        if (!isLowEnd) {
+          const g = ctx.createRadialGradient(px, py, 0, px, py, r * 3.8);
+          g.addColorStop(0, `rgba(${rgb},${a * 0.32})`);
+          g.addColorStop(1, `rgba(${rgb},0)`);
+          ctx.beginPath();
+          ctx.arc(px, py, r * 3.8, 0, Math.PI * 2);
+          ctx.fillStyle = g;
+          ctx.fill();
+        }
 
         ctx.beginPath();
         ctx.arc(px, py, r, 0, Math.PI * 2);
@@ -216,7 +302,10 @@ export function NeuralCanvas() {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onMouse);
+      document.removeEventListener('visibilitychange', onVisibility);
+      document.removeEventListener('keydown', onKey);
+      if (!isMobile) window.removeEventListener('mousemove', onMouse);
+      if (isMobile)  document.removeEventListener('touchstart', onTouch);
     };
   }, []);
 
@@ -225,8 +314,6 @@ export function NeuralCanvas() {
     style: {
       position:      'fixed',
       inset:         0,
-      width:         '100%',
-      height:        '100%',
       pointerEvents: 'none',
       zIndex:        0,
       opacity:       0.68,
