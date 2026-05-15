@@ -272,8 +272,25 @@ function extractTopics(text) {
 }
 
 function detectLanguage(text) {
-  if (/\b(t[eē]n[aā] koe|kia ora|wh[aā]nau|aroha|hauora|m[aā]ori|ng[aā])\b/i.test(text)) return 'mi';
-  if (/\b(hola|gracias|c[oó]mo|est[aá]s?|est[aá]mos|est[aá]n|estoy|qu[eé]|qu[eé]|qui[eé]n|cu[aá]ndo|d[oó]nde|porque|siempre|nunca|tambi[eé]n|tengo|tener|hacer|sentir|siento|sientes|siente|hay|algo|alguien|nadie|todo|nada|muy|bien|mal|hoy|aqu[ií]|ahora|pero|por favor|quiero|puedo|soy|me|te)\b/i.test(text)) return 'es';
+  const lowered = text.toLowerCase();
+
+  // Greetings excluded: kia ora, hola, hello, hi — too common in mixed messages
+  const patterns = {
+    mi: /\b(wh[aā]nau|aroha|hauora|m[aā]tauranga|t[eē]n[aā]|whakapapa|rangatahi|kai[aā]whina|tamariki|wahine|t[aā]ne|reo|iwi|hap[uū]|marae|taonga|wairua|tikanga)\b/gi,
+    es: /\b(soy|estoy|tengo|quiero|necesito|siento|hace|cu[aá]ndo|porque|ahora|c[oó]mo|qu[eé]|para|esto|tambi[eé]n|mucho|nada|aqu[ií]|familia|salud|miedo|ayuda|recib[ií]|diagn[oó]stico|positivo|prueba|examen|m[eé]dico|doctora|doctor|gracias|no s[eé])\b/gi,
+    en: /\b(have|need|want|feel|just|received|tested|positive|diagnosis|scared|worried|help|family|health|doctor|today|yesterday|something|nothing|because|about|really|please|don't|doesn't|can't|i'm|it's)\b/gi,
+  };
+
+  const scores = {
+    mi: (lowered.match(patterns.mi) || []).length,
+    es: (lowered.match(patterns.es) || []).length,
+    en: (lowered.match(patterns.en) || []).length,
+  };
+
+  const max = Math.max(scores.mi, scores.es, scores.en);
+  if (max === 0) return 'en';
+  if (scores.es === max) return 'es';
+  if (scores.mi === max) return 'mi';
   return 'en';
 }
 
