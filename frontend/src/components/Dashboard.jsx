@@ -393,7 +393,6 @@ function TabCommand() {
   const sessions   = data.totals?.sessions  ?? 0;
   const messages   = data.totals?.messages  ?? 0;
   const crises     = data.totals?.crises    ?? 0;
-  const denom      = sessions || 1;
   const topLang    = [...(data.languages || [])].sort((a, b) => b.n - a.n)[0];
   const deduped    = data.topics_deduped || [];
   const maxN       = Math.max(...deduped.map(t => t.session_count), 1);
@@ -425,6 +424,26 @@ function TabCommand() {
         <span style={{ fontSize: 10, color: 'rgba(223,240,225,.3)', letterSpacing: '.05em' }}>
           Updated {age}s ago · refreshes every 60s
         </span>
+      </div>
+
+      {/* ── AGGREGATE DATA NOTICE ──────────────────────────────────────────── */}
+      <div style={{
+        background: 'rgba(14,165,233,.08)',
+        border: '1px solid rgba(14,165,233,.3)',
+        borderRadius: 10,
+        padding: '14px 18px',
+        marginBottom: 22,
+        fontSize: 13,
+        lineHeight: 1.6,
+        color: 'rgba(220,240,255,.85)',
+        fontFamily: "'DM Mono', monospace"
+      }}>
+        <div style={{color:'rgba(14,165,233,.95)', fontWeight:600, marginBottom:6}}>
+          ⓘ Aggregate national analytics
+        </div>
+        Counts are aggregated nationally. Dimensions with fewer than 6 sessions
+        are suppressed. Cross-tabulation of region × topic is not computed.
+        No individual-level analysis is performed.
       </div>
 
       {/* ── AUTO-INSIGHTS ──────────────────────────────────────────────────── */}
@@ -475,7 +494,7 @@ function TabCommand() {
             sub={`${sessions} total session${sessions !== 1 ? 's' : ''} · each topic counted once per session`}
           />
           <span style={{ fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(223,240,225,.22)', flexShrink: 0, marginLeft: 12 }}>
-            SESSIONS · %
+            SESSIONS
           </span>
         </div>
 
@@ -511,7 +530,6 @@ function TabCommand() {
               }}>
                 {topics.map((t, idx) => {
                   const n   = t.session_count || 0;
-                  const pct = n / denom * 100;
                   const bar = n / maxN * 100;
                   return (
                     <div key={t.code}
@@ -537,7 +555,7 @@ function TabCommand() {
                         }} />
                       </div>
                       <div style={{ width: 74, flexShrink: 0, fontSize: 10, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: n > 0 ? 'rgba(223,240,225,.5)' : 'rgba(223,240,225,.17)' }}>
-                        {n > 0 ? `${n} · ${pct.toFixed(1)}%` : '—'}
+                        {n > 0 ? `${n}` : '—'}
                       </div>
                     </div>
                   );
@@ -584,109 +602,42 @@ function TabCommand() {
 // TAB 2 — ATLAS
 // ═══════════════════════════════════════════════════════════════════════════
 const ZONES = [
-  {
-    id: 'NTH', code: 'NTH', name: 'Northern / Te Tai Tokerau ki Tāmaki',
-    hiv: 38, art: 920, sdhi: 6.2, warn: null,
-    indices: [
-      { label: 'Housing',              score: 5.8, color: 'rgba(200,148,26,.8)' },
-      { label: 'Employment',           score: 6.4, color: 'rgba(200,148,26,.8)' },
-      { label: 'Healthcare access',    score: 6.1, color: 'rgba(30,220,130,.7)' },
-      { label: 'Social connectedness', score: 7.2, color: 'rgba(248,110,110,.7)' },
-    ],
-    recs: ['Increase outreach to Tāmaki urban communities','Strengthen LGBTQ+ affirming primary care'],
-  },
-  {
-    id: 'MID', code: 'MID', name: 'Midland / Te Manawa Taki',
-    hiv: 22, art: 510, sdhi: 7.1,
-    warn: { level: 'amber', text: 'High access gap — priority for outreach' },
-    indices: [
-      { label: 'Housing',              score: 7.2, color: 'rgba(248,110,110,.75)' },
-      { label: 'Employment',           score: 7.8, color: 'rgba(248,110,110,.75)' },
-      { label: 'Healthcare access',    score: 7.1, color: 'rgba(248,110,110,.75)' },
-      { label: 'Social connectedness', score: 6.4, color: 'rgba(200,148,26,.8)' },
-    ],
-    recs: ['Deploy mobile testing unit to Waikato rural areas','Coordinate with Māori health providers'],
-  },
-  {
-    id: 'CEN', code: 'CEN', name: 'Central / Te Ikaroa',
-    hiv: 18, art: 440, sdhi: 5.9, warn: null,
-    indices: [
-      { label: 'Housing',              score: 5.2, color: 'rgba(30,220,130,.7)' },
-      { label: 'Employment',           score: 5.8, color: 'rgba(200,148,26,.7)' },
-      { label: 'Healthcare access',    score: 5.4, color: 'rgba(30,220,130,.7)' },
-      { label: 'Social connectedness', score: 6.1, color: 'rgba(200,148,26,.7)' },
-    ],
-    recs: ['Maintain current outreach cadence','Expand DoxyPEP awareness in Wellington urban'],
-  },
-  {
-    id: 'STH', code: 'STH', name: 'Southern / Te Waipounamu',
-    hiv: 17, art: 440, sdhi: 7.8,
-    warn: { level: 'red', text: 'CRITICAL — highest access gap nationally' },
-    indices: [
-      { label: 'Housing',              score: 7.9, color: 'rgba(248,110,110,.85)' },
-      { label: 'Employment',           score: 8.1, color: 'rgba(248,110,110,.85)' },
-      { label: 'Healthcare access',    score: 8.4, color: 'rgba(248,110,110,.9)' },
-      { label: 'Social connectedness', score: 7.2, color: 'rgba(248,110,110,.75)' },
-    ],
-    recs: ['Urgent: establish rural telehealth HIV support line','Māori/Pasifika cultural broker programme — South Island','Increase NZAF clinic outreach cadence'],
-  },
+  { id: 'NTH', code: 'NTH',
+    name: 'Northern / Te Tai Tokerau ki Tāmaki',
+    districts: 'Auckland · Northland',
+    hiv: 38 },
+  { id: 'MID', code: 'MID',
+    name: 'Midland / Te Manawa Taki',
+    districts: 'Waikato · Bay of Plenty · Tairāwhiti',
+    hiv: 22 },
+  { id: 'CEN', code: 'CEN',
+    name: 'Central / Te Ikaroa',
+    districts: 'Wellington · Hawke\'s Bay · MidCentral · Whanganui · Taranaki · Nelson Marlborough',
+    hiv: 18 },
+  { id: 'STH', code: 'STH',
+    name: 'Southern / Te Waipounamu',
+    districts: 'Canterbury · West Coast · South Canterbury · Southern',
+    hiv: 17 },
 ];
 
 function ZoneCard({ zone }) {
-  const [open, setOpen] = useState(false);
-  const contentRef = useRef(null);
-
-  const warnStyle = zone.warn?.level === 'red'
-    ? { background: 'rgba(248,110,110,.06)', border: '1px solid rgba(248,110,110,.22)', color: 'rgba(248,110,110,.9)' }
-    : { background: 'rgba(200,148,26,.06)', border: '1px solid rgba(200,148,26,.22)', color: 'rgba(240,188,56,.9)' };
-
+  const [enName, miName] = zone.name.split(' / ');
   return (
-    <div style={{ ...C.card, overflow: 'hidden', transition: 'border-color .2s', ...(open ? { borderColor: 'rgba(200,148,26,.3)' } : {}) }}>
-      <button onClick={() => setOpen(o => !o)}
-        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '18px 18px 14px', textAlign: 'left', color: '#dff0e1' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-          <div>
-            <span style={{ fontSize: 10, letterSpacing: '.18em', color: 'rgba(200,148,26,.7)', fontWeight: 600 }}>{zone.code}</span>
-            <div style={{ fontSize: 13, fontWeight: 500, color: '#dff0e1', marginTop: 2, lineHeight: 1.3 }}>{zone.name}</div>
-          </div>
-          <span style={{ fontSize: 12, color: 'rgba(200,148,26,.5)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .25s', display: 'inline-block', marginTop: 2 }}>▼</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: zone.warn ? 10 : 0 }}>
-          {[
-            { label: 'HIV 2024', value: zone.hiv, color: 'rgba(248,110,110,.85)' },
-            { label: 'On ART',   value: zone.art.toLocaleString(), color: 'rgba(30,220,130,.85)' },
-            { label: 'SDHI',     value: zone.sdhi, color: zone.sdhi > 7 ? 'rgba(248,110,110,.85)' : 'rgba(200,148,26,.85)' },
-          ].map(m => (
-            <div key={m.label} style={{ textAlign: 'center', padding: '8px 6px', borderRadius: 9, background: 'rgba(255,255,255,.025)' }}>
-              <div style={{ fontSize: 18, fontFamily: "'Cormorant Garamond',serif", color: m.color, fontWeight: 300 }}>{m.value}</div>
-              <div style={{ fontSize: 9.5, color: 'rgba(223,240,225,.4)', marginTop: 2 }}>{m.label}</div>
-            </div>
-          ))}
-        </div>
-        {zone.warn && (
-          <div style={{ ...warnStyle, fontSize: 11, padding: '7px 11px', borderRadius: 9, fontWeight: 500 }}>◉ {zone.warn.text}</div>
+    <div style={{ ...C.card, padding: '22px 20px' }}>
+      <div style={{ marginBottom: 16 }}>
+        <span style={{ fontSize: 10, letterSpacing: '.18em', color: 'rgba(200,148,26,.7)', fontWeight: 600, textTransform: 'uppercase' }}>{zone.code}</span>
+        <div style={{ fontSize: 14, fontWeight: 500, color: '#dff0e1', marginTop: 4, lineHeight: 1.3 }}>{enName}</div>
+        {miName && (
+          <div style={{ fontSize: 12, color: 'rgba(223,240,225,.45)', marginTop: 2, fontStyle: 'italic' }}>{miName}</div>
         )}
-      </button>
-
-      <div style={{ maxHeight: open ? `${contentRef.current?.scrollHeight || 500}px` : '0px', overflow: 'hidden', transition: 'max-height 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
-        <div ref={contentRef} style={{ padding: '0 18px 18px' }}>
-          <div style={{ fontSize: 10, letterSpacing: '.14em', textTransform: 'uppercase', color: 'rgba(200,148,26,.55)', marginBottom: 10 }}>SDHI sub-indices</div>
-          {zone.indices.map(idx => (
-            <div key={idx.label} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                <span style={{ fontSize: 11, color: 'rgba(223,240,225,.65)' }}>{idx.label}</span>
-                <span style={{ fontSize: 11, color: idx.color, fontWeight: 600 }}>{idx.score}/10</span>
-              </div>
-              <div style={{ height: 5, borderRadius: 99, background: 'rgba(255,255,255,.06)' }}>
-                <div style={{ height: '100%', width: `${idx.score * 10}%`, borderRadius: 99, background: idx.color, transition: 'width .4s' }} />
-              </div>
-            </div>
-          ))}
-          <div style={{ marginTop: 14, fontSize: 10, letterSpacing: '.14em', textTransform: 'uppercase', color: 'rgba(200,148,26,.55)', marginBottom: 8 }}>Recommendations</div>
-          {zone.recs.map((r, i) => (
-            <div key={i} style={{ fontSize: 11, color: 'rgba(223,240,225,.55)', padding: '5px 0', borderBottom: i < zone.recs.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none', lineHeight: 1.5 }}>→ {r}</div>
-          ))}
-        </div>
+        <div style={{ fontSize: 11, color: 'rgba(223,240,225,.3)', marginTop: 6 }}>{zone.districts}</div>
+      </div>
+      <div style={{ textAlign: 'center', padding: '16px 0 12px', borderTop: '1px solid rgba(13,153,96,.1)' }}>
+        <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 52, fontWeight: 300, color: 'rgba(248,110,110,.85)', lineHeight: 1 }}>{zone.hiv}</div>
+        <div style={{ fontSize: 10, color: 'rgba(223,240,225,.35)', marginTop: 6, letterSpacing: '.05em' }}>New HIV diagnoses · 2024</div>
+      </div>
+      <div style={{ marginTop: 12, fontSize: 10, color: 'rgba(223,240,225,.22)', textAlign: 'center', letterSpacing: '.04em' }}>
+        Source: AIDS Epidemiology Group · Te Whatu Ora
       </div>
     </div>
   );
@@ -695,160 +646,42 @@ function ZoneCard({ zone }) {
 function TabAtlas() {
   return (
     <div className="db-fade">
-      <div style={{ fontSize: 12, color: 'rgba(223,240,225,.38)', marginBottom: 18, padding: '10px 14px', background: 'rgba(200,148,26,.04)', border: '1px solid rgba(200,148,26,.12)', borderRadius: 10 }}>
-        Click a zone to expand · SDHI = Social Determinants Health Index · Scale 1–10 (higher = greater disadvantage)
+      <div style={{
+        background: 'rgba(14,165,233,.08)',
+        border: '1px solid rgba(14,165,233,.3)',
+        borderRadius: 10,
+        padding: '14px 18px',
+        marginBottom: 22,
+        fontSize: 13,
+        lineHeight: 1.6,
+        color: 'rgba(220,240,255,.85)',
+        fontFamily: "'DM Mono', monospace"
+      }}>
+        <div style={{color:'rgba(14,165,233,.95)', fontWeight:600, marginBottom:6}}>
+          ⓘ Public reference data — Aotearoa New Zealand
+        </div>
+        Regional aggregates published by Te Whatu Ora (AIDS Epidemiology Group, 2024).
+        No individual-level analysis. NOVA does not infer, predict, or model regional
+        outcomes from its own conversational data.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
         {ZONES.map(z => <ZoneCard key={z.id} zone={z} />)}
       </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TAB 3 — PREDICTIVE
-// ═══════════════════════════════════════════════════════════════════════════
-const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const SEASONAL = [7.2,5.1,4.8,5.5,5.8,7.5,7.8,6.9,5.2,5.0,6.1,8.4];
-
-function riskColor(v) {
-  if (v >= 7.5) return { bg: 'rgba(248,110,110,.18)', border: 'rgba(248,110,110,.4)', text: 'rgba(248,110,110,.95)' };
-  if (v >= 6.0) return { bg: 'rgba(200,148,26,.14)',  border: 'rgba(200,148,26,.38)', text: 'rgba(240,188,56,.95)' };
-  if (v >= 5.0) return { bg: 'rgba(139,92,246,.1)',   border: 'rgba(139,92,246,.3)',  text: 'rgba(167,139,250,.9)' };
-  return           { bg: 'rgba(30,220,130,.08)',  border: 'rgba(30,220,130,.25)', text: 'rgba(30,220,130,.85)' };
-}
-
-function TabPredictive() {
-  const projRef = useRef(null);
-  const NOW = new Date();
-  const monthName   = MONTHS_SHORT[NOW.getMonth()];
-  const currentRisk = SEASONAL[NOW.getMonth()];
-  const nextRisk    = SEASONAL[(NOW.getMonth() + 1) % 12];
-  const rc = riskColor(currentRisk);
-
-  useChart(projRef, (el) => new Chart(el, {
-    type: 'line',
-    data: {
-      labels: ['Jan 25','Mar 25','May 25','Jul 25','Sep 25','Nov 25','Jan 26','Mar 26'],
-      datasets: [
-        { label: 'NZ total (actual)',    data: [95,92,88,91,87,89,null,null],   borderColor: 'rgba(30,220,130,.8)',  backgroundColor: 'rgba(30,220,130,.06)', fill: false, tension: 0.3, pointRadius: 3 },
-        { label: 'Forecast (model)',     data: [null,null,null,null,null,89,93,98], borderColor: 'rgba(200,148,26,.7)', borderDash: [5,3], fill: false, tension: 0.3, pointRadius: 3 },
-        { label: 'Southern risk proxy', data: [22,24,21,26,23,28,31,35],        borderColor: 'rgba(248,110,110,.7)', backgroundColor: 'rgba(248,110,110,.05)', fill: true, tension: 0.4, pointRadius: 2 },
-      ],
-    },
-    options: { ...chartDefaults },
-  }));
-
-  const STRESS = [
-    { indicator: 'Suicidal ideation',        risk: 7.1, zone: 'STH + MID', driver: 'Social isolation / rural', action: 'Activate 1737 push campaign' },
-    { indicator: 'Isolation / disconnection', risk: 6.8, zone: 'STH rural', driver: 'Seasonal + housing',       action: 'Peer support activation' },
-    { indicator: 'Workplace discrimination',  risk: 5.9, zone: 'NTH + CEN', driver: 'Stigma disclosure',        action: 'Employer toolkit release' },
-    { indicator: 'Medical stigma',            risk: 5.4, zone: 'STH + MID', driver: 'Provider attitudes',       action: 'Clinical competency audit' },
-    { indicator: 'Drug use / chemsex',        risk: 5.1, zone: 'NTH urban', driver: 'Party circuit events',     action: 'Peer navigators — Tāmaki' },
-    { indicator: 'Food insecurity',           risk: 4.8, zone: 'STH + MID', driver: 'Cost of living',           action: 'Refer to community food banks' },
-  ];
-
-  const OUTBREAKS = [
-    { zone: 'Northern', pct: 12, color: 'rgba(30,220,130,.75)' },
-    { zone: 'Midland',  pct: 34, color: 'rgba(200,148,26,.8)' },
-    { zone: 'Central',  pct: 22, color: 'rgba(139,92,246,.75)' },
-    { zone: 'Southern', pct: 41, color: 'rgba(248,110,110,.85)' },
-  ];
-
-  return (
-    <div className="db-fade">
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-        <div style={{ ...C.card, padding: '22px 20px' }}>
-          <div style={{ fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'rgba(223,240,225,.4)', marginBottom: 10 }}>Current risk — {monthName} {NOW.getFullYear()}</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
-            <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 56, fontWeight: 300, color: rc.text, lineHeight: 1 }}>{currentRisk}</span>
-            <span style={{ fontSize: 12, color: 'rgba(223,240,225,.4)' }}>/10</span>
-          </div>
-          <div style={{ ...rc, fontSize: 11, padding: '5px 11px', borderRadius: 8, display: 'inline-block', marginBottom: 12 }}>
-            {currentRisk >= 7.5 ? 'CRITICAL' : currentRisk >= 6 ? 'HIGH' : currentRisk >= 5 ? 'MODERATE' : 'LOW'}
-          </div>
-          <div style={{ fontSize: 11, color: 'rgba(223,240,225,.4)' }}>
-            Next month ({MONTHS_SHORT[(NOW.getMonth()+1)%12]}) preview: <span style={{ color: riskColor(nextRisk).text }}>{nextRisk}</span>
-          </div>
-        </div>
-        <div style={{ ...C.card, padding: '22px 20px' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#dff0e1', marginBottom: 14 }}>Outbreak probability by zone</div>
-          {OUTBREAKS.map(o => (
-            <div key={o.zone} style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 11, color: 'rgba(223,240,225,.7)' }}>{o.zone}</span>
-                <span style={{ fontSize: 11, color: o.color, fontWeight: 600 }}>{o.pct}%</span>
-              </div>
-              <div style={{ height: 7, borderRadius: 99, background: 'rgba(255,255,255,.06)' }}>
-                <div style={{ height: '100%', width: `${o.pct}%`, borderRadius: 99, background: o.color, transition: 'width .5s' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ ...C.card, padding: '20px 20px 16px', marginBottom: 16 }}>
-        <SectionHeader title="Projection 2025–2026" sub="NZ total · 12-month rolling forecast with Southern risk proxy" />
-        <canvas ref={projRef} />
-      </div>
-
-      <div style={{ ...C.card, padding: '0', marginBottom: 16, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 18px 12px', borderBottom: '1px solid rgba(13,153,96,.1)' }}>
-          <SectionHeader title="Social stress indicators — next 30 days" sub="Model-derived risk signals for Burnett Foundation prioritisation" />
-        </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-          <thead>
-            <tr style={{ background: 'rgba(13,153,96,.04)' }}>
-              {['Indicator','Risk','Zone','Driver','Burnett action'].map(h => (
-                <th key={h} style={{ padding: '10px 16px', textAlign: 'left', color: 'rgba(223,240,225,.45)', fontWeight: 500, letterSpacing: '.06em', fontSize: 10, textTransform: 'uppercase' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {STRESS.map((row, i) => {
-              const rc2 = riskColor(row.risk);
-              return (
-                <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,.04)' }}>
-                  <td style={{ padding: '10px 16px', color: '#dff0e1', fontWeight: 500 }}>{row.indicator}</td>
-                  <td style={{ padding: '10px 16px' }}>
-                    <span style={{ ...rc2, fontSize: 11, padding: '2px 9px', borderRadius: 6, fontWeight: 600 }}>{row.risk}</span>
-                  </td>
-                  <td style={{ padding: '10px 16px', color: 'rgba(223,240,225,.55)' }}>{row.zone}</td>
-                  <td style={{ padding: '10px 16px', color: 'rgba(223,240,225,.45)', fontSize: 10.5 }}>{row.driver}</td>
-                  <td style={{ padding: '10px 16px', color: 'rgba(200,148,26,.7)', fontSize: 10.5 }}>{row.action}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div style={{ ...C.card, padding: '20px 20px 16px' }}>
-        <SectionHeader title="Seasonal risk calendar — Aotearoa NZ" sub="Jan–Dec rolling 12-month model · higher = greater epidemic risk" />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 8, marginBottom: 14 }}>
-          {SEASONAL.map((v, i) => {
-            const rc3 = riskColor(v);
-            return (
-              <div key={i} style={{ textAlign: 'center', padding: '10px 8px', borderRadius: 10, background: rc3.bg, border: `1px solid ${rc3.border}` }}>
-                <div style={{ fontSize: 9, color: 'rgba(223,240,225,.5)', marginBottom: 4 }}>{MONTHS_SHORT[i]}</div>
-                <div style={{ fontSize: 16, fontFamily: "'Cormorant Garamond',serif", fontWeight: 300, color: rc3.text }}>{v}</div>
-              </div>
-            );
-          })}
-        </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 10, color: 'rgba(223,240,225,.4)' }}>
-          {[
-            { label: 'Critical ≥7.5', ...riskColor(8) },
-            { label: 'High 6–7.4',    ...riskColor(6.5) },
-            { label: 'Moderate 5–5.9',...riskColor(5.3) },
-            { label: 'Low <5',        ...riskColor(4) },
-          ].map(l => (
-            <span key={l.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 10, borderRadius: 3, background: l.bg, border: `1px solid ${l.border}`, display: 'inline-block' }} />
-              {l.label}
-            </span>
-          ))}
-        </div>
+      <div style={{
+        marginTop: 28,
+        padding: '18px 20px',
+        background: 'rgba(255,255,255,.02)',
+        borderLeft: '2px solid rgba(200,148,26,.4)',
+        fontSize: 13,
+        lineHeight: 1.7,
+        color: 'rgba(220,240,225,.7)',
+        fontStyle: 'italic'
+      }}>
+        These regional indicators support Burnett Foundation Aotearoa service
+        planning. Specific outreach priorities and resource allocation are
+        determined by Burnett Foundation in consultation with affected
+        communities, kaupapa Māori health providers, and people living with HIV.
+        NOVA does not generate community-specific recommendations.
       </div>
     </div>
   );
@@ -940,7 +773,7 @@ function TabStatus() {
 
   const ROADMAP = [
     { phase: 'Phase 1 — Now',         cost: '$198 NZD/month',  items: ['phi3:mini · CPU inference','5-tab analytics dashboard','Privacy Shield · zero retention','Burnett Innovation Challenge demo'], color: 'rgba(30,220,130,.8)' },
-    { phase: 'Phase 2 — Grant Q3 2026', cost: '$395 NZD/month', items: ['Mistral 7B · GPU upgrade','Dual AI architecture','NZ epi fine-tuning dataset','30-day outbreak prediction model'], color: 'rgba(200,148,26,.8)' },
+    { phase: 'Phase 2 — Grant Q3 2026', cost: '$395 NZD/month', items: ['Mistral 7B · GPU upgrade · 8K context window','NZ sexual health knowledge fine-tuning','te reo Māori cultural responsiveness · Te Whare Tapa Whā depth'], color: 'rgba(200,148,26,.8)' },
     { phase: 'Phase 3 — Scale 2027',   cost: 'TBD',            items: ['API for sexual health clinics','Healthpoint NZ integration','Direct appointment booking','iwi / DHB data federation'], color: 'rgba(139,92,246,.7)' },
   ];
 
@@ -1164,7 +997,7 @@ function TabActions() {
 const QUICK_QUESTIONS = [
   'Resumen ejecutivo de esta semana',
   'Análisis de indicadores de crisis',
-  'Top 5 temas por zona',
+  'Top 5 temas nacionales',
   'Comparar este mes vs anterior',
   'Reporte para el directorio',
 ];
@@ -1460,7 +1293,7 @@ function TabIntelligence() {
               { type: 'monthly',  label: '📄 Generar Reporte Mensual', primary: true  },
               { type: 'crisis',   label: '📊 Reporte de Crisis',        primary: false },
               { type: 'privacy',  label: '🛡️ Reporte de Privacidad',    primary: false },
-              { type: 'regional', label: '📍 Reporte por Zona',         primary: false },
+              { type: 'regional', label: '📊 Reporte de Distribución',  primary: false },
             ].map(({ type, label, primary }) => (
               <button key={type} onClick={() => generatePDF(type)}
                 style={{ width: '100%', padding: primary ? '10px 16px' : '8px 14px', borderRadius: 9, border: `1px solid ${primary ? 'rgba(13,153,96,.38)' : 'rgba(13,153,96,.18)'}`, background: primary ? 'rgba(13,153,96,.13)' : 'rgba(13,153,96,.05)', color: primary ? 'rgba(30,220,130,.9)' : 'rgba(223,240,225,.55)', fontSize: primary ? 13 : 12, fontWeight: primary ? 600 : 400, cursor: 'pointer', fontFamily: "'Outfit',sans-serif", textAlign: 'left', transition: 'all .15s' }}>
@@ -1486,7 +1319,6 @@ function TabIntelligence() {
 const TABS = [
   { id: 'command',      label: '◉ Command'      },
   { id: 'atlas',        label: '⬡ Atlas'        },
-  { id: 'predictive',   label: '↗ Predictive'   },
   { id: 'privacy',      label: '🛡 Privacy'     },
   { id: 'status',       label: '◎ Status'       },
   { id: 'actions',      label: '📋 Actions'     },
@@ -1558,7 +1390,6 @@ export default function Dashboard() {
     <DashboardShell tab={tab} setTab={setTab} onLogout={logout}>
       {tab === 'command'      && <TabCommand      key="command"      />}
       {tab === 'atlas'        && <TabAtlas        key="atlas"        />}
-      {tab === 'predictive'   && <TabPredictive   key="predictive"   />}
       {tab === 'privacy'      && <TabPrivacy      key="privacy"      />}
       {tab === 'status'       && <TabStatus       key="status"       />}
       {tab === 'actions'      && <TabActions      key="actions"      />}

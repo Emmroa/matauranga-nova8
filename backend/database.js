@@ -213,20 +213,8 @@ const stmts = {
   totalMessages: db.prepare(`SELECT COUNT(*) AS n FROM events`),
   crisisCount:   db.prepare(`SELECT COUNT(*) AS n FROM events WHERE crisis_flag = 1`),
 
-  topicsByRegion: db.prepare(`
-    SELECT
-      r.code AS region_code, r.name_en AS region_name,
-      t.code AS topic_code,  t.label_en AS topic_label, t.category AS topic_category,
-      CASE WHEN COUNT(*) < 6 THEN 0 ELSE COUNT(*) END AS n
-    FROM events e
-    JOIN regions r ON r.code = e.region_code
-    JOIN topics  t ON t.code = e.topic_code
-    GROUP BY r.code, t.code
-    ORDER BY r.display_order, t.display_order
-  `),
-
   languageBreakdown: db.prepare(`
-    SELECT language, COUNT(*) AS n FROM events GROUP BY language
+    SELECT language, COUNT(*) AS n FROM events GROUP BY language HAVING COUNT(*) >= 6
   `),
 
   regionSummary: db.prepare(`
@@ -244,6 +232,7 @@ const stmts = {
     SELECT t.category, COUNT(*) AS n
     FROM events e JOIN topics t ON t.code = e.topic_code
     GROUP BY t.category
+    HAVING COUNT(*) >= 6
     ORDER BY n DESC
   `),
 
@@ -388,7 +377,6 @@ export function getDashboardSummary() {
       topics_tracked:  35
     },
     regions:           stmts.regionSummary.all(),
-    topics_by_region:  stmts.topicsByRegion.all(),
     languages:         stmts.languageBreakdown.all(),
     categories:        stmts.categoryBreakdown.all(),
     top_topics:        stmts.topTopics.all(),
@@ -398,16 +386,6 @@ export function getDashboardSummary() {
     feedback:          stmts.feedbackSummary.get() || { up_count: 0, down_count: 0 },
     timeseries:        stmts.timeseriesLast7Days.all()
   };
-}
-
-/** SELECT-only gateway for the admin AI assistant (dashboard analyst panel). */
-export function querySafe(sql, params = []) {
-  const trimmed = sql.trim().toUpperCase();
-  if (!trimmed.startsWith('SELECT') && !trimmed.startsWith('WITH')) {
-    throw new Error('Only SELECT/WITH queries permitted');
-  }
-  if (/;\s*\S/.test(sql)) throw new Error('Multi-statement queries not permitted');
-  return db.prepare(sql).all(...params);
 }
 
 export function ensureAdmin(username, passwordHash) {

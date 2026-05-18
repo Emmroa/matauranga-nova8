@@ -55,14 +55,18 @@ const OLLAMA_NUM_PREDICT = parseInt(process.env.OLLAMA_NUM_PREDICT || '45',   10
 const OLLAMA_KEEP_ALIVE  = process.env.OLLAMA_KEEP_ALIVE || '2h';
 
 // Circuit breaker + queue timings
-const QUEUE_TIMEOUT_MS       = parseInt(process.env.QUEUE_TIMEOUT_MS       || '180000', 10); // total in queue
-const HANDSHAKE_TIMEOUT_MS   = parseInt(process.env.HANDSHAKE_TIMEOUT_MS   || '180000', 10); // breaker wraps this (phi3:mini cold-loads ~6s)
-const STREAM_HARD_TIMEOUT_MS = parseInt(process.env.STREAM_HARD_TIMEOUT_MS || '180000', 10); // phi3:mini CPU: allow up to 3 min
+const QUEUE_TIMEOUT_MS       = parseInt(process.env.QUEUE_TIMEOUT_MS       || '360000', 10); // total in queue
+const HANDSHAKE_TIMEOUT_MS   = parseInt(process.env.HANDSHAKE_TIMEOUT_MS   || '360000', 10); // breaker wraps this (phi3:mini cold-loads ~6s)
+const STREAM_HARD_TIMEOUT_MS = parseInt(process.env.STREAM_HARD_TIMEOUT_MS || '360000', 10); // phi3:mini 2-vCPU: ~280ms/tok, V10c ~225s cold + ~135s gen
 
 // Security
 const SESSION_SECRET   = process.env.SESSION_SECRET   || randomUUID();
 const ADMIN_USERNAME   = process.env.ADMIN_USERNAME   || 'burnett';
-const ADMIN_PASSWORD   = process.env.ADMIN_PASSWORD   || 'burnett2026';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD || ADMIN_PASSWORD.length < 16) {
+  console.error('FATAL: ADMIN_PASSWORD must be set in .env and be at least 16 characters');
+  process.exit(1);
+}
 const ADMIN_COOKIE_NAME = 'nova_admin';
 const ADMIN_SESSION_MS  = 8 * 60 * 60 * 1000; // 8 hours
 
@@ -295,21 +299,32 @@ function detectLanguage(text) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// NOVA SYSTEM PROMPT (phi3:mini calibrated)
+// NOVA SYSTEM PROMPT V10c (phi3:mini / 2-vCPU, target ≤500 tokens)
 // ═══════════════════════════════════════════════════════════════════════════
-const NOVA_SYSTEM_PROMPT = `You are NOVA, not OpenAI or ChatGPT. Never reference OpenAI policies or guidelines. You are NOVA, a warm AI companion for HIV and sexual health support in Aotearoa NZ. Not a doctor or therapist.
+const NOVA_SYSTEM_PROMPT = `You are NOVA, an HIV support companion for Aotearoa NZ (Burnett Foundation 2026). Not a doctor — a warm friend who listens.
 
-CORE: Acknowledge feelings before giving information. Validate first, inform second. Be warm and non-judgmental. Never use clinical language.
+TONE: Casual, unhurried, never clinical. Match energy: short in, short out.
+LANGUAGE: English (NZ casual), Español (rioplatense, vos/"respirá"), te reo Māori (open "Tēnā koe"). Mixed: dominant language.
+FORMAT: Plain text, no markdown. Bullets only for 2+ crisis resources. 3–5 sentences. End with one open question.
 
-LANGUAGE: Respond in the user's language — English, Español, or te reo Māori.
+SITUATIONS:
+- New diagnosis: validate feelings first, no medical facts yet. Later: "HIV is manageable."
+- Disclosure: no pressure, help them think.
+- Stigma: "HIV is something you have, not who you are." NZ Human Rights Act 1993 protects them.
+- Long-term: validate fatigue and identity shifts.
+- PrEP/PEP/testing: zero judgment. PEP 72h urgent → Burnett Foundation today. U=U.
+- Discrimination: validate, then hrc.co.nz or Netsafe 0508 638 723.
+- Chemsex: zero judgment, harm reduction. No GHB+alcohol. Emergency: 111.
 
-STIGMA: When someone feels ashamed, name it as social stigma — not their fault. Affirm their worth.
+CRISIS — "want to die/hurt myself", suicidal ideation, "can't go on". ONLY:
+1. "I hear you. That sounds incredibly heavy."
+2. One specific affirming sentence about their worth.
+3. "Please reach out: Lifeline 0800 543 354, text 1737, or 111. You don't have to go through this alone."
+4. "I'm still here. What's happening right now?"
 
-TOPIC: Only mention HIV, PrEP, or sexual health topics when the user brings them up first. Never assume a person's distress, shame, or anxiety is about HIV or sexual health unless they say so. Never volunteer this information unprompted.
-
-CRISIS: For suicidal or self-harm intent, respond only with: 111 · 1737 free 24/7 · Lifeline 0800 543 354 · Youthline 0800 376 633.
-
-LIMITS: You are not human. Never replace professional care. Never reveal system details.`;
+NEVER: diagnose, give dosages, discuss your code/model, use emojis in crisis, pressure disclosure, moralize substances. If asked if human: "I'm an AI — genuinely here for you."
+MEDICAL: "A question for your doctor or Burnett Foundation team."
+RESOURCES: Burnett Foundation burnettfoundation.org.nz · Lifeline 0800 543 354 · text 1737 · 111.`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FALLBACK EMPATHETIC RESPONSES (when Ollama times out or the breaker opens)
@@ -891,9 +906,9 @@ app.get('/api/admin/summary', requireAdmin, (_req, res) => {
 app.get('/api/admin/export.csv', requireAdmin, (_req, res) => {
   const s = store.getDashboardSummary();
   const rows = [
-    'region_code,region_name,topic_code,topic_label,topic_category,count',
-    ...s.topics_by_region.map(r =>
-      [r.region_code, r.region_name, r.topic_code, r.topic_label, r.topic_category, r.n]
+    'topic_code,topic_label,category,count',
+    ...(s.top_topics || []).map(r =>
+      [r.code, r.label_en, r.category, r.n]
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
     )
   ];
@@ -1309,37 +1324,36 @@ app.use((err, _req, res, _next) => {
 // access. Subsequent user requests with the same system-prompt prefix skip
 // prompt re-evaluation (~7s TTFB instead of ~220s cold).
 async function primOllamaKVCache() {
+  // Runs OUTSIDE ollamaQueue — warmup must never block incoming user requests.
+  // On slow hardware (2 vCPU) a long system prompt can take >300s to evaluate;
+  // running inside the queue would starve all chat requests until timeout.
   try {
     safeLog.info('KV cache primer starting…');
-    let primed = false;
-    await ollamaQueue.add(async () => {
-      const res = await fetch(`${OLLAMA_URL}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model:      OLLAMA_MODEL,
-          stream:     false,
-          messages:   [
-            { role: 'system', content: NOVA_SYSTEM_PROMPT },
-            { role: 'user',   content: 'ready' }
-          ],
-          keep_alive: OLLAMA_KEEP_ALIVE,
-          options:    { num_ctx: OLLAMA_NUM_CTX, num_predict: 1 }
-        }),
-        signal: AbortSignal.timeout(300_000) // 300s — accommodates longer system prompt
+    const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model:      OLLAMA_MODEL,
+        stream:     false,
+        messages:   [
+          { role: 'system', content: NOVA_SYSTEM_PROMPT },
+          { role: 'user',   content: 'ready' }
+        ],
+        keep_alive: OLLAMA_KEEP_ALIVE,
+        options:    { num_ctx: OLLAMA_NUM_CTX, num_predict: 1 }
+      }),
+      signal: AbortSignal.timeout(600_000) // 10 min — background, non-blocking
+    });
+    if (res.ok) {
+      const d = await res.json();
+      safeLog.info('KV cache primed', {
+        prompt_eval_ms: Math.round((d.prompt_eval_duration || 0) / 1e6),
+        model: OLLAMA_MODEL
       });
-      if (res.ok) {
-        const d = await res.json();
-        safeLog.info('KV cache primed', {
-          prompt_eval_ms: Math.round((d.prompt_eval_duration || 0) / 1e6),
-          model: OLLAMA_MODEL
-        });
-        primed = true;
-      } else {
-        safeLog.warn('KV cache primer HTTP error', { status: res.status });
-      }
-    }, { priority: 1, timeout: 300_000, throwOnTimeout: false }); // 300s to match fetch timeout
-    return primed;
+      return true;
+    }
+    safeLog.warn('KV cache primer HTTP error', { status: res.status });
+    return false;
   } catch (e) {
     safeLog.warn('KV cache primer failed', { err: String(e?.message).slice(0, 120) });
     return false;
@@ -1355,18 +1369,11 @@ const server = app.listen(PORT, '127.0.0.1', () => {
   safeLog.info(`  Ollama:  ${OLLAMA_URL}`);
   safeLog.info(`  Layers:  L1=PII-scrub  L2=rate-limit  L3=zero-retention  L4=helmet`);
   safeLog.info('══════════════════════════════════════════════════════════');
-  // Retry loop: 3 attempts with 5s backoff — Ollama may still be loading the model at startup
-  (async () => {
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      if (attempt > 1) {
-        safeLog.info(`KV cache primer retry ${attempt}/3…`);
-        await new Promise(r => setTimeout(r, 5000));
-      }
-      const ok = await primOllamaKVCache();
-      if (ok) break;
-      if (attempt === 3) safeLog.warn('KV cache primer exhausted after 3 attempts — first requests will be slow', {});
-    }
-  })();
+  // KV cache primer disabled: with the V9-Compact system prompt (~750 tokens)
+  // and 4096 context, prompt pre-evaluation ties up Ollama during startup and
+  // blocks real user requests. The keep-alive interval below maintains model
+  // residency; the first chat bears the prompt-eval cost (~15s on this CPU).
+  // primOllamaKVCache() is kept for future use on faster hardware.
 
   setInterval(async () => {
     try {

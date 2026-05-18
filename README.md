@@ -67,7 +67,7 @@ NOVA enforces Zero Data Retention (ZDR) in code, not just in policy.
 
 ---
 
-## Analytics Dashboard — 7 Tabs
+## Analytics Dashboard — 6 Tabs
 
 Access at `/dashboard` (requires admin login).
 
@@ -75,11 +75,10 @@ Access at `/dashboard` (requires admin login).
 |---|-----|-------------|
 | 1 | ◉ Command | Live KPIs · time-series with μ±1.5σ bands · anomaly detection · topic breakdown by category · language distribution · AI-generated insights |
 | 2 | ⬡ Atlas | Regional activity map — NTH / MID / CEN / STH / NAT zones |
-| 3 | ↗ Predictive | Seasonal trend model · stress calendar · outbreak risk indicators |
-| 4 | 🛡 Privacy | ZDR compliance view · NZ Privacy Act 2020 · HIPC 2020 · Te Mana Raraunga framework |
-| 5 | ◎ Status | Live service health (Ollama · backend · nginx) · infrastructure roadmap |
-| 6 | 📋 Actions | Social Stress Indicator tracker (13 indicators) with 3-state institutional response (Pending / In Progress / Completed) · Live PII Audit counter (Layer 1) |
-| 7 | 🤖 Intelligence | Internal AI chat assistant (anonymous data only) · PDF report generator (Monthly · Crisis · Privacy · Regional) |
+| 3 | 🛡 Privacy | ZDR compliance view · NZ Privacy Act 2020 · HIPC 2020 · Te Mana Raraunga framework |
+| 4 | ◎ Status | Live service health (Ollama · backend · nginx) · infrastructure roadmap |
+| 5 | 📋 Actions | Social Stress Indicator tracker (13 indicators) with 3-state institutional response (Pending / In Progress / Completed) · Live PII Audit counter (Layer 1) |
+| 6 | 🤖 Intelligence | Internal AI chat assistant (anonymous data only) · PDF report generator (Monthly · Crisis · Privacy · Regional) |
 
 ---
 
@@ -168,6 +167,36 @@ Crisis safety resources surfaced automatically:
 - **1737** — free text or call, 24/7
 - **Lifeline** — 0800 543 354
 - **111** — immediate danger
+
+---
+
+## Design Principles — What NOVA Deliberately Does Not Do
+
+NOVA could implement features common in international HIV-tech tools. We chose not to, as design principles aligned with **Burnett Foundation Innovation Challenge 2026 · Section 4** and **Te Mana Raraunga** (Māori data sovereignty).
+
+In Aotearoa New Zealand, the population is small and closely connected. Communities most affected by HIV — Takatāpui, Pasifika takatāpui, rural Māori living with HIV — are small enough that statistical patterns can identify individuals even without names. The Burnett Foundation Innovation Challenge guide identifies this risk directly in Section 4. We accepted it as a foundational design constraint, not a deferred consideration.
+
+### What NOVA does not do
+
+- **No regional segmentation of conversational analytics.** Cross-tabulation of region × topic is not computed. The query `topicsByRegion` has been removed from the codebase entirely — not suppressed, not deferred — removed.
+- **No transmission cluster analysis or network inference.** The Burnett guide explicitly warns against this approach for Aotearoa's scale. We do not build it.
+- **No epidemiological prediction or outbreak models.** There is no Predictive tab. There is no risk forecast. There is no Social Epidemic Index. These were removed from the codebase in May 2026 as part of compliance hardening.
+- **No conversation text storage.** Zero Data Retention is verified at the source-code level. User messages are scrubbed of PII (NZ-specific patterns: NHI, IRD, +64 phone, NZ addresses), processed in memory by phi3:mini, and discarded. No log file, database column, or temporary file persists any conversation text.
+- **No individual tracking.** Session IDs are HMAC-SHA256 hashes truncated to 12 hex characters — irreversible by design. IP addresses are hashed for rate limiting only and never persisted. X-Forwarded-For, User-Agent, and Referer headers are stripped before any processing.
+- **No third-party analytics, fingerprinting, or telemetry.** No Google Analytics, no Plausible, no anything. The frontend ships zero external trackers.
+
+### What NOVA does instead
+
+- Trauma-informed conversational support in three languages (English · te reo Māori · Spanish), with crisis protocols routing to Lifeline (0800 543 354), 1737, and 111.
+- The Atlas tab visualises only **published Health NZ aggregates** (AIDS Epidemiology Group · Te Whatu Ora). Source citation is explicit on every card.
+- National-level aggregate analytics inform Burnett Foundation service planning, with small-cell suppression applied (n<6 per dimension; percentages omitted while sample size is small).
+- Specific outreach priorities and resource allocation are determined by **Burnett Foundation in consultation with affected communities, kaupapa Māori health providers, and people living with HIV** — not inferred by NOVA's analytics.
+
+### The principle
+
+> **The absence of these features is not a limitation. It is the architecture.**
+
+Responsible AI in HIV care is defined as much by what we refuse to build as by what we build.
 
 ---
 

@@ -173,13 +173,13 @@ export default function Landing({ lang, setLang, consent, onConsent, onDecline }
     { id: 'hosting', icon: '☁', label: 'Catalyst Cloud NZ',
       items: [['Data sovereignty','100% NZ infrastructure. HIPC 2020 + Te Mana Raraunga require data stays in Aotearoa.'],['Infrastructure','c1.c4r8: 4 vCPU / 8GB RAM · Intel Xeon · NVMe · 10Gbps · ~$198 NZD/month.'],['Why not AWS/GCP','Overseas servers create HIPC + Māori Data Sovereignty conflicts.']] },
     { id: 'ai', icon: '∿', label: 'AI engine: phi3 → Mistral',
-      items: [['phi3:mini — current','2.3 GB · 4096 token context · CPU-only · 8–15s response. Ideal for demo.'],['Mistral 7B — phase 2','Apache 2.0 · self-hosted · 8192 context · 3–5s on c1.c8r16.'],['Dual AI','Mistral for conversation (empathy) + phi3 for analytics (speed). Two AIs, two roles.']] },
+      items: [['phi3:mini — current','2.3 GB · 4096 token context · CPU-only · 8–15s response. Ideal for demo.'],['Mistral 7B — phase 2','Apache 2.0 · self-hosted · 8192 context · 3–5s on c1.c8r16.']] },
     { id: 'constitution', icon: '✦', label: 'Constitution & values',
       items: [['Whakapapa','Bruce Burnett (1984) → NZAF → Burnett Foundation. Emanuel Figueroa built NOVA for the gap he found.'],['Wairua — 3 truths','AROHA (love) · TIKA ME PONO (truth with kindness) · KAITIAKITANGA (guardian of dignity).'],['Human rights','Human Rights Act 1993 · Privacy Act 2020 · HDCA 2015 · Employment NZ · HRC 0800 496 877.']] },
     { id: 'tags', icon: '◎', label: 'Tag system & dashboard',
-      items: [['How tags work','Hidden HTML comments in each NOVA response. Extracted before rendering. User never sees them.'],['35 topics × 4 zones','140 indicators · Social Epidemic Index · R-social · Seasonal risk calendar.'],['Privacy guarantee','Small-cell suppression n<6. Never cross-tabulate region + language + topic.']] },
+      items: [['How tags work','Hidden HTML comments in each NOVA response. Extracted before rendering. User never sees them.'],['36 topics · 4 regions','National aggregate counts · 6 categories · suppressed at n<6.'],['Privacy guarantee','Small-cell suppression n<6. Never cross-tabulate region + language + topic.']] },
     { id: 'roadmap', icon: '↗', label: 'Roadmap 2026–2027',
-      items: [['Phase 1 — Demo','phi3:mini · 5-tab epi dashboard · Privacy Shield · Burnett Innovation Challenge.'],['Phase 2 — Q3 2026','Mistral 7B · dual AI · NZ epi fine-tuning · 30-day outbreak prediction.'],['Phase 4 — 2027','API for sexual health clinics · Healthpoint NZ integration · direct appointments.']] },
+      items: [['Phase 1 — Demo','phi3:mini · privacy-first analytics dashboard · Burnett Innovation Challenge demo.'],['Phase 2 — Q3 2026','Mistral 7B · GPU upgrade · 8K context · NZ sexual health knowledge fine-tuning · te reo Māori cultural responsiveness with Te Whare Tapa Whā depth.'],['Phase 4 — 2027','API for sexual health clinics · Healthpoint NZ integration · direct appointments.']] },
   ];
 
   const cardStyle = (variant) => ({
