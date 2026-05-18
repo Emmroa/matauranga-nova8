@@ -9,6 +9,8 @@ module.exports = {
         PORT: 10000,
         OLLAMA_MODEL: 'phi3:mini',
         OLLAMA_KEEP_ALIVE: '2h',
+        OLLAMA_NUM_CTX: '2048',
+        OLLAMA_NUM_PREDICT: '180',
         ALLOWED_ORIGINS: 'https://matauranga-nova.duckdns.org',
         ADMIN_USERNAME: 'burnett'
       }
