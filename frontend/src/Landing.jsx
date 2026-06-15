@@ -162,7 +162,7 @@ export default function Landing({ lang, setLang, consent, onConsent, onDecline }
     { icon: '✦', title: 'Culturally safe', variant: 'gold',
       body: "Built on Te Whare Tapa Whā. Responds in English, te reo Māori, and Spanish. Designed for Takatāpui, Pacific, Māori, migrant, and rural communities." },
     { icon: '◈', title: 'Sovereign NZ AI', variant: 'emerald',
-      body: "All processing in Aotearoa on Catalyst Cloud. Data never leaves NZ. phi3:mini → Mistral 7B dual architecture." },
+      body: "All processing in Aotearoa on Catalyst Cloud. Data never leaves NZ. Powered by Mistral 7B via Ollama — fully local, zero cloud." },
     { icon: '◎', title: 'Languages', variant: 'emerald', langCard: true },
     { icon: '◉', title: 'If you need help now', variant: 'rose', crisisCard: true },
   ];
@@ -172,8 +172,8 @@ export default function Landing({ lang, setLang, consent, onConsent, onDecline }
       items: [['L1 — PII scrubbing','NHI, IRD, phone, email, address stripped before the AI sees any message.'],['L2 — Session rate limiting','Circuit breaker (opossum) cuts AI at 10s timeout. Prebuilt crisis message returned.'],['L3 — Zero retention','Message text NEVER reaches SQLite. Only region, topic, language, hour, crisis flag.'],['L4 — Helmet CSP + HSTS','Strict CSP, HSTS, SSH tunnel only. Cookie: HttpOnly, SameSite=lax, 8h TTL.']] },
     { id: 'hosting', icon: '☁', label: 'Catalyst Cloud NZ',
       items: [['Data sovereignty','100% NZ infrastructure. HIPC 2020 + Te Mana Raraunga require data stays in Aotearoa.'],['Infrastructure','c1.c4r8: 4 vCPU / 8GB RAM · Intel Xeon · NVMe · 10Gbps · ~$198 NZD/month.'],['Why not AWS/GCP','Overseas servers create HIPC + Māori Data Sovereignty conflicts.']] },
-    { id: 'ai', icon: '∿', label: 'AI engine: phi3 → Mistral',
-      items: [['phi3:mini — current','2.3 GB · 4096 token context · CPU-only · 8–15s response. Ideal for demo.'],['Mistral 7B — phase 2','Apache 2.0 · self-hosted · 8192 context · 3–5s on c1.c8r16.']] },
+    { id: 'ai', icon: '∿', label: 'AI engine: Mistral 7B',
+      items: [['Mistral 7B via Ollama','Apache 2.0 · fully local · 8192 token context · 3–5s response on Catalyst Cloud c1.c8r16.'],['Zero cloud dependency','Model runs on NZ infrastructure. No OpenAI, no external API calls, no data leaves Aotearoa.']] },
     { id: 'constitution', icon: '✦', label: 'Constitution & values',
       items: [['Whakapapa','NZAF (1985) → Community HIV advocacy → Mātauranga NOVA. Emanuel Figueroa built NOVA to fill the gap he found.'],['Wairua — 3 truths','AROHA (love) · TIKA ME PONO (truth with kindness) · KAITIAKITANGA (guardian of dignity).'],['Human rights','Human Rights Act 1993 · Privacy Act 2020 · HDCA 2015 · Employment NZ · HRC 0800 496 877.']] },
     { id: 'tags', icon: '◎', label: 'Tag system & dashboard',
@@ -221,12 +221,12 @@ export default function Landing({ lang, setLang, consent, onConsent, onDecline }
               <span style={{ fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: 'rgba(200,148,26,.65)' }}>Mātauranga NOVA · Community Health Initiative · Aotearoa NZ</span>
             </div>
             <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(50px,6.2vw,88px)', fontWeight: 300, lineHeight: 1.06, letterSpacing: '-.01em', margin: '0 0 6px' }}>
-              <span style={{ display: 'block', color: '#dff0e1' }}>A private</span>
-              <span style={{ display: 'block', background: 'linear-gradient(135deg,#0d9960 0%,#18dc88 35%,#c8941a 65%,#f0bc38 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', animation: 'nova-shimmer 4.5s linear infinite' }}>companion</span>
-              <span style={{ display: 'block', fontStyle: 'italic', fontWeight: 300, fontSize: 'clamp(34px,4.2vw,60px)', color: 'rgba(223,240,225,.72)' }}>for HIV in Aotearoa</span>
+              <span style={{ display: 'block', color: '#dff0e1' }}>Digital sexual health</span>
+              <span style={{ display: 'block', background: 'linear-gradient(135deg,#0d9960 0%,#18dc88 35%,#c8941a 65%,#f0bc38 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', animation: 'nova-shimmer 4.5s linear infinite' }}>educator</span>
+              <span style={{ display: 'block', fontStyle: 'italic', fontWeight: 300, fontSize: 'clamp(34px,4.2vw,60px)', color: 'rgba(223,240,225,.72)' }}>HIV stigma reduction · Aotearoa</span>
             </h1>
             <p style={{ fontSize: 15, lineHeight: 1.7, fontWeight: 300, color: 'rgba(223,240,225,.5)', maxWidth: 440, margin: '22px 0 38px' }}>
-              Science-led · Culturally safe · Sovereign NZ AI. NOVA listens without judgment, informs without fear, and never stores your words.
+              Science-led · Culturally safe · Sovereign NZ AI. NOVA covers HIV, STIs, PrEP/PEP, and sexual health — listening without judgment and never storing your words.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
               <Link to="/chat"

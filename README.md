@@ -1,21 +1,22 @@
 # Mātauranga NOVA
 
-> A private AI companion for HIV-related kōrero in Aotearoa New Zealand.  
-> Zero Data Retention. Science-led. Culturally safe.
+> **Digital sexual health educator and HIV stigma reduction AI for Aotearoa NZ.**  
+> Zero Data Retention. Trilingual. Science-led. Culturally safe.
 
-Built by Emanuel Figueroa · **Mātauranga NOVA · Community Health Initiative · Aotearoa NZ**.
+Built by **Emanuel Figueroa** — Auckland, Aotearoa NZ  
+Mātauranga NOVA · Community Health Initiative · Aotearoa NZ
 
 ---
 
 ## What is NOVA?
 
-Mātauranga NOVA is a bilingual (English / Te Reo Māori / Español) AI chat companion that lets people ask questions about HIV — stigma, treatment, prevention, identity, crisis — in a completely private environment. No account required. No messages stored. Nothing logged beyond anonymous counters.
+Mātauranga NOVA is a trilingual AI educator covering **HIV, STIs (syphilis, gonorrhoea, chlamydia, DoxyPEP), PrEP/PEP, and sexual health in general** — in a completely private environment. No account required. No messages stored. Nothing logged beyond anonymous counters.
 
-The name combines **mātauranga** (Māori: knowledge, understanding) with **NOVA** — a new light. The interface is designed to feel safe and unhurried, with a neural-canvas background that responds to touch and typing.
+The name combines **mātauranga** (Māori: knowledge, understanding) with **NOVA** — a new light. NOVA exists to fight HIV stigma and reduce shame around sexual health through honest, caring conversation grounded in Te Whare Tapa Whā and Māori data sovereignty principles.
 
 ---
 
-## Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -33,7 +34,20 @@ The name combines **mātauranga** (Māori: knowledge, understanding) with **NOVA
 | TLS certificate | ZeroSSL ECC (ec-256) via acme.sh + DuckDNS DNS-01 |
 | Firewall | UFW — allow 22/80/443 only |
 | Brute-force | fail2ban — sshd jail |
-| Platform | Catalyst Cloud NZ |
+| Platform | Catalyst Cloud NZ (sovereign NZ hosting) |
+
+---
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| Trilingual | English · Te Reo Māori · Español — automatic detection |
+| 7 Moments framework | Structured conversation flow across 7 emotional entry points |
+| Crisis protocol | Auto-detects crisis signals; surfaces 111 · Lifeline 0800 543 354 · 1737 immediately |
+| Anonymous analytics dashboard | 6-tab admin dashboard — KPIs, atlas, privacy audit, AI analyst, PDF reports |
+| Sexual health scope | HIV · ITS (sífilis, gonorrea, clamidia, DoxyPEP) · PrEP/PEP · salud sexual general |
+| Quad-Layer Armor | PII scrub → rate limiting → zero retention → Helmet.js CSP/HSTS |
 
 ---
 
@@ -159,7 +173,7 @@ sudo systemctl status nginx fail2ban
 | Standard | Application |
 |----------|------------|
 | NZ Privacy Act 2020 | No personal information collected or retained |
-| Health Information Privacy Code 2020 (HIPC) | Health data (HIV status) never stored |
+| Health Information Privacy Code 2020 (HIPC) | Health data (HIV status, STI status) never stored |
 | Te Mana Raraunga | Māori data sovereignty — no profiling, no re-identification |
 | UN OHCHR HIV rights framework | Non-stigmatising language in all prompts |
 
@@ -181,7 +195,7 @@ In Aotearoa New Zealand, the population is small and closely connected. Communit
 - **No regional segmentation of conversational analytics.** Cross-tabulation of region × topic is not computed. The query `topicsByRegion` has been removed from the codebase entirely — not suppressed, not deferred — removed.
 - **No transmission cluster analysis or network inference.** This approach is inappropriate for Aotearoa's scale. We do not build it.
 - **No epidemiological prediction or outbreak models.** There is no Predictive tab. There is no risk forecast. There is no Social Epidemic Index. These were removed from the codebase in May 2026 as part of compliance hardening.
-- **No conversation text storage.** Zero Data Retention is verified at the source-code level. User messages are scrubbed of PII (NZ-specific patterns: NHI, IRD, +64 phone, NZ addresses), processed in memory by phi3:mini, and discarded. No log file, database column, or temporary file persists any conversation text.
+- **No conversation text storage.** Zero Data Retention is verified at the source-code level. User messages are scrubbed of PII (NZ-specific patterns: NHI, IRD, +64 phone, NZ addresses), processed in memory by Mistral 7B, and discarded. No log file, database column, or temporary file persists any conversation text.
 - **No individual tracking.** Session IDs are HMAC-SHA256 hashes truncated to 12 hex characters — irreversible by design. IP addresses are hashed for rate limiting only and never persisted. X-Forwarded-For, User-Agent, and Referer headers are stripped before any processing.
 - **No third-party analytics, fingerprinting, or telemetry.** No Google Analytics, no Plausible, no anything. The frontend ships zero external trackers.
 
@@ -196,7 +210,7 @@ In Aotearoa New Zealand, the population is small and closely connected. Communit
 
 > **The absence of these features is not a limitation. It is the architecture.**
 
-Responsible AI in HIV care is defined as much by what we refuse to build as by what we build.
+Responsible AI in sexual health and HIV care is defined as much by what we refuse to build as by what we build.
 
 ---
 
@@ -212,14 +226,14 @@ Responsible AI in HIV care is defined as much by what we refuse to build as by w
 
 ## Credits
 
-**Developer:** Emanuel Figueroa  
+**Developer:** Emanuel Figueroa — Auckland, Aotearoa NZ  
 **Organisation:** Mātauranga NOVA · Community Health Initiative · Aotearoa NZ  
 **AI Model:** Mistral 7B via Ollama — fully local, zero cloud  
-**Hosting:** Catalyst Cloud NZ (data sovereignty)
+**Hosting:** Catalyst Cloud NZ (sovereign NZ infrastructure)
 
 ---
 
 ## Licence
 
-Built by Emanuel Figueroa · Aotearoa NZ · Privacy Act 2020.  
+Built by Emanuel Figueroa · Auckland, Aotearoa NZ · Privacy Act 2020.  
 Code shared for evaluation purposes only.
