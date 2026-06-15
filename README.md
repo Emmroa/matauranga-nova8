@@ -51,6 +51,21 @@ The name combines **mātauranga** (Māori: knowledge, understanding) with **NOVA
 
 ---
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System diagrams, tech stack, Quad-Layer security, data flow, API reference, env vars |
+| [SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md) | OWASP Top 10, NZ Privacy Act IPPs, HIPC, Te Mana Raraunga, pen-test checklist, score 87/100 |
+| [API_DOCS.md](docs/API_DOCS.md) | All endpoints with curl examples, request/response schemas, auth, rate limits, error codes |
+| [PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | Problem, solution, target communities, tech differentiators, roadmap 2026–2027 |
+| [IMPACT_REPORT.md](docs/IMPACT_REPORT.md) | NZ sexual health context, communities served, crisis protocol, Health Strategy alignment |
+| [PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) | Public-facing: what is/isn't collected, ZDR explained simply, NZ Privacy Act 2020 rights |
+| [TERMS_OF_SERVICE.md](docs/TERMS_OF_SERVICE.md) | Not-medical disclaimer, crisis notice, user responsibilities, governing law NZ |
+| [DATA_HANDLING.md](docs/DATA_HANDLING.md) | SQLite schema, retention periods, n8n data, Ollama data sovereignty, incident response |
+
+---
+
 ## Automation — n8n Workflows
 
 6 active workflows running on n8n v2.8.4:
