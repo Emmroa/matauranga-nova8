@@ -1,0 +1,151 @@
+{
+  "updatedAt": "2026-06-15T19:08:05.264Z",
+  "createdAt": "2026-06-15T19:08:05.264Z",
+  "id": "2VXJxgixRUZcsHcS",
+  "name": "NOVA Crisis Alert Logger",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "cr-hook",
+      "name": "Crisis Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "nova-crisis-alert-001",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nova-crisis-alert",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      }
+    },
+    {
+      "id": "cr-log",
+      "name": "Log Crisis Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst fs = require('fs');\nconst now = new Date().toISOString();\nconst body = ($input.first().json.body) || {};\nconst region = body.region || 'unknown';\nconst topic  = body.topic  || 'unknown';\nconst lang   = body.lang   || 'unknown';\nconst line = '[' + now + '] CRISIS_EVENT region=' + region + ' topic=' + topic + ' lang=' + lang + '\\n';\nconst dir = '/home/ubuntu/logs';\nfs.mkdirSync(dir, { recursive: true });\nfs.appendFileSync(dir + '/crisis_log.txt', line);\nreturn [{ json: { logged: true, ts: now } }];\n"
+      }
+    }
+  ],
+  "connections": {
+    "Crisis Webhook": {
+      "main": [
+        [
+          {
+            "node": "Log Crisis Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "9ebbdfe4-6ddb-4fb5-990e-1258845a7dce",
+  "activeVersionId": "9ebbdfe4-6ddb-4fb5-990e-1258845a7dce",
+  "versionCounter": 3,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-06-15T19:08:05.270Z",
+      "createdAt": "2026-06-15T19:08:05.270Z",
+      "role": "workflow:owner",
+      "workflowId": "2VXJxgixRUZcsHcS",
+      "projectId": "Ulewkx0XO8WcUsFp",
+      "project": {
+        "updatedAt": "2026-06-15T19:01:42.398Z",
+        "createdAt": "2026-06-15T18:58:16.188Z",
+        "id": "Ulewkx0XO8WcUsFp",
+        "name": "Emanuel Figueroa <emanuel.figueroa.alejandro@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-15T19:08:05.280Z",
+    "createdAt": "2026-06-15T19:08:05.280Z",
+    "versionId": "9ebbdfe4-6ddb-4fb5-990e-1258845a7dce",
+    "workflowId": "2VXJxgixRUZcsHcS",
+    "nodes": [
+      {
+        "id": "cr-hook",
+        "name": "Crisis Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "nova-crisis-alert-001",
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "nova-crisis-alert",
+          "responseMode": "onReceived",
+          "responseData": "allEntries"
+        }
+      },
+      {
+        "id": "cr-log",
+        "name": "Log Crisis Event",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst fs = require('fs');\nconst now = new Date().toISOString();\nconst body = ($input.first().json.body) || {};\nconst region = body.region || 'unknown';\nconst topic  = body.topic  || 'unknown';\nconst lang   = body.lang   || 'unknown';\nconst line = '[' + now + '] CRISIS_EVENT region=' + region + ' topic=' + topic + ' lang=' + lang + '\\n';\nconst dir = '/home/ubuntu/logs';\nfs.mkdirSync(dir, { recursive: true });\nfs.appendFileSync(dir + '/crisis_log.txt', line);\nreturn [{ json: { logged: true, ts: now } }];\n"
+        }
+      }
+    ],
+    "connections": {
+      "Crisis Webhook": {
+        "main": [
+          [
+            {
+              "node": "Log Crisis Event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Emanuel Figueroa",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-15T19:08:28.831Z",
+        "id": 2,
+        "workflowId": "2VXJxgixRUZcsHcS",
+        "versionId": "9ebbdfe4-6ddb-4fb5-990e-1258845a7dce",
+        "event": "activated",
+        "userId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    ]
+  }
+}

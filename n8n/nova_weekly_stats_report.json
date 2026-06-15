@@ -1,0 +1,261 @@
+{
+  "updatedAt": "2026-06-15T19:08:04.368Z",
+  "createdAt": "2026-06-15T19:08:04.368Z",
+  "id": "n6QbobTdoigVc79g",
+  "name": "NOVA Weekly Stats Report",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "wk-trigger",
+      "name": "Every Monday 8am NZT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 20 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wk-http",
+      "name": "GET NOVA Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:10000/api/health",
+        "options": {}
+      }
+    },
+    {
+      "id": "wk-format",
+      "name": "Format Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst h = $input.first().json;\nconst now = new Date();\nconst dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);\nconst sep = '='.repeat(40);\nconst summary = [\n  'NOVA Weekly Health Report',\n  'Generated: ' + now.toISOString(),\n  sep,\n  'Status:              ' + (h.ok ? 'OK' : 'ERROR'),\n  'Ollama UP:           ' + h.ollamaUp,\n  'Model Loaded:        ' + h.modelLoaded,\n  'Circuit Breaker Open:' + h.breakerOpen,\n  sep,\n  ''\n].join('\\n');\nreturn [{ json: { summary, dateStr } }];\n"
+      }
+    },
+    {
+      "id": "wk-save",
+      "name": "Save to File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst fs = require('fs');\nconst path = require('path');\nconst { summary, dateStr } = $input.first().json;\nconst dir = '/home/ubuntu/reports';\nfs.mkdirSync(dir, { recursive: true });\nfs.writeFileSync(path.join(dir, 'weekly_' + dateStr + '.txt'), summary);\nreturn [{ json: { saved: true, file: 'weekly_' + dateStr + '.txt' } }];\n"
+      }
+    }
+  ],
+  "connections": {
+    "Every Monday 8am NZT": {
+      "main": [
+        [
+          {
+            "node": "GET NOVA Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET NOVA Health": {
+      "main": [
+        [
+          {
+            "node": "Format Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Summary": {
+      "main": [
+        [
+          {
+            "node": "Save to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Every Monday 8am NZT": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "56f331c5-e64a-4a11-b5ab-a7659c71e457",
+  "activeVersionId": "56f331c5-e64a-4a11-b5ab-a7659c71e457",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-06-15T19:08:04.376Z",
+      "createdAt": "2026-06-15T19:08:04.376Z",
+      "role": "workflow:owner",
+      "workflowId": "n6QbobTdoigVc79g",
+      "projectId": "Ulewkx0XO8WcUsFp",
+      "project": {
+        "updatedAt": "2026-06-15T19:01:42.398Z",
+        "createdAt": "2026-06-15T18:58:16.188Z",
+        "id": "Ulewkx0XO8WcUsFp",
+        "name": "Emanuel Figueroa <emanuel.figueroa.alejandro@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-15T19:08:04.390Z",
+    "createdAt": "2026-06-15T19:08:04.390Z",
+    "versionId": "56f331c5-e64a-4a11-b5ab-a7659c71e457",
+    "workflowId": "n6QbobTdoigVc79g",
+    "nodes": [
+      {
+        "id": "wk-trigger",
+        "name": "Every Monday 8am NZT",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 20 * * 0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "wk-http",
+        "name": "GET NOVA Health",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          450,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://localhost:10000/api/health",
+          "options": {}
+        }
+      },
+      {
+        "id": "wk-format",
+        "name": "Format Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          650,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst h = $input.first().json;\nconst now = new Date();\nconst dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);\nconst sep = '='.repeat(40);\nconst summary = [\n  'NOVA Weekly Health Report',\n  'Generated: ' + now.toISOString(),\n  sep,\n  'Status:              ' + (h.ok ? 'OK' : 'ERROR'),\n  'Ollama UP:           ' + h.ollamaUp,\n  'Model Loaded:        ' + h.modelLoaded,\n  'Circuit Breaker Open:' + h.breakerOpen,\n  sep,\n  ''\n].join('\\n');\nreturn [{ json: { summary, dateStr } }];\n"
+        }
+      },
+      {
+        "id": "wk-save",
+        "name": "Save to File",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          850,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst fs = require('fs');\nconst path = require('path');\nconst { summary, dateStr } = $input.first().json;\nconst dir = '/home/ubuntu/reports';\nfs.mkdirSync(dir, { recursive: true });\nfs.writeFileSync(path.join(dir, 'weekly_' + dateStr + '.txt'), summary);\nreturn [{ json: { saved: true, file: 'weekly_' + dateStr + '.txt' } }];\n"
+        }
+      }
+    ],
+    "connections": {
+      "Every Monday 8am NZT": {
+        "main": [
+          [
+            {
+              "node": "GET NOVA Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET NOVA Health": {
+        "main": [
+          [
+            {
+              "node": "Format Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Summary": {
+        "main": [
+          [
+            {
+              "node": "Save to File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Emanuel Figueroa",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-15T19:08:28.665Z",
+        "id": 1,
+        "workflowId": "n6QbobTdoigVc79g",
+        "versionId": "56f331c5-e64a-4a11-b5ab-a7659c71e457",
+        "event": "activated",
+        "userId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    ]
+  }
+}
