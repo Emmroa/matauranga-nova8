@@ -51,6 +51,24 @@ The name combines **mātauranga** (Māori: knowledge, understanding) with **NOVA
 
 ---
 
+## Automation — n8n Workflows
+
+6 active workflows running on n8n v2.8.4:
+
+| # | Workflow | Trigger | Action |
+|---|----------|---------|--------|
+| 1 | Weekly Stats Report | Monday 8:00 AM NZST | Sends formatted NOVA usage report via email |
+| 2 | Crisis Alert Logger | Webhook POST | Logs crisis activations with timestamp (no PII) |
+| 3 | Daily Health Check | Daily 9:00 AM NZST | Alerts via email if server is down |
+| 4 | LinkedIn Post Generator | Monday 9:00 AM NZST | Generates sexual health post for review via email |
+| 5a | Server Auto Shutdown | Friday 6:00 PM NZST | Stops nova-backend to save Catalyst Cloud grant |
+| 5b | Server Auto Start | Monday 7:00 AM NZST | Restarts nova-backend automatically |
+
+Workflow JSON backups are stored in `/n8n/` directory.  
+Credentials are stored securely via n8n credential manager — never hardcoded.
+
+---
+
 ## Privacy Architecture — Quad-Layer Armor
 
 NOVA enforces Zero Data Retention (ZDR) in code, not just in policy.
