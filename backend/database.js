@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // NOVA — SQLite Schema & Data-Access Layer (ESM)
-// Mātauranga NOVA · Burnett Foundation Innovation Challenge 2026
+// Mātauranga NOVA · Community Health Initiative · Aotearoa NZ
 //
 // PRIVACY GUARANTEE (NZ Privacy Act 2020 · HIPC 2020 · Māori Data Sovereignty)
 //   ✘ NO message content is ever stored

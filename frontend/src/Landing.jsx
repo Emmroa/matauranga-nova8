@@ -175,11 +175,11 @@ export default function Landing({ lang, setLang, consent, onConsent, onDecline }
     { id: 'ai', icon: '∿', label: 'AI engine: phi3 → Mistral',
       items: [['phi3:mini — current','2.3 GB · 4096 token context · CPU-only · 8–15s response. Ideal for demo.'],['Mistral 7B — phase 2','Apache 2.0 · self-hosted · 8192 context · 3–5s on c1.c8r16.']] },
     { id: 'constitution', icon: '✦', label: 'Constitution & values',
-      items: [['Whakapapa','Bruce Burnett (1984) → NZAF → Burnett Foundation. Emanuel Figueroa built NOVA for the gap he found.'],['Wairua — 3 truths','AROHA (love) · TIKA ME PONO (truth with kindness) · KAITIAKITANGA (guardian of dignity).'],['Human rights','Human Rights Act 1993 · Privacy Act 2020 · HDCA 2015 · Employment NZ · HRC 0800 496 877.']] },
+      items: [['Whakapapa','NZAF (1985) → Community HIV advocacy → Mātauranga NOVA. Emanuel Figueroa built NOVA to fill the gap he found.'],['Wairua — 3 truths','AROHA (love) · TIKA ME PONO (truth with kindness) · KAITIAKITANGA (guardian of dignity).'],['Human rights','Human Rights Act 1993 · Privacy Act 2020 · HDCA 2015 · Employment NZ · HRC 0800 496 877.']] },
     { id: 'tags', icon: '◎', label: 'Tag system & dashboard',
       items: [['How tags work','Hidden HTML comments in each NOVA response. Extracted before rendering. User never sees them.'],['36 topics · 4 regions','National aggregate counts · 6 categories · suppressed at n<6.'],['Privacy guarantee','Small-cell suppression n<6. Never cross-tabulate region + language + topic.']] },
     { id: 'roadmap', icon: '↗', label: 'Roadmap 2026–2027',
-      items: [['Phase 1 — Demo','phi3:mini · privacy-first analytics dashboard · Burnett Innovation Challenge demo.'],['Phase 2 — Q3 2026','Mistral 7B · GPU upgrade · 8K context · NZ sexual health knowledge fine-tuning · te reo Māori cultural responsiveness with Te Whare Tapa Whā depth.'],['Phase 4 — 2027','API for sexual health clinics · Healthpoint NZ integration · direct appointments.']] },
+      items: [['Phase 1 — Live','Mistral 7B · privacy-first analytics dashboard · Community Health Initiative launch.'],['Phase 2 — Q3 2026','GPU upgrade · 8K context · NZ sexual health knowledge fine-tuning · te reo Māori cultural responsiveness with Te Whare Tapa Whā depth.'],['Phase 3 — 2027','API for sexual health clinics · Healthpoint NZ integration · direct appointments.']] },
   ];
 
   const cardStyle = (variant) => ({
@@ -218,7 +218,7 @@ export default function Landing({ lang, setLang, consent, onConsent, onDecline }
           <div className="fi2">
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 26 }}>
               <div style={{ width: 26, height: 1, background: 'rgba(200,148,26,.6)' }} />
-              <span style={{ fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: 'rgba(200,148,26,.65)' }}>Burnett Foundation Aotearoa · Innovation Challenge 2026</span>
+              <span style={{ fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: 'rgba(200,148,26,.65)' }}>Mātauranga NOVA · Community Health Initiative · Aotearoa NZ</span>
             </div>
             <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(50px,6.2vw,88px)', fontWeight: 300, lineHeight: 1.06, letterSpacing: '-.01em', margin: '0 0 6px' }}>
               <span style={{ display: 'block', color: '#dff0e1' }}>A private</span>
@@ -352,7 +352,7 @@ export default function Landing({ lang, setLang, consent, onConsent, onDecline }
         </div>
 
         <footer style={{ borderTop: '1px solid rgba(13,153,96,.1)', padding: '36px 0 44px', textAlign: 'center' }}>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: 'rgba(223,240,225,.3)', marginBottom: 8, letterSpacing: '.05em' }}>Built by Emanuel Figueroa · Burnett Foundation Aotearoa Innovation Challenge 2026</p>
+          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: 'rgba(223,240,225,.3)', marginBottom: 8, letterSpacing: '.05em' }}>Built by Emanuel Figueroa · Aotearoa NZ · Privacy Act 2020</p>
           <p style={{ fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: 'rgba(223,240,225,.18)' }}>NZ Privacy Act 2020 · HIPC 2020 · Te Mana Raraunga · Māori Data Sovereignty · Catalyst Cloud Aotearoa</p>
         </footer>
       </main>

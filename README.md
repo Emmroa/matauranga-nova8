@@ -3,7 +3,7 @@
 > A private AI companion for HIV-related kōrero in Aotearoa New Zealand.  
 > Zero Data Retention. Science-led. Culturally safe.
 
-Built for the **Burnett Foundation Aotearoa Innovation Challenge 2026** by Emanuel Figueroa.
+Built by Emanuel Figueroa · **Mātauranga NOVA · Community Health Initiative · Aotearoa NZ**.
 
 ---
 
@@ -23,7 +23,7 @@ The name combines **mātauranga** (Māori: knowledge, understanding) with **NOVA
 | Styling | Inline design tokens · Cormorant Garamond + Outfit (Google Fonts) |
 | PWA | Web App Manifest · Service Worker (cache-first shell / network-first API) |
 | Backend | Node.js 20+ · Express 5 (ESM) · port 10000 |
-| AI model | phi3:mini via Ollama (loopback `127.0.0.1:11434`) |
+| AI model | Mistral 7B via Ollama (loopback `127.0.0.1:11434`) |
 | Database | better-sqlite3 · `backend/data/analytics.db` |
 | Queue | p-queue (concurrency = 1, sequential inference) |
 | Circuit breaker | opossum (wraps every Ollama call) |
@@ -99,7 +99,7 @@ Access at `/dashboard` (requires admin login).
 | GET | `/api/admin/me` | Verify session |
 | GET | `/api/admin/summary` | Full analytics summary + piiEvents snapshot |
 | GET | `/api/admin/export.csv` | Download analytics as CSV |
-| POST | `/api/admin/analyst` | SSE AI analyst (phi3:mini over aggregate data) |
+| POST | `/api/admin/analyst` | SSE AI analyst (Mistral over aggregate data) |
 | GET | `/api/admin/actions` | Load institutional action states |
 | POST | `/api/admin/actions` | Update action status (allowlisted keys + statuses) |
 | POST | `/api/admin/assistant` | SSE AI assistant with caller-supplied sanitized context |
@@ -110,7 +110,7 @@ Access at `/dashboard` (requires admin login).
 
 ### Prerequisites
 - Node.js 20+
-- [Ollama](https://ollama.ai) with `phi3:mini` pulled (`ollama pull phi3:mini`)
+- [Ollama](https://ollama.ai) with `mistral` pulled (`ollama pull mistral`)
 
 ### Backend
 
@@ -172,14 +172,14 @@ Crisis safety resources surfaced automatically:
 
 ## Design Principles — What NOVA Deliberately Does Not Do
 
-NOVA could implement features common in international HIV-tech tools. We chose not to, as design principles aligned with **Burnett Foundation Innovation Challenge 2026 · Section 4** and **Te Mana Raraunga** (Māori data sovereignty).
+NOVA could implement features common in international HIV-tech tools. We chose not to, as design principles aligned with **Te Mana Raraunga** (Māori data sovereignty) and privacy-first community health practice.
 
-In Aotearoa New Zealand, the population is small and closely connected. Communities most affected by HIV — Takatāpui, Pasifika takatāpui, rural Māori living with HIV — are small enough that statistical patterns can identify individuals even without names. The Burnett Foundation Innovation Challenge guide identifies this risk directly in Section 4. We accepted it as a foundational design constraint, not a deferred consideration.
+In Aotearoa New Zealand, the population is small and closely connected. Communities most affected by HIV — Takatāpui, Pasifika takatāpui, rural Māori living with HIV — are small enough that statistical patterns can identify individuals even without names. We accepted this as a foundational design constraint, not a deferred consideration.
 
 ### What NOVA does not do
 
 - **No regional segmentation of conversational analytics.** Cross-tabulation of region × topic is not computed. The query `topicsByRegion` has been removed from the codebase entirely — not suppressed, not deferred — removed.
-- **No transmission cluster analysis or network inference.** The Burnett guide explicitly warns against this approach for Aotearoa's scale. We do not build it.
+- **No transmission cluster analysis or network inference.** This approach is inappropriate for Aotearoa's scale. We do not build it.
 - **No epidemiological prediction or outbreak models.** There is no Predictive tab. There is no risk forecast. There is no Social Epidemic Index. These were removed from the codebase in May 2026 as part of compliance hardening.
 - **No conversation text storage.** Zero Data Retention is verified at the source-code level. User messages are scrubbed of PII (NZ-specific patterns: NHI, IRD, +64 phone, NZ addresses), processed in memory by phi3:mini, and discarded. No log file, database column, or temporary file persists any conversation text.
 - **No individual tracking.** Session IDs are HMAC-SHA256 hashes truncated to 12 hex characters — irreversible by design. IP addresses are hashed for rate limiting only and never persisted. X-Forwarded-For, User-Agent, and Referer headers are stripped before any processing.
@@ -189,8 +189,8 @@ In Aotearoa New Zealand, the population is small and closely connected. Communit
 
 - Trauma-informed conversational support in three languages (English · te reo Māori · Spanish), with crisis protocols routing to Lifeline (0800 543 354), 1737, and 111.
 - The Atlas tab visualises only **published Health NZ aggregates** (AIDS Epidemiology Group · Te Whatu Ora). Source citation is explicit on every card.
-- National-level aggregate analytics inform Burnett Foundation service planning, with small-cell suppression applied (n<6 per dimension; percentages omitted while sample size is small).
-- Specific outreach priorities and resource allocation are determined by **Burnett Foundation in consultation with affected communities, kaupapa Māori health providers, and people living with HIV** — not inferred by NOVA's analytics.
+- National-level aggregate analytics inform community health service planning, with small-cell suppression applied (n<6 per dimension; percentages omitted while sample size is small).
+- Specific outreach priorities and resource allocation are determined by **community health providers in consultation with affected communities, kaupapa Māori health providers, and people living with HIV** — not inferred by NOVA's analytics.
 
 ### The principle
 
@@ -213,14 +213,13 @@ Responsible AI in HIV care is defined as much by what we refuse to build as by w
 ## Credits
 
 **Developer:** Emanuel Figueroa  
-**Organisation:** Burnett Foundation Aotearoa  
-**Challenge:** Innovation Challenge 2026  
-**AI Model:** phi3:mini (Microsoft) via Ollama — fully local, zero cloud  
+**Organisation:** Mātauranga NOVA · Community Health Initiative · Aotearoa NZ  
+**AI Model:** Mistral 7B via Ollama — fully local, zero cloud  
 **Hosting:** Catalyst Cloud NZ (data sovereignty)
 
 ---
 
 ## Licence
 
-All rights reserved — Burnett Foundation Aotearoa 2026.  
+Built by Emanuel Figueroa · Aotearoa NZ · Privacy Act 2020.  
 Code shared for evaluation purposes only.

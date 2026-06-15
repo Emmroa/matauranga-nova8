@@ -43,7 +43,7 @@ app.post('/api/chat', async (req, res) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'llama3:latest',
+                model: process.env.OLLAMA_MODEL || 'mistral',
                 prompt: `Eres NOVA, un amigo de Aotearoa. Sé MUY breve (1-2 oraciones). Si el usuario está triste, sé empático. Si está normal, sé relajado y usa "Kia ora" o "Mate". No hables de salud sexual a menos que te pregunten. Usuario: ${safeMessage}`,
                 stream: false,
                 options: { num_predict: 80, temperature: 0.7 }
@@ -58,6 +58,6 @@ app.post('/api/chat', async (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🌿 NOVA v9.3 (SafeLinks) Activa en puerto ${PORT}`);
+    console.log(`🌿 NOVA v9.3 (Mistral) Activa en puerto ${PORT}`);
 });
 

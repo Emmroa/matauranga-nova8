@@ -667,7 +667,7 @@ export default function Chat({ lang, setLang, consent, onConsent, onDecline }) {
           { label: '111', sub: 'emergency' },
           { label: 'Lifeline', sub: '0800 543 354' },
           { label: '1737', sub: 'text or call' },
-          { label: 'Burnett', sub: '0800 802 437' },
+          { label: 'NZAF', sub: '0800 802 437' },
         ].map((item, i) => (
           <span key={item.label} style={{ display: 'inline-flex', alignItems: 'center' }}>
             {i > 0 && <span style={{ display: 'inline-block', width: 1, height: 11, background: 'rgba(220,60,60,.18)', margin: '0 12px' }} />}

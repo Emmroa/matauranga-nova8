@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // App.jsx — NOVA Root Router
-// Mātauranga NOVA · Burnett Foundation Innovation Challenge 2026
+// Mātauranga NOVA · Community Health Initiative · Aotearoa NZ
 //
 // Routes:
 //   /             → Landing.jsx   (home page + consent)

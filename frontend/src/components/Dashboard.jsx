@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // Dashboard.jsx — NOVA Analytics Dashboard — 5 tabs
-// Mātauranga NOVA · Burnett Foundation Innovation Challenge 2026
+// Mātauranga NOVA · Community Health Initiative · Aotearoa NZ
 // ═══════════════════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
@@ -613,7 +613,7 @@ function TabCommand() {
 // - HIV Epidemiology Group · public release 2025 preliminary data (May 2026)
 // - HIV Monitoring Report 2025 · Ministry of Health (Nov 2025)
 // - National HIV Action Plan for Aotearoa New Zealand 2023–2030
-// - Burnett Foundation Aotearoa · published statistics
+// - NZAF Aotearoa · burnettfoundation.org.nz/learn/hiv/hiv-in-aotearoa/
 // ═══════════════════════════════════════════════════════════════════════════
 
 const ATLAS_KPIS = [
@@ -678,7 +678,7 @@ const ATLAS_SOURCES = [
     detail: 'Ministry of Health · Manatū Hauora · published November 2025' },
   { org: 'National HIV Action Plan for Aotearoa New Zealand 2023–2030',
     detail: 'Ministry of Health · 90% reduction target from 2010 baseline' },
-  { org: 'Burnett Foundation Aotearoa',
+  { org: 'NZAF Aotearoa',
     detail: 'HIV in Aotearoa statistics · burnettfoundation.org.nz/learn/hiv/hiv-in-aotearoa/' }
 ];
 
@@ -891,7 +891,7 @@ function TabAtlas() {
           Public reference data. All figures sourced from publicly released
           Aotearoa New Zealand government and research publications (HIV
           Epidemiology Group · University of Otago · Ministry of Health ·
-          Burnett Foundation). National-level data only. NOVA does not
+          NZAF Aotearoa). National-level data only. NOVA does not
           perform regional segmentation, transmission modelling, or
           individual-level inference of its own conversational analytics.
         </div>
@@ -1040,8 +1040,8 @@ function TabAtlas() {
           fontFamily: "'DM Mono', monospace", fontSize: 12,
           color: 'rgba(220,240,255,.7)', lineHeight: 1.7
         }}>
-          The figures above describe clinical-epidemiological reality. Burnett
-          Foundation Aotearoa service planning interprets them through the
+          The figures above describe clinical-epidemiological reality. Community
+          health planning interprets them through the
           four pou of Te Whare Tapa Whā: <strong style={{ color: '#1edc82' }}>taha
           tinana</strong> (physical health · access to ART, testing, PrEP),{' '}
           <strong style={{ color: '#1edc82' }}>taha hinengaro</strong> (mental
@@ -1051,7 +1051,7 @@ function TabAtlas() {
           <strong style={{ color: '#1edc82' }}>taha wairua</strong>{' '}
           (spiritual and identity dimension · cultural safety, kaupapa Māori
           care pathways). Specific outreach priorities are determined by
-          Burnett Foundation in consultation with affected communities,
+          community health providers in consultation with affected communities,
           kaupapa Māori health providers, and people living with HIV — not
           inferred by NOVA.
         </div>
@@ -1186,7 +1186,7 @@ function TabStatus() {
   ];
 
   const ROADMAP = [
-    { phase: 'Phase 1 — Now',         cost: '$198 NZD/month',  items: ['phi3:mini · CPU inference','5-tab analytics dashboard','Privacy Shield · zero retention','Burnett Innovation Challenge demo'], color: 'rgba(30,220,130,.8)' },
+    { phase: 'Phase 1 — Now',         cost: '$198 NZD/month',  items: ['Mistral 7B · CPU inference','5-tab analytics dashboard','Privacy Shield · zero retention','Community Health Initiative launch'], color: 'rgba(30,220,130,.8)' },
     { phase: 'Phase 2 — Grant Q3 2026', cost: '$395 NZD/month', items: ['Mistral 7B · GPU upgrade · 8K context window','NZ sexual health knowledge fine-tuning','te reo Māori cultural responsiveness · Te Whare Tapa Whā depth'], color: 'rgba(200,148,26,.8)' },
     { phase: 'Phase 3 — Scale 2027',   cost: 'TBD',            items: ['API for sexual health clinics','Healthpoint NZ integration','Direct appointment booking','iwi / DHB data federation'], color: 'rgba(139,92,246,.7)' },
   ];
@@ -1534,7 +1534,7 @@ function TabIntelligence() {
     doc.text(reportTitles[type] || `Report — ${ym}`, 20, 76);
     doc.setFontSize(9); doc.setTextColor(90, 110, 90);
     doc.text(`Generated: ${dateStr}`, 20, 87);
-    doc.text('CONFIDENTIAL — Burnett Foundation Innovation Challenge 2026', 20, 93);
+    doc.text('CONFIDENTIAL — Mātauranga NOVA · Community Health Initiative · Aotearoa NZ', 20, 93);
 
     // ── Content pages ────────────────────────────────────────────────────────
     if (type === 'monthly' || type === 'regional') {
@@ -1633,7 +1633,7 @@ function TabIntelligence() {
     for (let i = 1; i <= pages; i++) {
       doc.setPage(i);
       doc.setFontSize(8); doc.setTextColor(50, 80, 50);
-      doc.text('ZDR · NZ Privacy Act 2020 · HIPC 2020 · Mātauranga NOVA · Burnett Foundation', 20, 290);
+      doc.text('ZDR · NZ Privacy Act 2020 · HIPC 2020 · Mātauranga NOVA · Community Health Initiative · Aotearoa NZ', 20, 290);
       doc.text(`Page ${i} / ${pages}`, 190, 290, { align: 'right' });
     }
     doc.save(`nova-report-${type}-${ym}.pdf`);

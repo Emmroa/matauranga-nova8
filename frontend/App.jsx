@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // NOVA — Frontend App (React 19)
-// Mātauranga NOVA · Burnett Foundation Innovation Challenge 2026
+// Mātauranga NOVA · Community Health Initiative · Aotearoa NZ
 //
 // This single file contains:
 //   • Router (react-router v7)
@@ -266,9 +266,9 @@ function ChatBoard({ consent, lang, setLang, standalone = false, onReset }) {
   // Pre-seed with a NOVA greeting in the chosen language
   useEffect(() => {
     const greetings = {
-      en: "Kia ora — I'm NOVA. I'm an AI companion built by Emanuel for the Burnett Foundation. This chat is private — nothing you type is stored. What's on your mind?",
-      es: "Hola — soy NOVA. Soy una IA creada por Emanuel para la Burnett Foundation. Esta charla es privada — nada se guarda. ¿Qué te pasa?",
-      mi: "Tēnā koe — ko NOVA tōku ingoa. He atamai mimitahi nā Emanuel i hanga mō te Burnett Foundation. He kōrero tūmataiti tēnei. He aha tō whakaaro?"
+      en: "Kia ora — I'm NOVA. I'm an AI companion built by Emanuel Figueroa for Mātauranga NOVA · Community Health Initiative · Aotearoa NZ. This chat is private — nothing you type is stored. What's on your mind?",
+      es: "Hola — soy NOVA. Soy una IA creada por Emanuel Figueroa para Mātauranga NOVA · Iniciativa de Salud Comunitaria · Aotearoa NZ. Esta charla es privada — nada se guarda. ¿Qué te pasa?",
+      mi: "Tēnā koe — ko NOVA tōku ingoa. He atamai mimitahi nā Emanuel Figueroa i hanga mō Mātauranga NOVA · Community Health Initiative · Aotearoa NZ. He kōrero tūmataiti tēnei. He aha tō whakaaro?"
     };
     setMessages([{ id: 'sys-' + Date.now(), role: 'assistant', text: greetings[lang] }]);
   }, [lang, consent?.sessionId]);
