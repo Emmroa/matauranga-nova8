@@ -1,0 +1,281 @@
+{
+  "updatedAt": "2026-06-15T19:33:10.946Z",
+  "createdAt": "2026-06-15T19:33:10.946Z",
+  "id": "00JwVRIjZ9H86VFD",
+  "name": "NOVA LinkedIn Post Generator",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "li-trigger",
+      "name": "Monday 9am NZT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 21 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "li-http",
+      "name": "GET NOVA Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:10000/api/health",
+        "options": {}
+      }
+    },
+    {
+      "id": "li-gen",
+      "name": "Generate LinkedIn Post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst h = $input.first().json;\nconst now = new Date();\nconst nzDate = now.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', month: 'long', day: 'numeric', year: 'numeric' });\nconst status = h.ok ? 'operational' : 'under maintenance';\n\nconst post = [\n  '\ud83c\udf3f Sexual health education matters \u2014 for everyone.',\n  '',\n  'M\u0101tauranga NOVA is a free, private AI educator covering HIV, STIs, PrEP/PEP, and sexual health in Aotearoa New Zealand.',\n  '',\n  'What makes it different:',\n  '\u2192 Trilingual: English \u00b7 Te Reo M\u0101ori \u00b7 Espa\u00f1ol',\n  '\u2192 Zero data retention \u2014 nothing you type is stored',\n  '\u2192 Hosted 100% in NZ on Catalyst Cloud (data sovereignty)',\n  '\u2192 Built on Te Whare Tapa Wh\u0101 \u2014 holistic, culturally safe',\n  '\u2192 Crisis protocol: instant links to 111, Lifeline, 1737',\n  '',\n  'This week the platform is ' + status + ' and serving wh\u0101nau across Aotearoa.',\n  '',\n  'Reducing HIV stigma starts with honest conversation. NOVA makes that conversation accessible, private, and safe.',\n  '',\n  'Built by Emanuel Figueroa \u00b7 Auckland NZ',\n  '',\n  '#SexualHealth #HIVStigma #AotearoaNZ #HealthEquity #M\u0101oriHealth #PrEP #DigitalHealth #TeReoM\u0101ori',\n].join('\\n');\n\nconst subject = 'NOVA LinkedIn Post \u2014 ready to publish \u2014 ' + nzDate;\nreturn [{ json: { post, subject, nzDate } }];\n"
+      }
+    },
+    {
+      "id": "li-email",
+      "name": "Email Post for Review",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        850,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "N7qGdXz8oiPovFpM",
+          "name": "NOVA Gmail SMTP"
+        }
+      },
+      "parameters": {
+        "fromEmail": "={{ $env.NOVA_GMAIL_USER }}",
+        "toEmail": "={{ $env.NOVA_REPORT_TO }}",
+        "subject": "={{ $json.subject }}",
+        "text": "={{ $json.post }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Monday 9am NZT": {
+      "main": [
+        [
+          {
+            "node": "GET NOVA Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET NOVA Health": {
+      "main": [
+        [
+          {
+            "node": "Generate LinkedIn Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate LinkedIn Post": {
+      "main": [
+        [
+          {
+            "node": "Email Post for Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Monday 9am NZT": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "3b7b7b62-78b9-43ba-9f3f-41b2ccb2b159",
+  "activeVersionId": "3b7b7b62-78b9-43ba-9f3f-41b2ccb2b159",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-06-15T19:33:10.952Z",
+      "createdAt": "2026-06-15T19:33:10.952Z",
+      "role": "workflow:owner",
+      "workflowId": "00JwVRIjZ9H86VFD",
+      "projectId": "Ulewkx0XO8WcUsFp",
+      "project": {
+        "updatedAt": "2026-06-15T19:01:42.398Z",
+        "createdAt": "2026-06-15T18:58:16.188Z",
+        "id": "Ulewkx0XO8WcUsFp",
+        "name": "Emanuel Figueroa <emanuel.figueroa.alejandro@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-15T19:33:11.017Z",
+    "createdAt": "2026-06-15T19:33:11.017Z",
+    "versionId": "3b7b7b62-78b9-43ba-9f3f-41b2ccb2b159",
+    "workflowId": "00JwVRIjZ9H86VFD",
+    "nodes": [
+      {
+        "id": "li-trigger",
+        "name": "Monday 9am NZT",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 21 * * 0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "li-http",
+        "name": "GET NOVA Health",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          450,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://localhost:10000/api/health",
+          "options": {}
+        }
+      },
+      {
+        "id": "li-gen",
+        "name": "Generate LinkedIn Post",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          650,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst h = $input.first().json;\nconst now = new Date();\nconst nzDate = now.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', month: 'long', day: 'numeric', year: 'numeric' });\nconst status = h.ok ? 'operational' : 'under maintenance';\n\nconst post = [\n  '\ud83c\udf3f Sexual health education matters \u2014 for everyone.',\n  '',\n  'M\u0101tauranga NOVA is a free, private AI educator covering HIV, STIs, PrEP/PEP, and sexual health in Aotearoa New Zealand.',\n  '',\n  'What makes it different:',\n  '\u2192 Trilingual: English \u00b7 Te Reo M\u0101ori \u00b7 Espa\u00f1ol',\n  '\u2192 Zero data retention \u2014 nothing you type is stored',\n  '\u2192 Hosted 100% in NZ on Catalyst Cloud (data sovereignty)',\n  '\u2192 Built on Te Whare Tapa Wh\u0101 \u2014 holistic, culturally safe',\n  '\u2192 Crisis protocol: instant links to 111, Lifeline, 1737',\n  '',\n  'This week the platform is ' + status + ' and serving wh\u0101nau across Aotearoa.',\n  '',\n  'Reducing HIV stigma starts with honest conversation. NOVA makes that conversation accessible, private, and safe.',\n  '',\n  'Built by Emanuel Figueroa \u00b7 Auckland NZ',\n  '',\n  '#SexualHealth #HIVStigma #AotearoaNZ #HealthEquity #M\u0101oriHealth #PrEP #DigitalHealth #TeReoM\u0101ori',\n].join('\\n');\n\nconst subject = 'NOVA LinkedIn Post \u2014 ready to publish \u2014 ' + nzDate;\nreturn [{ json: { post, subject, nzDate } }];\n"
+        }
+      },
+      {
+        "id": "li-email",
+        "name": "Email Post for Review",
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          850,
+          300
+        ],
+        "credentials": {
+          "smtp": {
+            "id": "N7qGdXz8oiPovFpM",
+            "name": "NOVA Gmail SMTP"
+          }
+        },
+        "parameters": {
+          "fromEmail": "={{ $env.NOVA_GMAIL_USER }}",
+          "toEmail": "={{ $env.NOVA_REPORT_TO }}",
+          "subject": "={{ $json.subject }}",
+          "text": "={{ $json.post }}",
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "Monday 9am NZT": {
+        "main": [
+          [
+            {
+              "node": "GET NOVA Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET NOVA Health": {
+        "main": [
+          [
+            {
+              "node": "Generate LinkedIn Post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate LinkedIn Post": {
+        "main": [
+          [
+            {
+              "node": "Email Post for Review",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Emanuel Figueroa",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-15T19:33:30.811Z",
+        "id": 5,
+        "workflowId": "00JwVRIjZ9H86VFD",
+        "versionId": "3b7b7b62-78b9-43ba-9f3f-41b2ccb2b159",
+        "event": "activated",
+        "userId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    ]
+  }
+}

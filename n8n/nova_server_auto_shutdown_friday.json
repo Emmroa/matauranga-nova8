@@ -1,0 +1,161 @@
+{
+  "updatedAt": "2026-06-15T19:33:11.077Z",
+  "createdAt": "2026-06-15T19:33:11.077Z",
+  "id": "jMR6dIKSFdk1Rj7C",
+  "name": "NOVA Server Auto Shutdown \u2014 Friday",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "sd-trigger",
+      "name": "Friday 6pm NZT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * 5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sd-stop",
+      "name": "PM2 Stop NOVA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst { execSync } = require('child_process');\nconst result = execSync('/usr/bin/pm2 stop nova-backend').toString();\nconst fs = require('fs');\nfs.mkdirSync('/home/ubuntu/logs', { recursive: true });\nfs.appendFileSync('/home/ubuntu/logs/pm2_schedule.log',\n  '[' + new Date().toISOString() + '] STOP nova-backend\\n' + result + '\\n');\nreturn [{ json: { action: 'stop', ts: new Date().toISOString() } }];\n"
+      }
+    }
+  ],
+  "connections": {
+    "Friday 6pm NZT": {
+      "main": [
+        [
+          {
+            "node": "PM2 Stop NOVA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Friday 6pm NZT": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "0e973ac8-e6b3-4862-be44-dec5bbdefc83",
+  "activeVersionId": "0e973ac8-e6b3-4862-be44-dec5bbdefc83",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-06-15T19:33:11.081Z",
+      "createdAt": "2026-06-15T19:33:11.081Z",
+      "role": "workflow:owner",
+      "workflowId": "jMR6dIKSFdk1Rj7C",
+      "projectId": "Ulewkx0XO8WcUsFp",
+      "project": {
+        "updatedAt": "2026-06-15T19:01:42.398Z",
+        "createdAt": "2026-06-15T18:58:16.188Z",
+        "id": "Ulewkx0XO8WcUsFp",
+        "name": "Emanuel Figueroa <emanuel.figueroa.alejandro@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-15T19:33:11.091Z",
+    "createdAt": "2026-06-15T19:33:11.091Z",
+    "versionId": "0e973ac8-e6b3-4862-be44-dec5bbdefc83",
+    "workflowId": "jMR6dIKSFdk1Rj7C",
+    "nodes": [
+      {
+        "id": "sd-trigger",
+        "name": "Friday 6pm NZT",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 6 * * 5"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "sd-stop",
+        "name": "PM2 Stop NOVA",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst { execSync } = require('child_process');\nconst result = execSync('/usr/bin/pm2 stop nova-backend').toString();\nconst fs = require('fs');\nfs.mkdirSync('/home/ubuntu/logs', { recursive: true });\nfs.appendFileSync('/home/ubuntu/logs/pm2_schedule.log',\n  '[' + new Date().toISOString() + '] STOP nova-backend\\n' + result + '\\n');\nreturn [{ json: { action: 'stop', ts: new Date().toISOString() } }];\n"
+        }
+      }
+    ],
+    "connections": {
+      "Friday 6pm NZT": {
+        "main": [
+          [
+            {
+              "node": "PM2 Stop NOVA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Emanuel Figueroa",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-15T19:33:30.942Z",
+        "id": 6,
+        "workflowId": "jMR6dIKSFdk1Rj7C",
+        "versionId": "0e973ac8-e6b3-4862-be44-dec5bbdefc83",
+        "event": "activated",
+        "userId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    ]
+  }
+}

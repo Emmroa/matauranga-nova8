@@ -1,0 +1,161 @@
+{
+  "updatedAt": "2026-06-15T19:33:11.143Z",
+  "createdAt": "2026-06-15T19:33:11.143Z",
+  "id": "1Ra9WbCgvdpwjKt7",
+  "name": "NOVA Server Auto Start \u2014 Monday",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "su-trigger",
+      "name": "Monday 7am NZT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 19 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "su-start",
+      "name": "PM2 Start NOVA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst { execSync } = require('child_process');\nconst result = execSync('/usr/bin/pm2 start nova-backend').toString();\nconst fs = require('fs');\nfs.mkdirSync('/home/ubuntu/logs', { recursive: true });\nfs.appendFileSync('/home/ubuntu/logs/pm2_schedule.log',\n  '[' + new Date().toISOString() + '] START nova-backend\\n' + result + '\\n');\nreturn [{ json: { action: 'start', ts: new Date().toISOString() } }];\n"
+      }
+    }
+  ],
+  "connections": {
+    "Monday 7am NZT": {
+      "main": [
+        [
+          {
+            "node": "PM2 Start NOVA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Monday 7am NZT": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "90765f37-5a52-44e2-9d8a-3c0733b5189a",
+  "activeVersionId": "90765f37-5a52-44e2-9d8a-3c0733b5189a",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-06-15T19:33:11.147Z",
+      "createdAt": "2026-06-15T19:33:11.147Z",
+      "role": "workflow:owner",
+      "workflowId": "1Ra9WbCgvdpwjKt7",
+      "projectId": "Ulewkx0XO8WcUsFp",
+      "project": {
+        "updatedAt": "2026-06-15T19:01:42.398Z",
+        "createdAt": "2026-06-15T18:58:16.188Z",
+        "id": "Ulewkx0XO8WcUsFp",
+        "name": "Emanuel Figueroa <emanuel.figueroa.alejandro@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-15T19:33:11.155Z",
+    "createdAt": "2026-06-15T19:33:11.155Z",
+    "versionId": "90765f37-5a52-44e2-9d8a-3c0733b5189a",
+    "workflowId": "1Ra9WbCgvdpwjKt7",
+    "nodes": [
+      {
+        "id": "su-trigger",
+        "name": "Monday 7am NZT",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 19 * * 0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "su-start",
+        "name": "PM2 Start NOVA",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst { execSync } = require('child_process');\nconst result = execSync('/usr/bin/pm2 start nova-backend').toString();\nconst fs = require('fs');\nfs.mkdirSync('/home/ubuntu/logs', { recursive: true });\nfs.appendFileSync('/home/ubuntu/logs/pm2_schedule.log',\n  '[' + new Date().toISOString() + '] START nova-backend\\n' + result + '\\n');\nreturn [{ json: { action: 'start', ts: new Date().toISOString() } }];\n"
+        }
+      }
+    ],
+    "connections": {
+      "Monday 7am NZT": {
+        "main": [
+          [
+            {
+              "node": "PM2 Start NOVA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Emanuel Figueroa",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-15T19:33:31.086Z",
+        "id": 7,
+        "workflowId": "1Ra9WbCgvdpwjKt7",
+        "versionId": "90765f37-5a52-44e2-9d8a-3c0733b5189a",
+        "event": "activated",
+        "userId": "290a5642-4625-4650-be11-878711ddb8c1"
+      }
+    ]
+  }
+}

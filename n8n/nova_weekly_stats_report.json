@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-06-15T19:08:04.368Z",
-  "createdAt": "2026-06-15T19:08:04.368Z",
-  "id": "n6QbobTdoigVc79g",
+  "updatedAt": "2026-06-15T19:33:10.391Z",
+  "createdAt": "2026-06-15T19:33:10.391Z",
+  "id": "BK3LUKLihBNK769I",
   "name": "NOVA Weekly Stats Report",
   "description": null,
   "active": true,
@@ -44,7 +44,7 @@
     },
     {
       "id": "wk-format",
-      "name": "Format Summary",
+      "name": "Format Report",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -52,7 +52,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "\nconst h = $input.first().json;\nconst now = new Date();\nconst dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);\nconst sep = '='.repeat(40);\nconst summary = [\n  'NOVA Weekly Health Report',\n  'Generated: ' + now.toISOString(),\n  sep,\n  'Status:              ' + (h.ok ? 'OK' : 'ERROR'),\n  'Ollama UP:           ' + h.ollamaUp,\n  'Model Loaded:        ' + h.modelLoaded,\n  'Circuit Breaker Open:' + h.breakerOpen,\n  sep,\n  ''\n].join('\\n');\nreturn [{ json: { summary, dateStr } }];\n"
+        "jsCode": "\nconst h = $input.first().json;\nconst now = new Date();\nconst dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);\nconst nzDate = now.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\nconst sep = '\u2500'.repeat(44);\nconst status = h.ok ? '\u2713 HEALTHY' : '\u2717 DEGRADED';\nconst subject = 'NOVA Weekly Report \u2014 ' + nzDate;\nconst body = [\n  'NOVA Weekly Health Report',\n  'Generated: ' + nzDate,\n  sep,\n  'Overall status:       ' + status,\n  'Ollama (Mistral 7B):  ' + (h.ollamaUp ? 'UP' : 'DOWN'),\n  'Model loaded:         ' + (h.modelLoaded ? 'YES' : 'NO'),\n  'Circuit breaker open: ' + (h.breakerOpen ? 'YES \u2014 degraded' : 'NO \u2014 normal'),\n  sep,\n  'Resources:',\n  '  NZAF        0800 802 437',\n  '  Lifeline    0800 543 354',\n  '  1737        text or call',\n  sep,\n  'M\u0101tauranga NOVA \u00b7 Community Health Initiative \u00b7 Aotearoa NZ',\n  'Hosted on Catalyst Cloud NZ \u2014 data never leaves Aotearoa.',\n].join('\\n');\nreturn [{ json: { subject, body, dateStr } }];\n"
       }
     },
     {
@@ -65,7 +65,30 @@
         300
       ],
       "parameters": {
-        "jsCode": "\nconst fs = require('fs');\nconst path = require('path');\nconst { summary, dateStr } = $input.first().json;\nconst dir = '/home/ubuntu/reports';\nfs.mkdirSync(dir, { recursive: true });\nfs.writeFileSync(path.join(dir, 'weekly_' + dateStr + '.txt'), summary);\nreturn [{ json: { saved: true, file: 'weekly_' + dateStr + '.txt' } }];\n"
+        "jsCode": "\nconst fs = require('fs');\nconst { body, dateStr } = $input.first().json;\nconst dir = '/home/ubuntu/reports';\nfs.mkdirSync(dir, { recursive: true });\nfs.writeFileSync(dir + '/weekly_' + dateStr + '.txt', body);\nreturn [{ json: { ...$input.first().json, saved: true } }];\n"
+      }
+    },
+    {
+      "id": "wk-email",
+      "name": "Send Email Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1050,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "N7qGdXz8oiPovFpM",
+          "name": "NOVA Gmail SMTP"
+        }
+      },
+      "parameters": {
+        "fromEmail": "={{ $env.NOVA_GMAIL_USER }}",
+        "toEmail": "={{ $env.NOVA_REPORT_TO }}",
+        "subject": "={{ $json.subject }}",
+        "text": "={{ $json.body }}",
+        "options": {}
       }
     }
   ],
@@ -85,18 +108,29 @@
       "main": [
         [
           {
-            "node": "Format Summary",
+            "node": "Format Report",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Format Summary": {
+    "Format Report": {
       "main": [
         [
           {
             "node": "Save to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to File": {
+      "main": [
+        [
+          {
+            "node": "Send Email Report",
             "type": "main",
             "index": 0
           }
@@ -116,16 +150,16 @@
   },
   "meta": null,
   "pinData": null,
-  "versionId": "56f331c5-e64a-4a11-b5ab-a7659c71e457",
-  "activeVersionId": "56f331c5-e64a-4a11-b5ab-a7659c71e457",
+  "versionId": "ff523194-7742-48f4-9acc-4991fe341c42",
+  "activeVersionId": "ff523194-7742-48f4-9acc-4991fe341c42",
   "versionCounter": 4,
   "triggerCount": 1,
   "shared": [
     {
-      "updatedAt": "2026-06-15T19:08:04.376Z",
-      "createdAt": "2026-06-15T19:08:04.376Z",
+      "updatedAt": "2026-06-15T19:33:10.397Z",
+      "createdAt": "2026-06-15T19:33:10.397Z",
       "role": "workflow:owner",
-      "workflowId": "n6QbobTdoigVc79g",
+      "workflowId": "BK3LUKLihBNK769I",
       "projectId": "Ulewkx0XO8WcUsFp",
       "project": {
         "updatedAt": "2026-06-15T19:01:42.398Z",
@@ -141,10 +175,10 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-06-15T19:08:04.390Z",
-    "createdAt": "2026-06-15T19:08:04.390Z",
-    "versionId": "56f331c5-e64a-4a11-b5ab-a7659c71e457",
-    "workflowId": "n6QbobTdoigVc79g",
+    "updatedAt": "2026-06-15T19:33:10.409Z",
+    "createdAt": "2026-06-15T19:33:10.409Z",
+    "versionId": "ff523194-7742-48f4-9acc-4991fe341c42",
+    "workflowId": "BK3LUKLihBNK769I",
     "nodes": [
       {
         "id": "wk-trigger",
@@ -183,7 +217,7 @@
       },
       {
         "id": "wk-format",
-        "name": "Format Summary",
+        "name": "Format Report",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
@@ -191,7 +225,7 @@
           300
         ],
         "parameters": {
-          "jsCode": "\nconst h = $input.first().json;\nconst now = new Date();\nconst dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);\nconst sep = '='.repeat(40);\nconst summary = [\n  'NOVA Weekly Health Report',\n  'Generated: ' + now.toISOString(),\n  sep,\n  'Status:              ' + (h.ok ? 'OK' : 'ERROR'),\n  'Ollama UP:           ' + h.ollamaUp,\n  'Model Loaded:        ' + h.modelLoaded,\n  'Circuit Breaker Open:' + h.breakerOpen,\n  sep,\n  ''\n].join('\\n');\nreturn [{ json: { summary, dateStr } }];\n"
+          "jsCode": "\nconst h = $input.first().json;\nconst now = new Date();\nconst dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);\nconst nzDate = now.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\nconst sep = '\u2500'.repeat(44);\nconst status = h.ok ? '\u2713 HEALTHY' : '\u2717 DEGRADED';\nconst subject = 'NOVA Weekly Report \u2014 ' + nzDate;\nconst body = [\n  'NOVA Weekly Health Report',\n  'Generated: ' + nzDate,\n  sep,\n  'Overall status:       ' + status,\n  'Ollama (Mistral 7B):  ' + (h.ollamaUp ? 'UP' : 'DOWN'),\n  'Model loaded:         ' + (h.modelLoaded ? 'YES' : 'NO'),\n  'Circuit breaker open: ' + (h.breakerOpen ? 'YES \u2014 degraded' : 'NO \u2014 normal'),\n  sep,\n  'Resources:',\n  '  NZAF        0800 802 437',\n  '  Lifeline    0800 543 354',\n  '  1737        text or call',\n  sep,\n  'M\u0101tauranga NOVA \u00b7 Community Health Initiative \u00b7 Aotearoa NZ',\n  'Hosted on Catalyst Cloud NZ \u2014 data never leaves Aotearoa.',\n].join('\\n');\nreturn [{ json: { subject, body, dateStr } }];\n"
         }
       },
       {
@@ -204,7 +238,30 @@
           300
         ],
         "parameters": {
-          "jsCode": "\nconst fs = require('fs');\nconst path = require('path');\nconst { summary, dateStr } = $input.first().json;\nconst dir = '/home/ubuntu/reports';\nfs.mkdirSync(dir, { recursive: true });\nfs.writeFileSync(path.join(dir, 'weekly_' + dateStr + '.txt'), summary);\nreturn [{ json: { saved: true, file: 'weekly_' + dateStr + '.txt' } }];\n"
+          "jsCode": "\nconst fs = require('fs');\nconst { body, dateStr } = $input.first().json;\nconst dir = '/home/ubuntu/reports';\nfs.mkdirSync(dir, { recursive: true });\nfs.writeFileSync(dir + '/weekly_' + dateStr + '.txt', body);\nreturn [{ json: { ...$input.first().json, saved: true } }];\n"
+        }
+      },
+      {
+        "id": "wk-email",
+        "name": "Send Email Report",
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          1050,
+          300
+        ],
+        "credentials": {
+          "smtp": {
+            "id": "N7qGdXz8oiPovFpM",
+            "name": "NOVA Gmail SMTP"
+          }
+        },
+        "parameters": {
+          "fromEmail": "={{ $env.NOVA_GMAIL_USER }}",
+          "toEmail": "={{ $env.NOVA_REPORT_TO }}",
+          "subject": "={{ $json.subject }}",
+          "text": "={{ $json.body }}",
+          "options": {}
         }
       }
     ],
@@ -224,18 +281,29 @@
         "main": [
           [
             {
-              "node": "Format Summary",
+              "node": "Format Report",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "Format Summary": {
+      "Format Report": {
         "main": [
           [
             {
               "node": "Save to File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save to File": {
+        "main": [
+          [
+            {
+              "node": "Send Email Report",
               "type": "main",
               "index": 0
             }
@@ -249,10 +317,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-06-15T19:08:28.665Z",
-        "id": 1,
-        "workflowId": "n6QbobTdoigVc79g",
-        "versionId": "56f331c5-e64a-4a11-b5ab-a7659c71e457",
+        "createdAt": "2026-06-15T19:33:30.675Z",
+        "id": 4,
+        "workflowId": "BK3LUKLihBNK769I",
+        "versionId": "ff523194-7742-48f4-9acc-4991fe341c42",
         "event": "activated",
         "userId": "290a5642-4625-4650-be11-878711ddb8c1"
       }
